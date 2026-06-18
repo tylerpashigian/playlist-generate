@@ -7,8 +7,216 @@ datasource db {
   provider = "postgresql"
 }
 
+enum StreamingProvider {
+  SPOTIFY
+}
+
+enum TrackMatchStatus {
+  MATCHED
+  LOW_CONFIDENCE
+  UNRESOLVED
+  SKIPPED
+}
+
+enum PlaylistStatus {
+  DRAFT
+  EXPORTED
+  ARCHIVED
+}
+
 model Todo {
   id        Int      @id @default(autoincrement())
   title     String
   createdAt DateTime @default(now())
+}
+
+model User {
+  id                   String                @id
+  name                 String
+  email                String
+  emailVerified        Boolean               @default(false)
+  image                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  sessions             Session[]
+  accounts             Account[]
+  playlists            Playlist[]
+  streamingConnections StreamingConnection[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model StreamingConnection {
+  id                String            @id @default(cuid())
+  userId            String
+  provider          StreamingProvider
+  providerAccountId String
+  displayName       String?
+  accessToken       String?
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  scopes            String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([provider, providerAccountId])
+  @@map("streaming_connection")
+}
+
+model Artist {
+  id             String     @id @default(cuid())
+  mbid           String
+  name           String
+  sortName       String?
+  disambiguation String?
+  setlistfmUrl   String?
+  rawPayload     Json?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  playlists      Playlist[]
+
+  @@unique([mbid])
+  @@index([name])
+  @@map("artist")
+}
+
+model Playlist {
+  id                 String             @id @default(cuid())
+  userId             String
+  artistId           String
+  status             PlaylistStatus     @default(DRAFT)
+  name               String
+  description        String?
+  generationSettings Json?
+  scoringVersion     String?
+  recentSetlistCount Int?
+  generatedAt        DateTime           @default(now())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artist             Artist             @relation(fields: [artistId], references: [id], onDelete: Restrict)
+  items              PlaylistItem[]
+  externalPlaylists  ExternalPlaylist[]
+
+  @@index([userId, createdAt])
+  @@index([artistId])
+  @@map("playlist")
+}
+
+model PlaylistItem {
+  id                      String       @id @default(cuid())
+  playlistId              String
+  position                Int
+  songTitle               String
+  normalizedSongTitle     String
+  isCover                 Boolean      @default(false)
+  originalArtistName      String?
+  originalArtistMbid      String?
+  confidenceScore         Float
+  weightedScore           Float
+  appearanceCount         Int
+  totalSetlistsConsidered Int
+  lastPlayedAt            DateTime?
+  evidence                Json?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  playlist                Playlist     @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  trackMatches            TrackMatch[]
+
+  @@unique([playlistId, position])
+  @@index([playlistId, normalizedSongTitle])
+  @@map("playlist_item")
+}
+
+model TrackMatch {
+  id                   String            @id @default(cuid())
+  playlistItemId       String
+  provider             StreamingProvider
+  status               TrackMatchStatus  @default(UNRESOLVED)
+  providerTrackId      String?
+  providerTrackUri     String?
+  providerTrackUrl     String?
+  trackName            String?
+  artistName           String?
+  albumName            String?
+  durationMs           Int?
+  matchConfidenceScore Float?
+  rawPayload           Json?
+  selectedAt           DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  playlistItem         PlaylistItem      @relation(fields: [playlistItemId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistItemId, provider])
+  @@index([provider, providerTrackId])
+  @@map("track_match")
+}
+
+model ExternalPlaylist {
+  id                 String            @id @default(cuid())
+  playlistId         String
+  provider           StreamingProvider
+  providerPlaylistId String
+  url                String?
+  snapshotId         String?
+  exportedAt         DateTime          @default(now())
+  lastSyncedAt       DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  playlist           Playlist          @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, provider])
+  @@index([provider, providerPlaylistId])
+  @@map("external_playlist")
 }
