@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTRPC } from '#/integrations/trpc/react'
 import { authClient } from '#/lib/auth-client'
 
 export const Route = createFileRoute('/demo/better-auth')({
@@ -8,6 +10,17 @@ export const Route = createFileRoute('/demo/better-auth')({
 
 function BetterAuthDemo() {
   const { data: session, isPending } = authClient.useSession()
+  const trpc = useTRPC()
+  const connectionsQuery = useQuery({
+    ...trpc.streaming.connections.queryOptions(),
+    enabled: Boolean(session?.user),
+  })
+  const disconnectMutation = useMutation({
+    ...trpc.streaming.disconnect.mutationOptions(),
+    onSuccess: () => {
+      void connectionsQuery.refetch()
+    },
+  })
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -42,7 +55,7 @@ function BetterAuthDemo() {
             ) : (
               <div className="h-10 w-10 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center">
                 <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                  {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                  {session.user.name.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
             )}
@@ -55,6 +68,18 @@ function BetterAuthDemo() {
               </p>
             </div>
           </div>
+
+          <StreamingConnectionsPanel
+            connection={connectionsQuery.data?.[0]}
+            isLoading={connectionsQuery.isLoading}
+            isDisconnecting={disconnectMutation.isPending}
+            onConnected={() => {
+              void connectionsQuery.refetch()
+            }}
+            onDisconnect={() => {
+              disconnectMutation.mutate({ provider: 'SPOTIFY' })
+            }}
+          />
 
           <button
             onClick={() => {
@@ -229,6 +254,101 @@ function BetterAuthDemo() {
           .
         </p>
       </div>
+    </div>
+  )
+}
+
+function StreamingConnectionsPanel({
+  connection,
+  isLoading,
+  isDisconnecting,
+  onConnected,
+  onDisconnect,
+}: {
+  connection:
+    | {
+        connected: boolean
+        displayName: string | null
+        providerAccountId: string | null
+      }
+    | undefined
+  isLoading: boolean
+  isDisconnecting: boolean
+  onConnected: () => void
+  onDisconnect: () => void
+}) {
+  const [error, setError] = useState('')
+  const [isConnecting, setIsConnecting] = useState(false)
+  const connected = Boolean(connection?.connected)
+
+  async function connectSpotify() {
+    setError('')
+    setIsConnecting(true)
+
+    try {
+      const result = await authClient.linkSocial({
+        provider: 'spotify',
+        scopes: ['playlist-modify-private'],
+        callbackURL: '/demo/better-auth',
+      })
+
+      if (result.error) {
+        setError(result.error.message ?? 'Spotify connection failed')
+      } else if (!result.data.redirect) {
+        onConnected()
+      }
+    } catch {
+      setError('Spotify connection failed')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  return (
+    <div className="border border-neutral-300 dark:border-neutral-700 p-4 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-sm font-medium">Spotify</h2>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {isLoading
+              ? 'Checking connection'
+              : connected
+                ? connection?.displayName ||
+                  connection?.providerAccountId ||
+                  'Connected'
+                : 'Not connected'}
+          </p>
+        </div>
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          {connected ? 'Connected' : 'Disconnected'}
+        </span>
+      </div>
+
+      {error ? (
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      ) : null}
+
+      {connected ? (
+        <button
+          type="button"
+          disabled={isDisconnecting}
+          onClick={onDisconnect}
+          className="w-full h-9 px-4 text-sm font-medium border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isDisconnecting ? 'Disconnecting' : 'Disconnect Spotify'}
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={isConnecting || isLoading}
+          onClick={() => {
+            void connectSpotify()
+          }}
+          className="w-full h-9 px-4 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isConnecting ? 'Connecting' : 'Connect Spotify'}
+        </button>
+      )}
     </div>
   )
 }

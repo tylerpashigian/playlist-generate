@@ -30,10 +30,6 @@ export type StreamingConnectionMinAggregateOutputType = {
   provider: $Enums.StreamingProvider | null
   providerAccountId: string | null
   displayName: string | null
-  accessToken: string | null
-  refreshToken: string | null
-  tokenExpiresAt: Date | null
-  scopes: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -44,10 +40,6 @@ export type StreamingConnectionMaxAggregateOutputType = {
   provider: $Enums.StreamingProvider | null
   providerAccountId: string | null
   displayName: string | null
-  accessToken: string | null
-  refreshToken: string | null
-  tokenExpiresAt: Date | null
-  scopes: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -58,10 +50,6 @@ export type StreamingConnectionCountAggregateOutputType = {
   provider: number
   providerAccountId: number
   displayName: number
-  accessToken: number
-  refreshToken: number
-  tokenExpiresAt: number
-  scopes: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -74,10 +62,6 @@ export type StreamingConnectionMinAggregateInputType = {
   provider?: true
   providerAccountId?: true
   displayName?: true
-  accessToken?: true
-  refreshToken?: true
-  tokenExpiresAt?: true
-  scopes?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -88,10 +72,6 @@ export type StreamingConnectionMaxAggregateInputType = {
   provider?: true
   providerAccountId?: true
   displayName?: true
-  accessToken?: true
-  refreshToken?: true
-  tokenExpiresAt?: true
-  scopes?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -102,10 +82,6 @@ export type StreamingConnectionCountAggregateInputType = {
   provider?: true
   providerAccountId?: true
   displayName?: true
-  accessToken?: true
-  refreshToken?: true
-  tokenExpiresAt?: true
-  scopes?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -189,10 +165,6 @@ export type StreamingConnectionGroupByOutputType = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName: string | null
-  accessToken: string | null
-  refreshToken: string | null
-  tokenExpiresAt: Date | null
-  scopes: string | null
   createdAt: Date
   updatedAt: Date
   _count: StreamingConnectionCountAggregateOutputType | null
@@ -224,10 +196,6 @@ export type StreamingConnectionWhereInput = {
   provider?: Prisma.EnumStreamingProviderFilter<"StreamingConnection"> | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFilter<"StreamingConnection"> | string
   displayName?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  accessToken?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  refreshToken?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  tokenExpiresAt?: Prisma.DateTimeNullableFilter<"StreamingConnection"> | Date | string | null
-  scopes?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StreamingConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StreamingConnection"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -239,10 +207,6 @@ export type StreamingConnectionOrderByWithRelationInput = {
   provider?: Prisma.SortOrder
   providerAccountId?: Prisma.SortOrder
   displayName?: Prisma.SortOrderInput | Prisma.SortOrder
-  accessToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  refreshToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  tokenExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  scopes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -258,10 +222,6 @@ export type StreamingConnectionWhereUniqueInput = Prisma.AtLeast<{
   provider?: Prisma.EnumStreamingProviderFilter<"StreamingConnection"> | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFilter<"StreamingConnection"> | string
   displayName?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  accessToken?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  refreshToken?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  tokenExpiresAt?: Prisma.DateTimeNullableFilter<"StreamingConnection"> | Date | string | null
-  scopes?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StreamingConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StreamingConnection"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -273,10 +233,6 @@ export type StreamingConnectionOrderByWithAggregationInput = {
   provider?: Prisma.SortOrder
   providerAccountId?: Prisma.SortOrder
   displayName?: Prisma.SortOrderInput | Prisma.SortOrder
-  accessToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  refreshToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  tokenExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  scopes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.StreamingConnectionCountOrderByAggregateInput
@@ -293,10 +249,6 @@ export type StreamingConnectionScalarWhereWithAggregatesInput = {
   provider?: Prisma.EnumStreamingProviderWithAggregatesFilter<"StreamingConnection"> | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringWithAggregatesFilter<"StreamingConnection"> | string
   displayName?: Prisma.StringNullableWithAggregatesFilter<"StreamingConnection"> | string | null
-  accessToken?: Prisma.StringNullableWithAggregatesFilter<"StreamingConnection"> | string | null
-  refreshToken?: Prisma.StringNullableWithAggregatesFilter<"StreamingConnection"> | string | null
-  tokenExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StreamingConnection"> | Date | string | null
-  scopes?: Prisma.StringNullableWithAggregatesFilter<"StreamingConnection"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StreamingConnection"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"StreamingConnection"> | Date | string
 }
@@ -306,10 +258,6 @@ export type StreamingConnectionCreateInput = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName?: string | null
-  accessToken?: string | null
-  refreshToken?: string | null
-  tokenExpiresAt?: Date | string | null
-  scopes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutStreamingConnectionsInput
@@ -321,10 +269,6 @@ export type StreamingConnectionUncheckedCreateInput = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName?: string | null
-  accessToken?: string | null
-  refreshToken?: string | null
-  tokenExpiresAt?: Date | string | null
-  scopes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -334,10 +278,6 @@ export type StreamingConnectionUpdateInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutStreamingConnectionsNestedInput
@@ -349,10 +289,6 @@ export type StreamingConnectionUncheckedUpdateInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -363,10 +299,6 @@ export type StreamingConnectionCreateManyInput = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName?: string | null
-  accessToken?: string | null
-  refreshToken?: string | null
-  tokenExpiresAt?: Date | string | null
-  scopes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -376,10 +308,6 @@ export type StreamingConnectionUpdateManyMutationInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -390,10 +318,6 @@ export type StreamingConnectionUncheckedUpdateManyInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -419,10 +343,6 @@ export type StreamingConnectionCountOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   providerAccountId?: Prisma.SortOrder
   displayName?: Prisma.SortOrder
-  accessToken?: Prisma.SortOrder
-  refreshToken?: Prisma.SortOrder
-  tokenExpiresAt?: Prisma.SortOrder
-  scopes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -433,10 +353,6 @@ export type StreamingConnectionMaxOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   providerAccountId?: Prisma.SortOrder
   displayName?: Prisma.SortOrder
-  accessToken?: Prisma.SortOrder
-  refreshToken?: Prisma.SortOrder
-  tokenExpiresAt?: Prisma.SortOrder
-  scopes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -447,10 +363,6 @@ export type StreamingConnectionMinOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   providerAccountId?: Prisma.SortOrder
   displayName?: Prisma.SortOrder
-  accessToken?: Prisma.SortOrder
-  refreshToken?: Prisma.SortOrder
-  tokenExpiresAt?: Prisma.SortOrder
-  scopes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -506,10 +418,6 @@ export type StreamingConnectionCreateWithoutUserInput = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName?: string | null
-  accessToken?: string | null
-  refreshToken?: string | null
-  tokenExpiresAt?: Date | string | null
-  scopes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -519,10 +427,6 @@ export type StreamingConnectionUncheckedCreateWithoutUserInput = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName?: string | null
-  accessToken?: string | null
-  refreshToken?: string | null
-  tokenExpiresAt?: Date | string | null
-  scopes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -562,10 +466,6 @@ export type StreamingConnectionScalarWhereInput = {
   provider?: Prisma.EnumStreamingProviderFilter<"StreamingConnection"> | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFilter<"StreamingConnection"> | string
   displayName?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  accessToken?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  refreshToken?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
-  tokenExpiresAt?: Prisma.DateTimeNullableFilter<"StreamingConnection"> | Date | string | null
-  scopes?: Prisma.StringNullableFilter<"StreamingConnection"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StreamingConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StreamingConnection"> | Date | string
 }
@@ -575,10 +475,6 @@ export type StreamingConnectionCreateManyUserInput = {
   provider: $Enums.StreamingProvider
   providerAccountId: string
   displayName?: string | null
-  accessToken?: string | null
-  refreshToken?: string | null
-  tokenExpiresAt?: Date | string | null
-  scopes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -588,10 +484,6 @@ export type StreamingConnectionUpdateWithoutUserInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -601,10 +493,6 @@ export type StreamingConnectionUncheckedUpdateWithoutUserInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -614,10 +502,6 @@ export type StreamingConnectionUncheckedUpdateManyWithoutUserInput = {
   provider?: Prisma.EnumStreamingProviderFieldUpdateOperationsInput | $Enums.StreamingProvider
   providerAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -630,10 +514,6 @@ export type StreamingConnectionSelect<ExtArgs extends runtime.Types.Extensions.I
   provider?: boolean
   providerAccountId?: boolean
   displayName?: boolean
-  accessToken?: boolean
-  refreshToken?: boolean
-  tokenExpiresAt?: boolean
-  scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -645,10 +525,6 @@ export type StreamingConnectionSelectCreateManyAndReturn<ExtArgs extends runtime
   provider?: boolean
   providerAccountId?: boolean
   displayName?: boolean
-  accessToken?: boolean
-  refreshToken?: boolean
-  tokenExpiresAt?: boolean
-  scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -660,10 +536,6 @@ export type StreamingConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime
   provider?: boolean
   providerAccountId?: boolean
   displayName?: boolean
-  accessToken?: boolean
-  refreshToken?: boolean
-  tokenExpiresAt?: boolean
-  scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -675,15 +547,11 @@ export type StreamingConnectionSelectScalar = {
   provider?: boolean
   providerAccountId?: boolean
   displayName?: boolean
-  accessToken?: boolean
-  refreshToken?: boolean
-  tokenExpiresAt?: boolean
-  scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StreamingConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "provider" | "providerAccountId" | "displayName" | "accessToken" | "refreshToken" | "tokenExpiresAt" | "scopes" | "createdAt" | "updatedAt", ExtArgs["result"]["streamingConnection"]>
+export type StreamingConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "provider" | "providerAccountId" | "displayName" | "createdAt" | "updatedAt", ExtArgs["result"]["streamingConnection"]>
 export type StreamingConnectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -705,10 +573,6 @@ export type $StreamingConnectionPayload<ExtArgs extends runtime.Types.Extensions
     provider: $Enums.StreamingProvider
     providerAccountId: string
     displayName: string | null
-    accessToken: string | null
-    refreshToken: string | null
-    tokenExpiresAt: Date | null
-    scopes: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["streamingConnection"]>
@@ -1140,10 +1004,6 @@ export interface StreamingConnectionFieldRefs {
   readonly provider: Prisma.FieldRef<"StreamingConnection", 'StreamingProvider'>
   readonly providerAccountId: Prisma.FieldRef<"StreamingConnection", 'String'>
   readonly displayName: Prisma.FieldRef<"StreamingConnection", 'String'>
-  readonly accessToken: Prisma.FieldRef<"StreamingConnection", 'String'>
-  readonly refreshToken: Prisma.FieldRef<"StreamingConnection", 'String'>
-  readonly tokenExpiresAt: Prisma.FieldRef<"StreamingConnection", 'DateTime'>
-  readonly scopes: Prisma.FieldRef<"StreamingConnection", 'String'>
   readonly createdAt: Prisma.FieldRef<"StreamingConnection", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"StreamingConnection", 'DateTime'>
 }

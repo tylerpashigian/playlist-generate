@@ -1340,10 +1340,6 @@ export const StreamingConnectionScalarFieldEnum = {
   provider: 'provider',
   providerAccountId: 'providerAccountId',
   displayName: 'displayName',
-  accessToken: 'accessToken',
-  refreshToken: 'refreshToken',
-  tokenExpiresAt: 'tokenExpiresAt',
-  scopes: 'scopes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
