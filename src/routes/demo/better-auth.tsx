@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useTRPC } from '#/integrations/trpc/react'
-import { authClient } from '#/lib/auth-client'
+import { useTRPC } from '@/integrations/trpc/react'
+import { authClient } from '@/lib/auth-client'
 
 export const Route = createFileRoute('/demo/better-auth')({
   component: BetterAuthDemo,

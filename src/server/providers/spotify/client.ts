@@ -1,4 +1,4 @@
-import { ExternalProviderError } from '#/server/errors'
+import { ExternalProviderError } from '@/server/errors'
 import {
   spotifyAddItemsResponseSchema,
   spotifyCreatePlaylistResponseSchema,

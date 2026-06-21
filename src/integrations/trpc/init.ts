@@ -1,5 +1,5 @@
 import { TRPCError, initTRPC } from '@trpc/server'
-import { auth } from '#/lib/auth'
+import { auth } from '@/lib/auth'
 import superjson from 'superjson'
 
 export async function createTRPCContext({

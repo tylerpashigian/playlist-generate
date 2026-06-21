@@ -1,15 +1,15 @@
-import { prisma } from '#/db'
-import { auth } from '#/lib/auth'
+import { prisma } from '@/db'
+import { auth } from '@/lib/auth'
 import {
   streamingConnectionDtoSchema,
   streamingProviderSchema,
-} from '#/server/contracts/streaming'
-import { SpotifyNotConnectedError } from '#/server/errors'
-import { resolveSpotifyConnectionMetadata } from '#/server/providers/spotify/connection'
+} from '@/server/contracts/streaming'
+import { SpotifyNotConnectedError } from '@/server/errors'
+import { resolveSpotifyConnectionMetadata } from '@/server/providers/spotify/connection'
 import type {
   StreamingConnectionDto,
   StreamingProviderDto,
-} from '#/server/contracts/streaming'
+} from '@/server/contracts/streaming'
 
 type BetterAuthProviderId = 'spotify'
 

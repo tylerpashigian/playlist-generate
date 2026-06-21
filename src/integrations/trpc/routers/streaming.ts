@@ -1,11 +1,11 @@
 import {
   disconnectStreamingProviderInputSchema,
   streamingConnectionDtoSchema,
-} from '#/server/contracts/streaming'
+} from '@/server/contracts/streaming'
 import {
   disconnectStreamingProvider,
   listStreamingConnections,
-} from '#/server/services/streaming-connections'
+} from '@/server/services/streaming-connections'
 import { toTRPCError } from '../errors'
 import { protectedProcedure } from '../init'
 

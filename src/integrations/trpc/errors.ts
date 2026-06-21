@@ -2,7 +2,7 @@ import {
   ExternalProviderError,
   NoMatchedTracksError,
   SpotifyNotConnectedError,
-} from '#/server/errors'
+} from '@/server/errors'
 
 import { TRPCError } from '@trpc/server'
 

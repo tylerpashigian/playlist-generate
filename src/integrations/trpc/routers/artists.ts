@@ -1,8 +1,8 @@
 import {
   artistDtoSchema,
   artistSearchInputSchema,
-} from '#/server/contracts/artists'
-import { searchSetlistFmArtists } from '#/server/providers/setlistfm/client'
+} from '@/server/contracts/artists'
+import { searchSetlistFmArtists } from '@/server/providers/setlistfm/client'
 import { toTRPCError } from '../errors'
 import { publicProcedure } from '../init'
 

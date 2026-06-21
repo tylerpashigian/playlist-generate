@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { scoreSetlistsForArtist } from './scoring'
 
-import type { ArtistDto } from '#/server/contracts/artists'
-import type { NormalizedSetlist } from '#/server/models/setlists'
+import type { ArtistDto } from '@/server/contracts/artists'
+import type { NormalizedSetlist } from '@/server/models/setlists'
 
 const artist: ArtistDto = {
   mbid: 'artist-mbid',

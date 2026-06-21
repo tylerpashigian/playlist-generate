@@ -1,12 +1,12 @@
-import { generatedPlaylistDtoSchema } from '#/server/contracts/playlists'
+import { generatedPlaylistDtoSchema } from '@/server/contracts/playlists'
 import type {
   ArtistDto,
-} from '#/server/contracts/artists'
+} from '@/server/contracts/artists'
 import type {
   GeneratedPlaylistDto,
   PlaylistItemDto,
-} from '#/server/contracts/playlists'
-import type { NormalizedSetlist } from '#/server/models/setlists'
+} from '@/server/contracts/playlists'
+import type { NormalizedSetlist } from '@/server/models/setlists'
 
 const SCORING_VERSION = 'recent-weighted-v1'
 const PLAYLIST_LIMIT = 25

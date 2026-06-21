@@ -5,14 +5,14 @@ import {
   savePlaylistInputSchema,
   savedPlaylistDtoSchema,
   savedPlaylistSummaryDtoSchema,
-} from '#/server/contracts/playlists'
-import { fetchRecentSetlistsForArtist } from '#/server/providers/setlistfm/client'
+} from '@/server/contracts/playlists'
+import { fetchRecentSetlistsForArtist } from '@/server/providers/setlistfm/client'
 import {
   getUserPlaylist,
   listUserPlaylists,
   saveGeneratedPlaylist,
-} from '#/server/services/playlists'
-import { scoreSetlistsForArtist } from '#/server/services/scoring'
+} from '@/server/services/playlists'
+import { scoreSetlistsForArtist } from '@/server/services/scoring'
 import { toTRPCError } from '../errors'
 import { protectedProcedure, publicProcedure } from '../init'
 

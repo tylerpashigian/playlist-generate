@@ -1,13 +1,13 @@
-import { prisma } from '#/db'
+import { prisma } from '@/db'
 import {
   generatedPlaylistDtoSchema,
   savedPlaylistDtoSchema,
   savedPlaylistSummaryDtoSchema,
-} from '#/server/contracts/playlists'
+} from '@/server/contracts/playlists'
 import type {
   GeneratedPlaylistDto,
   PlaylistItemDto,
-} from '#/server/contracts/playlists'
+} from '@/server/contracts/playlists'
 
 type PlaylistWithRelations = Awaited<ReturnType<typeof findUserPlaylistById>>
 

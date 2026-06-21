@@ -1,12 +1,12 @@
-import { env } from '#/env'
-import { artistDtoSchema } from '#/server/contracts/artists'
-import { ExternalProviderError } from '#/server/errors'
+import { env } from '@/env'
+import { artistDtoSchema } from '@/server/contracts/artists'
+import { ExternalProviderError } from '@/server/errors'
 import {
   artistSetlistsResponseSchema,
   searchArtistsResponseSchema,
 } from './schemas'
-import type { ArtistDto } from '#/server/contracts/artists'
-import type { NormalizedSetlist } from '#/server/models/setlists'
+import type { ArtistDto } from '@/server/contracts/artists'
+import type { NormalizedSetlist } from '@/server/models/setlists'
 
 const SETLISTFM_BASE_URL = 'https://api.setlist.fm/rest/1.0'
 
