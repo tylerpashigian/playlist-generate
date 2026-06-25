@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useArtist } from '@/hooks/use-artist'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useGeneratedPlaylist } from '@/hooks/use-generated-playlist'
@@ -61,15 +63,13 @@ function AuthPanel({ auth }: { auth: ReturnType<typeof useAuthSession> }) {
 
   if (auth.user) {
     return (
-      <aside className="island-shell h-fit rounded-2xl p-5">
+      <aside className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm h-fit p-5">
         <div className="space-y-1">
-          <p className="island-kicker">Account</p>
-          <h1 className="text-xl font-semibold text-[var(--sea-ink)]">
+          <p className="text-sm font-bold text-muted-foreground">Account</p>
+          <h1 className="text-xl font-semibold text-foreground">
             {auth.user.name}
           </h1>
-          <p className="text-sm text-[var(--sea-ink-soft)]">
-            {auth.user.email}
-          </p>
+          <p className="text-sm text-muted-foreground">{auth.user.email}</p>
         </div>
 
         <ConnectionPanel
@@ -82,24 +82,25 @@ function AuthPanel({ auth }: { auth: ReturnType<typeof useAuthSession> }) {
           onDisconnect={() => streamingConnections.disconnect('SPOTIFY')}
         />
 
-        <button
+        <Button
           type="button"
-          className="mt-5 h-9 w-full border border-[rgba(23,58,64,0.2)] bg-white/60 px-4 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-white disabled:opacity-60"
+          variant="outline"
+          className="mt-5 w-full"
           onClick={() => {
             void auth.signOut()
           }}
         >
           Sign out
-        </button>
+        </Button>
       </aside>
     )
   }
 
   return (
-    <aside className="island-shell h-fit rounded-2xl p-5">
+    <aside className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm h-fit p-5">
       <div className="space-y-1">
-        <p className="island-kicker">Account</p>
-        <h1 className="text-xl font-semibold text-[var(--sea-ink)]">
+        <p className="text-sm font-bold text-muted-foreground">Account</p>
+        <h1 className="text-xl font-semibold text-foreground">
           {isSignUp ? 'Create account' : 'Sign in'}
         </h1>
       </div>
@@ -132,28 +133,25 @@ function AuthPanel({ auth }: { auth: ReturnType<typeof useAuthSession> }) {
           <p className="text-sm text-red-600">{auth.authError}</p>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={auth.isAuthenticating}
-          className="h-9 bg-[var(--sea-ink)] px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-        >
+        <Button type="submit" disabled={auth.isAuthenticating}>
           {auth.isAuthenticating
             ? 'Please wait'
             : isSignUp
               ? 'Create account'
               : 'Sign in'}
-        </button>
+        </Button>
       </form>
 
-      <button
+      <Button
         type="button"
-        className="mt-4 text-sm font-medium text-[var(--lagoon-deep)]"
+        variant="link"
+        className="mt-4 h-auto p-0"
         onClick={() => {
           setIsSignUp((value) => !value)
         }}
       >
         {isSignUp ? 'Use an existing account' : 'Create a new account'}
-      </button>
+      </Button>
     </aside>
   )
 }
@@ -203,12 +201,14 @@ function PlaylistWorkflow() {
 
   return (
     <section className="grid gap-5">
-      <div className="island-shell rounded-2xl p-5">
-        <p className="island-kicker">Playlist builder</p>
-        <h2 className="mt-1 text-2xl font-semibold text-[var(--sea-ink)]">
+      <div className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-5">
+        <p className="text-sm font-bold text-muted-foreground">
+          Playlist builder
+        </p>
+        <h2 className="mt-1 text-2xl font-semibold text-foreground">
           Spotify validation flow
         </h2>
-        <p className="mt-2 max-w-2xl text-sm text-[var(--sea-ink-soft)]">
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           This temporary route validates the hook and service boundaries before
           the final product UI is built.
         </p>
@@ -280,15 +280,15 @@ function Field({
   const id = label.toLowerCase()
 
   return (
-    <label className="grid gap-2 text-sm font-medium text-[var(--sea-ink)]">
+    <label className="grid gap-2 text-sm font-medium text-foreground">
       {label}
-      <input
+      <Input
         id={id}
         type={type}
         value={value}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 border border-[rgba(23,58,64,0.2)] bg-white/70 px-3 text-sm font-normal outline-none focus:border-[var(--lagoon-deep)]"
+        className="bg-background font-normal"
         required
       />
     </label>
@@ -297,7 +297,7 @@ function Field({
 
 function StatusPanel({ message }: { message: string }) {
   return (
-    <div className="island-shell mx-auto max-w-md rounded-2xl p-5 text-sm text-[var(--sea-ink-soft)]">
+    <div className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm mx-auto max-w-md rounded-2xl p-5 text-sm text-muted-foreground">
       {message}
     </div>
   )
@@ -305,12 +305,12 @@ function StatusPanel({ message }: { message: string }) {
 
 function SignedOutPanel() {
   return (
-    <section className="island-shell rounded-2xl p-5">
-      <p className="island-kicker">Spotify</p>
-      <h2 className="mt-1 text-2xl font-semibold text-[var(--sea-ink)]">
+    <section className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-5">
+      <p className="text-sm font-bold text-muted-foreground">Spotify</p>
+      <h2 className="mt-1 text-2xl font-semibold text-foreground">
         Sign in to test playlist actions
       </h2>
-      <p className="mt-2 text-sm text-[var(--sea-ink-soft)]">
+      <p className="mt-2 text-sm text-muted-foreground">
         Use the account panel to sign in or create an app account, then connect
         Spotify and validate the playlist workflow.
       </p>
@@ -338,13 +338,11 @@ function ConnectionPanel({
   const connected = Boolean(connection?.connected)
 
   return (
-    <div className="mt-5 border border-[rgba(23,58,64,0.16)] bg-white/50 p-4">
+    <div className="mt-5 border border-border bg-background p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--sea-ink)]">
-            Spotify
-          </h2>
-          <p className="mt-1 text-xs text-[var(--sea-ink-soft)]">
+          <h2 className="text-sm font-semibold text-foreground">Spotify</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             {isLoading
               ? 'Checking connection'
               : connected
@@ -354,7 +352,7 @@ function ConnectionPanel({
                 : 'Not connected'}
           </p>
         </div>
-        <span className="text-xs font-medium text-[var(--sea-ink-soft)]">
+        <span className="text-xs font-medium text-muted-foreground">
           {connected ? 'Connected' : 'Disconnected'}
         </span>
       </div>
@@ -363,10 +361,11 @@ function ConnectionPanel({
         <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
       ) : null}
 
-      <button
+      <Button
         type="button"
         disabled={isLoading || isConnecting || isDisconnecting}
-        className="mt-4 h-9 w-full border border-[rgba(23,58,64,0.2)] bg-white/70 px-4 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-white disabled:opacity-60"
+        variant={connected ? 'outline' : 'default'}
+        className="mt-4 w-full"
         onClick={() => {
           if (connected) {
             void onDisconnect()
@@ -382,7 +381,7 @@ function ConnectionPanel({
           : isConnecting
             ? 'Connecting'
             : 'Connect Spotify'}
-      </button>
+      </Button>
     </div>
   )
 }
@@ -409,24 +408,19 @@ function ArtistSearchPanel({
   onGenerate: (artist: Artist) => Promise<void>
 }) {
   return (
-    <section className="island-shell rounded-2xl p-5">
-      <h2 className="text-lg font-semibold text-[var(--sea-ink)]">
-        Search artists
-      </h2>
+    <section className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-5">
+      <h2 className="text-lg font-semibold text-foreground">Search artists</h2>
       <form className="mt-4 flex gap-2" onSubmit={onSearch}>
-        <input
+        <Input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Artist name"
-          className="h-10 min-w-0 flex-1 border border-[rgba(23,58,64,0.2)] bg-white/70 px-3 text-sm outline-none focus:border-[var(--lagoon-deep)]"
+          aria-label="Artist name"
+          className="h-10 flex-1 bg-background"
         />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="h-10 px-4 text-sm font-semibold text-white bg-[var(--sea-ink)] disabled:opacity-60"
-        >
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? 'Searching' : 'Search'}
-        </button>
+        </Button>
       </form>
 
       {errorMessage ? (
@@ -435,29 +429,30 @@ function ArtistSearchPanel({
 
       <div className="mt-4 grid gap-2">
         {artists.map((artist) => (
-          <button
+          <Button
             key={artist.mbid}
             type="button"
+            variant="outline"
             disabled={isGenerating}
-            className="border border-[rgba(23,58,64,0.14)] bg-white/50 p-3 text-left transition hover:bg-white disabled:opacity-60"
+            className="h-auto justify-start p-3 text-left"
             onClick={() => {
               void onGenerate(artist)
             }}
           >
-            <span className="block text-sm font-semibold text-[var(--sea-ink)]">
-              {artist.name}
+            <span className="grid gap-1">
+              <span className="block text-sm font-semibold">{artist.name}</span>
+              <span className="block text-xs text-muted-foreground">
+                {artist.disambiguation ||
+                  artist.sortName ||
+                  'Generate a recent-setlist playlist'}
+              </span>
             </span>
-            <span className="block text-xs text-[var(--sea-ink-soft)]">
-              {artist.disambiguation ||
-                artist.sortName ||
-                'Generate a recent-setlist playlist'}
-            </span>
-          </button>
+          </Button>
         ))}
       </div>
 
       {selectedArtist ? (
-        <p className="mt-4 text-xs text-[var(--sea-ink-soft)]">
+        <p className="mt-4 text-xs text-muted-foreground">
           Selected: {selectedArtist.name}
         </p>
       ) : null}
@@ -481,39 +476,38 @@ function GeneratedPlaylistPanel({
   onRegenerate: () => Promise<GeneratedPlaylist | null>
 }) {
   return (
-    <section className="island-shell rounded-2xl p-5">
+    <section className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--sea-ink)]">
+          <h2 className="text-lg font-semibold text-foreground">
             Generated playlist
           </h2>
-          <p className="text-sm text-[var(--sea-ink-soft)]">
+          <p className="text-sm text-muted-foreground">
             {playlist
               ? `${playlist.tracks.length} tracks from ${playlist.recentSetlistCount} setlists`
               : 'Generate a playlist from an artist search result.'}
           </p>
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
             disabled={!playlist || isGenerating}
-            className="h-9 border border-[rgba(23,58,64,0.2)] bg-white/70 px-3 text-sm font-semibold disabled:opacity-60"
             onClick={() => {
               void onRegenerate()
             }}
           >
             Regenerate
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             disabled={!playlist || isSaving}
-            className="h-9 bg-[var(--sea-ink)] px-3 text-sm font-semibold text-white disabled:opacity-60"
             onClick={() => {
               void onSave()
             }}
           >
             {isSaving ? 'Saving' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -522,7 +516,7 @@ function GeneratedPlaylistPanel({
       ) : null}
 
       {isGenerating ? (
-        <p className="mt-4 text-sm text-[var(--sea-ink-soft)]">
+        <p className="mt-4 text-sm text-muted-foreground">
           Generating playlist
         </p>
       ) : null}
@@ -538,13 +532,13 @@ function TrackList({ playlist }: { playlist: GeneratedPlaylist }) {
       {playlist.tracks.map((track) => (
         <li
           key={`${track.position}-${track.normalizedTitle}`}
-          className="grid gap-1 border border-[rgba(23,58,64,0.12)] bg-white/50 p-3 sm:grid-cols-[1fr_auto]"
+          className="grid gap-1 border border-border bg-background p-3 sm:grid-cols-[1fr_auto]"
         >
           <div>
-            <p className="text-sm font-semibold text-[var(--sea-ink)]">
+            <p className="text-sm font-semibold text-foreground">
               {track.position}. {track.title}
             </p>
-            <p className="text-xs text-[var(--sea-ink-soft)]">
+            <p className="text-xs text-muted-foreground">
               Played {track.appearanceCount} of {track.totalSetlistsConsidered}{' '}
               setlists
               {track.isCover && track.originalArtistName
@@ -552,7 +546,7 @@ function TrackList({ playlist }: { playlist: GeneratedPlaylist }) {
                 : ''}
             </p>
           </div>
-          <p className="text-sm font-semibold text-[var(--lagoon-deep)]">
+          <p className="text-sm font-semibold text-primary">
             {Math.round(track.confidenceScore)}%
           </p>
         </li>
@@ -577,38 +571,39 @@ function SavedPlaylistsPanel({
   onSelect: (playlistId: string | null) => void
 }) {
   return (
-    <section className="island-shell rounded-2xl p-5">
-      <h2 className="text-lg font-semibold text-[var(--sea-ink)]">
-        Saved playlists
-      </h2>
+    <section className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-5">
+      <h2 className="text-lg font-semibold text-foreground">Saved playlists</h2>
       {errorMessage ? (
         <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
       ) : null}
       {isLoading ? (
-        <p className="mt-3 text-sm text-[var(--sea-ink-soft)]">
-          Loading playlists
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">Loading playlists</p>
       ) : null}
       <div className="mt-4 grid gap-2">
         {playlists.map((playlist) => (
-          <button
+          <Button
             key={playlist.id}
             type="button"
-            className="border border-[rgba(23,58,64,0.14)] bg-white/50 p-3 text-left transition hover:bg-white data-[selected=true]:border-[var(--lagoon-deep)]"
+            variant={
+              playlist.id === selectedPlaylistId ? 'secondary' : 'outline'
+            }
+            className="h-auto justify-start p-3 text-left"
             data-selected={playlist.id === selectedPlaylistId}
             onClick={() => onSelect(playlist.id)}
           >
-            <span className="block text-sm font-semibold text-[var(--sea-ink)]">
-              {playlist.name}
+            <span className="grid gap-1">
+              <span className="block text-sm font-semibold">
+                {playlist.name}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {playlist.trackCount} tracks - {playlist.status}
+              </span>
             </span>
-            <span className="block text-xs text-[var(--sea-ink-soft)]">
-              {playlist.trackCount} tracks - {playlist.status}
-            </span>
-          </button>
+          </Button>
         ))}
       </div>
       {selectedPlaylist ? (
-        <p className="mt-4 text-xs text-[var(--sea-ink-soft)]">
+        <p className="mt-4 text-xs text-muted-foreground">
           Selected for Spotify: {selectedPlaylist.name}
         </p>
       ) : null}
@@ -636,11 +631,9 @@ function SpotifyActionPanel({
   onExport: () => Promise<void>
 }) {
   return (
-    <section className="island-shell rounded-2xl p-5">
-      <h2 className="text-lg font-semibold text-[var(--sea-ink)]">
-        Spotify actions
-      </h2>
-      <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+    <section className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-5">
+      <h2 className="text-lg font-semibold text-foreground">Spotify actions</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         Save and select a playlist before matching or exporting.
       </p>
 
@@ -649,37 +642,36 @@ function SpotifyActionPanel({
       ) : null}
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <button
+        <Button
           type="button"
           disabled={!selectedPlaylist || isMatching}
-          className="h-9 border border-[rgba(23,58,64,0.2)] bg-white/70 px-3 text-sm font-semibold disabled:opacity-60"
+          variant="outline"
           onClick={() => {
             void onMatch()
           }}
         >
           {isMatching ? 'Matching' : 'Match tracks'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           disabled={!selectedPlaylist || isExporting}
-          className="h-9 bg-[var(--sea-ink)] px-3 text-sm font-semibold text-white disabled:opacity-60"
           onClick={() => {
             void onExport()
           }}
         >
           {isExporting ? 'Exporting' : 'Export'}
-        </button>
+        </Button>
       </div>
 
       {matches.length ? (
-        <p className="mt-4 text-sm text-[var(--sea-ink-soft)]">
+        <p className="mt-4 text-sm text-muted-foreground">
           Matched {matches.filter((match) => match.status === 'MATCHED').length}{' '}
           of {matches.length} tracks.
         </p>
       ) : null}
 
       {exportResult ? (
-        <p className="mt-4 text-sm text-[var(--sea-ink-soft)]">
+        <p className="mt-4 text-sm text-muted-foreground">
           Exported {exportResult.exportedTrackCount} tracks
           {exportResult.externalUrl ? (
             <>
@@ -689,7 +681,7 @@ function SpotifyActionPanel({
                 href={exportResult.externalUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="font-semibold text-[var(--lagoon-deep)]"
+                className="font-semibold text-primary"
               >
                 Spotify
               </a>

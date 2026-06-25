@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useTRPC } from '@/integrations/trpc/react'
 import { authClient } from '@/lib/auth-client'
 
@@ -81,14 +83,16 @@ function BetterAuthDemo() {
             }}
           />
 
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
             onClick={() => {
               void authClient.signOut()
             }}
-            className="w-full h-9 px-4 text-sm font-medium border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             Sign out
-          </button>
+          </Button>
 
           <p className="text-xs text-center text-neutral-400 dark:text-neutral-500">
             Built with{' '}
@@ -159,12 +163,11 @@ function BetterAuthDemo() {
               >
                 Name
               </label>
-              <input
+              <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="flex h-9 w-full border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 text-sm focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               />
             </div>
@@ -174,12 +177,11 @@ function BetterAuthDemo() {
             <label htmlFor="email" className="text-sm font-medium leading-none">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex h-9 w-full border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 text-sm focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
               required
             />
           </div>
@@ -191,12 +193,11 @@ function BetterAuthDemo() {
             >
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="flex h-9 w-full border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 text-sm focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
               required
               minLength={8}
             />
@@ -208,11 +209,7 @@ function BetterAuthDemo() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-9 px-4 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" disabled={loading} className="w-full">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-white dark:border-neutral-600 dark:border-t-neutral-900" />
@@ -223,22 +220,23 @@ function BetterAuthDemo() {
             ) : (
               'Sign in'
             )}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-4 text-center">
-          <button
+          <Button
             type="button"
+            variant="link"
+            className="h-auto p-0 text-muted-foreground hover:text-foreground"
             onClick={() => {
               setIsSignUp(!isSignUp)
               setError('')
             }}
-            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             {isSignUp
               ? 'Already have an account? Sign in'
               : "Don't have an account? Sign up"}
-          </button>
+          </Button>
         </div>
 
         <p className="mt-6 text-xs text-center text-neutral-400 dark:text-neutral-500">
@@ -329,25 +327,26 @@ function StreamingConnectionsPanel({
       ) : null}
 
       {connected ? (
-        <button
+        <Button
           type="button"
+          variant="outline"
+          className="w-full"
           disabled={isDisconnecting}
           onClick={onDisconnect}
-          className="w-full h-9 px-4 text-sm font-medium border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDisconnecting ? 'Disconnecting' : 'Disconnect Spotify'}
-        </button>
+        </Button>
       ) : (
-        <button
+        <Button
           type="button"
+          className="w-full"
           disabled={isConnecting || isLoading}
           onClick={() => {
             void connectSpotify()
           }}
-          className="w-full h-9 px-4 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isConnecting ? 'Connecting' : 'Connect Spotify'}
-        </button>
+        </Button>
       )}
     </div>
   )

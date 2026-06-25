@@ -1,5 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { prisma } from '@/db'
 
 const getTodos = createServerFn({
@@ -113,27 +115,26 @@ function DemoPrisma() {
         </ul>
 
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
+          <Input
             type="text"
             name="title"
             placeholder="Add a new todo..."
-            className="flex-1 px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all text-white placeholder-indigo-300/50"
+            className="h-auto flex-1 rounded-lg px-4 py-3 text-white placeholder-indigo-300/50"
             style={{
               background: 'rgba(93, 103, 227, 0.1)',
               borderColor: 'rgba(93, 103, 227, 0.3)',
-              focusRing: 'rgba(93, 103, 227, 0.5)',
             }}
           />
-          <button
+          <Button
             type="submit"
-            className="px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap"
+            className="h-auto whitespace-nowrap rounded-lg px-6 py-3 font-semibold shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl"
             style={{
               background: 'linear-gradient(135deg, #5d67e3 0%, #8b5cf6 100%)',
               color: 'white',
             }}
           >
             Add Todo
-          </button>
+          </Button>
         </form>
 
         <div
