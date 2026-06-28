@@ -1,5 +1,10 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { authClient } from '@/lib/auth-client'
+import {
+  authSessionQueryKey,
+  authSessionQueryOptions,
+} from '@/lib/auth-session'
 import { getErrorMessage } from '@/lib/errors'
 
 interface EmailAuthInput {
@@ -12,7 +17,8 @@ interface SignUpInput extends EmailAuthInput {
 }
 
 export function useAuthSession() {
-  const session = authClient.useSession()
+  const queryClient = useQueryClient()
+  const sessionQuery = useQuery(authSessionQueryOptions())
   const [authError, setAuthError] = useState<string | null>(null)
   const [isAuthenticating, setIsAuthenticating] = useState(false)
 
@@ -27,6 +33,9 @@ export function useAuthSession() {
         setAuthError(result.error.message ?? 'Sign in failed')
         return false
       }
+
+      await queryClient.invalidateQueries({ queryKey: authSessionQueryKey })
+      await queryClient.fetchQuery(authSessionQueryOptions())
 
       return true
     } catch (error) {
@@ -49,6 +58,9 @@ export function useAuthSession() {
         return false
       }
 
+      await queryClient.invalidateQueries({ queryKey: authSessionQueryKey })
+      await queryClient.fetchQuery(authSessionQueryOptions())
+
       return true
     } catch (error) {
       setAuthError(getErrorMessage(error) ?? 'Sign up failed')
@@ -61,14 +73,16 @@ export function useAuthSession() {
   async function signOut() {
     setAuthError(null)
     await authClient.signOut()
+    queryClient.setQueryData(authSessionQueryKey, null)
+    await queryClient.invalidateQueries({ queryKey: authSessionQueryKey })
   }
 
   return {
-    session: session.data,
-    user: session.data?.user ?? null,
-    isAuthenticated: Boolean(session.data?.user),
-    isSessionLoading: session.isPending,
-    sessionError: getErrorMessage(session.error),
+    session: sessionQuery.data ?? null,
+    user: sessionQuery.data?.user ?? null,
+    isAuthenticated: Boolean(sessionQuery.data?.user),
+    isSessionLoading: sessionQuery.isPending,
+    sessionError: getErrorMessage(sessionQuery.error),
     authError,
     isAuthenticating,
     signIn,

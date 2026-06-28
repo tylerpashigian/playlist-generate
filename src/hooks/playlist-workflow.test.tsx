@@ -231,7 +231,7 @@ describe('playlist workflow hooks', () => {
     expect(authMocks.linkSocial).toHaveBeenCalledWith({
       provider: 'spotify',
       scopes: ['playlist-modify-private'],
-      callbackURL: '/spotify',
+      callbackURL: '/profile',
     })
     await waitFor(() => {
       expect(serviceMocks.listStreamingConnections).toHaveBeenCalled()

@@ -19,7 +19,7 @@ function getSpotifyProvider() {
 
 export function useStreamingConnections({
   enabled = true,
-  spotifyCallbackURL = '/spotify',
+  spotifyCallbackURL = '/profile',
 }: {
   enabled?: boolean
   spotifyCallbackURL?: string
