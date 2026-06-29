@@ -1,9 +1,25 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
-const runtimeEnv = {
+const baseRuntimeEnv = {
   ...import.meta.env,
   ...(typeof process === 'undefined' ? {} : process.env),
+}
+
+const withHttps = (url: string) =>
+  /^https?:\/\//.test(url) ? url : `https://${url}`
+
+const vercelUrl =
+  typeof baseRuntimeEnv.VERCEL_URL === 'string' &&
+  baseRuntimeEnv.VERCEL_URL.length > 0
+    ? withHttps(baseRuntimeEnv.VERCEL_URL)
+    : undefined
+
+const betterAuthUrl = baseRuntimeEnv.BETTER_AUTH_URL || vercelUrl
+
+const runtimeEnv = {
+  ...baseRuntimeEnv,
+  BETTER_AUTH_URL: betterAuthUrl,
 }
 
 export const env = createEnv({
@@ -11,7 +27,6 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string().min(1),
     BETTER_AUTH_URL: z.url(),
     DATABASE_URL: z.string().min(1),
-    SERVER_URL: z.url(),
     SETLISTFM_API_KEY: z.string().min(1),
     SPOTIFY_CLIENT_ID: z.string().min(1),
     SPOTIFY_CLIENT_SECRET: z.string().min(1),
@@ -23,9 +38,7 @@ export const env = createEnv({
    */
   clientPrefix: 'VITE_',
 
-  client: {
-    VITE_APP_TITLE: z.string().min(1).optional(),
-  },
+  client: {},
 
   /**
    * What object holds the environment variables at runtime. This is usually

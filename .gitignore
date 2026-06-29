@@ -5,6 +5,7 @@ dist-ssr
 storybook-static
 *.local
 .env
+.env.dev
 .nitro
 .tanstack
 .wrangler
