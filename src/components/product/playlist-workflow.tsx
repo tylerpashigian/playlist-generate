@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useAuthSession } from '@/hooks/use-auth-session'
 import { useArtist } from '@/hooks/use-artist'
 import { useGeneratedPlaylist } from '@/hooks/use-generated-playlist'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
@@ -15,9 +16,10 @@ import type {
 } from '@/models/playlists/models'
 
 export function PlaylistWorkflow() {
+  const auth = useAuthSession()
   const artistSearch = useArtist()
   const generatedPlaylist = useGeneratedPlaylist()
-  const savedPlaylists = useSavedPlaylists()
+  const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
   const spotify = useSpotify()
 
   async function handleArtistSearch(event: React.FormEvent<HTMLFormElement>) {
@@ -31,7 +33,7 @@ export function PlaylistWorkflow() {
   }
 
   async function handleSave() {
-    if (!generatedPlaylist.playlist) {
+    if (!auth.isAuthenticated || !generatedPlaylist.playlist) {
       return
     }
 
@@ -39,7 +41,7 @@ export function PlaylistWorkflow() {
   }
 
   async function handleMatch() {
-    if (!savedPlaylists.selectedPlaylist) {
+    if (!auth.isAuthenticated || !savedPlaylists.selectedPlaylist) {
       return
     }
 
@@ -47,7 +49,7 @@ export function PlaylistWorkflow() {
   }
 
   async function handleExport() {
-    if (!savedPlaylists.selectedPlaylist) {
+    if (!auth.isAuthenticated || !savedPlaylists.selectedPlaylist) {
       return
     }
 
@@ -88,6 +90,7 @@ export function PlaylistWorkflow() {
 
           <GeneratedPlaylistPanel
             playlist={generatedPlaylist.playlist}
+            isAuthenticated={auth.isAuthenticated}
             isGenerating={generatedPlaylist.isGenerating}
             isSaving={savedPlaylists.isSaving}
             errorMessage={generatedPlaylist.errorMessage}
@@ -97,25 +100,40 @@ export function PlaylistWorkflow() {
         </div>
 
         <div className="grid gap-5">
-          <SavedPlaylistsPanel
-            playlists={savedPlaylists.playlists}
-            selectedPlaylist={savedPlaylists.selectedPlaylist}
-            selectedPlaylistId={savedPlaylists.selectedPlaylistId}
-            isLoading={savedPlaylists.isLoadingPlaylists}
-            errorMessage={savedPlaylists.errorMessage}
-            onSelect={savedPlaylists.selectPlaylist}
-          />
+          {auth.isAuthenticated ? (
+            <>
+              <SavedPlaylistsPanel
+                playlists={savedPlaylists.playlists}
+                selectedPlaylist={savedPlaylists.selectedPlaylist}
+                selectedPlaylistId={savedPlaylists.selectedPlaylistId}
+                isLoading={savedPlaylists.isLoadingPlaylists}
+                errorMessage={savedPlaylists.errorMessage}
+                onSelect={savedPlaylists.selectPlaylist}
+              />
 
-          <SpotifyActionsPanel
-            selectedPlaylist={savedPlaylists.selectedPlaylist}
-            matches={spotify.matches}
-            exportResult={spotify.exportResult}
-            isMatching={spotify.isMatching}
-            isExporting={spotify.isExporting}
-            errorMessage={spotify.errorMessage}
-            onMatch={handleMatch}
-            onExport={handleExport}
-          />
+              <SpotifyActionsPanel
+                selectedPlaylist={savedPlaylists.selectedPlaylist}
+                matches={spotify.matches}
+                exportResult={spotify.exportResult}
+                isMatching={spotify.isMatching}
+                isExporting={spotify.isExporting}
+                errorMessage={spotify.errorMessage}
+                onMatch={handleMatch}
+                onExport={handleExport}
+              />
+            </>
+          ) : (
+            <>
+              <AuthGatePanel
+                title="Saved playlists"
+                description="Sign in to save playlists and return to them later."
+              />
+              <AuthGatePanel
+                title="Spotify export"
+                description="Sign in to match tracks and export playlists to Spotify."
+              />
+            </>
+          )}
         </div>
       </div>
     </section>
@@ -198,6 +216,7 @@ function ArtistSearchPanel({
 
 function GeneratedPlaylistPanel({
   playlist,
+  isAuthenticated,
   isGenerating,
   isSaving,
   errorMessage,
@@ -205,6 +224,7 @@ function GeneratedPlaylistPanel({
   onRegenerate,
 }: {
   playlist: GeneratedPlaylist | null
+  isAuthenticated: boolean
   isGenerating: boolean
   isSaving: boolean
   errorMessage: string | null
@@ -235,15 +255,31 @@ function GeneratedPlaylistPanel({
           >
             Regenerate
           </Button>
-          <Button
-            type="button"
-            disabled={!playlist || isSaving}
-            onClick={() => {
-              void onSave()
-            }}
-          >
-            {isSaving ? 'Saving' : 'Save'}
-          </Button>
+          {isAuthenticated ? (
+            <Button
+              type="button"
+              disabled={!playlist || isSaving}
+              onClick={() => {
+                void onSave()
+              }}
+            >
+              {isSaving ? 'Saving' : 'Save'}
+            </Button>
+          ) : (
+            <>
+              {playlist ? (
+                <Button type="button" asChild>
+                  <Link to="/auth" search={{ redirect: '/app' }}>
+                    Sign in to save
+                  </Link>
+                </Button>
+              ) : (
+                <Button type="button" disabled>
+                  Sign in to save
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -258,6 +294,26 @@ function GeneratedPlaylistPanel({
       ) : null}
 
       {playlist ? <PlaylistTrackList playlist={playlist} /> : null}
+    </section>
+  )
+}
+
+function AuthGatePanel({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      <Button type="button" className="mt-4" asChild>
+        <Link to="/auth" search={{ redirect: '/app' }}>
+          Sign in
+        </Link>
+      </Button>
     </section>
   )
 }

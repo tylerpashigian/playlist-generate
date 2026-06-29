@@ -149,6 +149,23 @@ describe('playlist workflow hooks', () => {
     expect(result.current.selectedPlaylistId).toBe('playlist-id')
   })
 
+  it('does not call protected saved playlist reads when disabled', async () => {
+    const { result } = renderHook(() => useSavedPlaylists({ enabled: false }), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.selectPlaylist('playlist-id')
+    })
+
+    await waitFor(() => {
+      expect(result.current.selectedPlaylistId).toBe('playlist-id')
+    })
+
+    expect(serviceMocks.listSavedPlaylists).not.toHaveBeenCalled()
+    expect(serviceMocks.getSavedPlaylist).not.toHaveBeenCalled()
+  })
+
   it('does not expose a stale saved playlist while a new selection loads', async () => {
     serviceMocks.saveGeneratedPlaylist.mockResolvedValue({
       ...generatedPlaylist,

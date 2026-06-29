@@ -18,7 +18,11 @@ function savedPlaylistDetailQueryKey(playlistId: string | null) {
   return ['saved-playlist', playlistId] as const
 }
 
-export function useSavedPlaylists() {
+export function useSavedPlaylists({
+  enabled = true,
+}: {
+  enabled?: boolean
+} = {}) {
   const queryClient = useQueryClient()
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null,
@@ -28,12 +32,13 @@ export function useSavedPlaylists() {
   const listQuery = useQuery({
     queryKey: savedPlaylistsQueryKey,
     queryFn: () => listSavedPlaylists(),
+    enabled,
   })
 
   const detailQuery = useQuery({
     queryKey: savedPlaylistDetailQueryKey(selectedPlaylistId),
     queryFn: () => getSavedPlaylist(selectedPlaylistId ?? ''),
-    enabled: Boolean(selectedPlaylistId),
+    enabled: enabled && Boolean(selectedPlaylistId),
   })
 
   const saveMutation = useMutation({

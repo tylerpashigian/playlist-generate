@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { PlaylistWorkflow } from '@/components/product/playlist-workflow'
 
-export const Route = createFileRoute('/_authenticated/app')({
+export const Route = createFileRoute('/app')({
   component: AppRoute,
 })
 
