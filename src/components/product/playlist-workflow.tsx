@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useArtist } from '@/hooks/use-artist'
 import { useGeneratedPlaylist } from '@/hooks/use-generated-playlist'
@@ -14,6 +13,14 @@ import type {
   SavedPlaylist,
   SavedPlaylistSummary,
 } from '@/models/playlists/models'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '../ui/combobox'
 
 export function PlaylistWorkflow() {
   const auth = useAuthSession()
@@ -22,14 +29,17 @@ export function PlaylistWorkflow() {
   const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
   const spotify = useSpotify()
 
-  async function handleArtistSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    await artistSearch.search()
+  async function handleGenerate(artist: Artist) {
+    artistSearch.selectArtist(artist)
+    await generatedPlaylist.generate(artist)
   }
 
-  async function handleGenerate(artist: Artist) {
-    artistSearch.setSelectedArtist(artist)
-    await generatedPlaylist.generate(artist)
+  function handleArtistQueryChange(query: string) {
+    artistSearch.setQuery(query)
+
+    if (!query.trim()) {
+      generatedPlaylist.reset()
+    }
   }
 
   async function handleSave() {
@@ -75,15 +85,14 @@ export function PlaylistWorkflow() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_24rem]">
-        <div className="grid gap-5">
+        <div className="grid gap-5 xl:grid-rows-[auto_minmax(0,1fr)]">
           <ArtistSearchPanel
             query={artistSearch.query}
             artists={artistSearch.artists}
             selectedArtist={artistSearch.selectedArtist}
             isLoading={artistSearch.isLoading}
             errorMessage={artistSearch.errorMessage}
-            onQueryChange={artistSearch.setQuery}
-            onSearch={handleArtistSearch}
+            onQueryChange={handleArtistQueryChange}
             onGenerate={handleGenerate}
             isGenerating={generatedPlaylist.isGenerating}
           />
@@ -148,7 +157,6 @@ function ArtistSearchPanel({
   isGenerating,
   errorMessage,
   onQueryChange,
-  onSearch,
   onGenerate,
 }: {
   query: string
@@ -158,52 +166,65 @@ function ArtistSearchPanel({
   isGenerating: boolean
   errorMessage: string | null
   onQueryChange: (value: string) => void
-  onSearch: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
   onGenerate: (artist: Artist) => Promise<void>
 }) {
+  const trimmedQuery = query.trim()
+  const emptyMessage = getArtistSearchEmptyMessage({
+    query: trimmedQuery,
+    isLoading,
+    errorMessage,
+  })
+
   return (
     <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
       <h2 className="text-lg font-semibold text-foreground">Search artists</h2>
-      <form className="mt-4 flex gap-2" onSubmit={onSearch}>
-        <Input
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Artist name"
-          aria-label="Artist name"
-          className="h-10 flex-1 bg-background"
+      <Combobox<Artist>
+        items={artists}
+        filteredItems={artists}
+        filter={null}
+        inputValue={query}
+        onInputValueChange={onQueryChange}
+        value={selectedArtist ?? undefined}
+        onValueChange={(artist) => {
+          if (!artist) {
+            return
+          }
+
+          void onGenerate(artist)
+        }}
+        itemToStringLabel={(artist) => artist.name}
+        itemToStringValue={(artist) => artist.mbid}
+        isItemEqualToValue={(item, value) => item.mbid === value.mbid}
+        autoComplete="none"
+      >
+        <ComboboxInput
+          className="mt-4 w-full"
+          placeholder="Search for an artist"
+          disabled={isGenerating}
+          showClear
         />
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Searching' : 'Search'}
-        </Button>
-      </form>
-
-      {errorMessage ? (
-        <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
-      ) : null}
-
-      <div className="mt-4 grid gap-2">
-        {artists.map((artist) => (
-          <Button
-            key={artist.mbid}
-            type="button"
-            variant="outline"
-            disabled={isGenerating}
-            className="h-auto justify-start p-3 text-left"
-            onClick={() => {
-              void onGenerate(artist)
-            }}
-          >
-            <span className="grid gap-1">
-              <span className="block text-sm font-semibold">{artist.name}</span>
-              <span className="block text-xs text-muted-foreground">
-                {artist.disambiguation ||
-                  artist.sortName ||
-                  'Generate a recent-setlist playlist'}
-              </span>
-            </span>
-          </Button>
-        ))}
-      </div>
+        <ComboboxContent>
+          <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
+          <ComboboxList>
+            {(artist) => (
+              <ComboboxItem
+                key={artist.mbid}
+                value={artist}
+                disabled={isGenerating}
+              >
+                <span className="grid min-w-0 gap-0.5">
+                  <span className="truncate font-medium">{artist.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {artist.disambiguation ||
+                      artist.sortName ||
+                      'Generate a recent-setlist playlist'}
+                  </span>
+                </span>
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
 
       {selectedArtist ? (
         <p className="mt-4 text-xs text-muted-foreground">
@@ -212,6 +233,30 @@ function ArtistSearchPanel({
       ) : null}
     </section>
   )
+}
+
+function getArtistSearchEmptyMessage({
+  query,
+  isLoading,
+  errorMessage,
+}: {
+  query: string
+  isLoading: boolean
+  errorMessage: string | null
+}) {
+  if (isLoading) {
+    return 'Searching artists'
+  }
+
+  if (errorMessage) {
+    return errorMessage
+  }
+
+  if (query.length < 2) {
+    return 'Type at least 2 characters.'
+  }
+
+  return 'No artists found.'
 }
 
 function GeneratedPlaylistPanel({

@@ -2,8 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useArtist } from './use-artist'
+import { useDebouncedValue } from './use-debounced-value'
 import { useGeneratedPlaylist } from './use-generated-playlist'
 import { useSavedPlaylists } from './use-saved-playlists'
 import { useSpotify } from './use-spotify'
@@ -96,6 +97,36 @@ describe('playlist workflow hooks', () => {
     serviceMocks.listStreamingConnections.mockResolvedValue([])
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('debounces values before publishing changes', () => {
+    vi.useFakeTimers()
+    const { result, rerender } = renderHook(
+      ({ value }) => useDebouncedValue(value, 300),
+      {
+        initialProps: { value: 'initial' },
+      },
+    )
+
+    rerender({ value: 'updated' })
+
+    expect(result.current).toBe('initial')
+
+    act(() => {
+      vi.advanceTimersByTime(299)
+    })
+
+    expect(result.current).toBe('initial')
+
+    act(() => {
+      vi.advanceTimersByTime(1)
+    })
+
+    expect(result.current).toBe('updated')
+  })
+
   it('searches artists through the artist service', async () => {
     serviceMocks.searchArtists.mockResolvedValue([artist])
     const { result } = renderHook(() => useArtist(), {
@@ -112,6 +143,76 @@ describe('playlist workflow hooks', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
+  it('debounces artist searches while the input updates immediately', async () => {
+    vi.useFakeTimers()
+    serviceMocks.searchArtists.mockResolvedValue([artist])
+    const { result } = renderHook(() => useArtist(), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.setQuery('artist')
+    })
+
+    expect(result.current.query).toBe('artist')
+    expect(serviceMocks.searchArtists).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
+    })
+
+    expect(serviceMocks.searchArtists).toHaveBeenCalledWith('artist')
+    expect(result.current.artists).toEqual([artist])
+  })
+
+  it('does not auto-search artist queries shorter than two characters', async () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(() => useArtist(), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.setQuery('a')
+    })
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
+    })
+
+    expect(serviceMocks.searchArtists).not.toHaveBeenCalled()
+    expect(result.current.artists).toEqual([])
+  })
+
+  it('clears artist results and selection when the query is cleared', async () => {
+    vi.useFakeTimers()
+    serviceMocks.searchArtists.mockResolvedValue([artist])
+    const { result } = renderHook(() => useArtist(), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.setQuery('artist')
+    })
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
+    })
+
+    expect(result.current.artists).toEqual([artist])
+
+    act(() => {
+      result.current.setSelectedArtist(artist)
+      result.current.setQuery('')
+    })
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
+    })
+
+    expect(result.current.artists).toEqual([])
+    expect(result.current.selectedArtist).toBeNull()
+  })
+
   it('generates playlists through the playlist service', async () => {
     serviceMocks.generatePlaylist.mockResolvedValue(generatedPlaylist)
     const { result } = renderHook(() => useGeneratedPlaylist(), {
@@ -124,6 +225,53 @@ describe('playlist workflow hooks', () => {
 
     expect(serviceMocks.generatePlaylist).toHaveBeenCalledWith(artist)
     expect(result.current.playlist).toEqual(generatedPlaylist)
+  })
+
+  it('clears the generated playlist when the artist query is cleared', async () => {
+    serviceMocks.generatePlaylist.mockResolvedValue(generatedPlaylist)
+    const { result } = renderHook(
+      () => {
+        const artistSearch = useArtist()
+        const generated = useGeneratedPlaylist()
+
+        function setArtistQuery(query: string) {
+          artistSearch.setQuery(query)
+
+          if (!query.trim()) {
+            generated.reset()
+          }
+        }
+
+        async function generate(artist: Artist) {
+          artistSearch.selectArtist(artist)
+          await generated.generate(artist)
+        }
+
+        return {
+          artistSearch,
+          generated,
+          setArtistQuery,
+          generate,
+        }
+      },
+      {
+        wrapper: createWrapper(),
+      },
+    )
+
+    await act(async () => {
+      await result.current.generate(artist)
+    })
+
+    expect(result.current.generated.playlist).toEqual(generatedPlaylist)
+    expect(result.current.artistSearch.selectedArtist).toEqual(artist)
+
+    act(() => {
+      result.current.setArtistQuery('')
+    })
+
+    expect(result.current.generated.playlist).toBeNull()
+    expect(result.current.artistSearch.selectedArtist).toBeNull()
   })
 
   it('saves playlists and refreshes saved playlist state', async () => {
