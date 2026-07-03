@@ -15,6 +15,14 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'prettier.config.js', 'storybook-static/**'],
+    ignores: [
+      'eslint.config.js',
+      'prettier.config.js',
+      'storybook-static/**',
+      'dist/**',
+      '.output/**',
+      'src/generated/**',
+      'src/routeTree.gen.ts',
+    ],
   },
 ]
