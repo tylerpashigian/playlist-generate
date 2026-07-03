@@ -29,6 +29,13 @@ const authMocks = vi.hoisted(() => ({
   linkSocial: vi.fn(),
 }))
 
+const notificationMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  promise: vi.fn(<T,>(promise: Promise<T>) => promise),
+}))
+
 vi.mock('@/services/artists', () => ({
   searchArtists: serviceMocks.searchArtists,
 }))
@@ -54,6 +61,10 @@ vi.mock('@/lib/auth-client', () => ({
   authClient: {
     linkSocial: authMocks.linkSocial,
   },
+}))
+
+vi.mock('@/lib/toast', () => ({
+  toast: notificationMocks,
 }))
 
 const artist: Artist = {
@@ -295,6 +306,13 @@ describe('playlist workflow hooks', () => {
       generatedPlaylist,
     )
     expect(result.current.selectedPlaylistId).toBe('playlist-id')
+    expect(notificationMocks.promise).toHaveBeenCalledWith(
+      expect.any(Promise),
+      expect.objectContaining({
+        loading: 'Saving playlist',
+        error: 'Playlist could not be saved',
+      }),
+    )
   })
 
   it('does not call protected saved playlist reads when disabled', async () => {
@@ -378,6 +396,13 @@ describe('playlist workflow hooks', () => {
     expect(serviceMocks.disconnectStreamingProvider).toHaveBeenCalledWith(
       'SPOTIFY',
     )
+    expect(notificationMocks.promise).toHaveBeenCalledWith(
+      expect.any(Promise),
+      expect.objectContaining({
+        loading: 'Disconnecting Spotify',
+        success: 'Spotify disconnected',
+      }),
+    )
   })
 
   it('connects Spotify through Better Auth inside the connection hook', async () => {
@@ -398,6 +423,10 @@ describe('playlist workflow hooks', () => {
       scopes: ['playlist-modify-private'],
       callbackURL: '/profile',
     })
+    expect(notificationMocks.info).toHaveBeenCalledWith(
+      'Opening Spotify connection',
+    )
+    expect(notificationMocks.success).toHaveBeenCalledWith('Spotify connected')
     await waitFor(() => {
       expect(serviceMocks.listStreamingConnections).toHaveBeenCalled()
     })
@@ -444,6 +473,20 @@ describe('playlist workflow hooks', () => {
       playlistId: 'playlist-id',
       name: 'Export name',
     })
+    expect(notificationMocks.promise).toHaveBeenCalledWith(
+      expect.any(Promise),
+      expect.objectContaining({
+        loading: 'Matching tracks',
+        error: 'Track matching failed',
+      }),
+    )
+    expect(notificationMocks.promise).toHaveBeenCalledWith(
+      expect.any(Promise),
+      expect.objectContaining({
+        loading: 'Exporting to Spotify',
+        error: 'Spotify export failed',
+      }),
+    )
     expect(result.current.matches).toHaveLength(1)
     expect(result.current.exportResult?.providerPlaylistId).toBe(
       'spotify-playlist-id',

@@ -5,6 +5,7 @@ import {
   matchPlaylistTracks,
 } from '@/services/spotify'
 import { getErrorMessage } from '@/lib/errors'
+import { toast } from '@/lib/toast'
 import type { PlaylistExportResult, TrackMatch } from '@/models/spotify/models'
 
 export function useSpotify() {
@@ -25,11 +26,26 @@ export function useSpotify() {
   })
 
   async function matchTracks(playlistId: string) {
-    return await matchMutation.mutateAsync(playlistId)
+    return await toast.promise(matchMutation.mutateAsync(playlistId), {
+      loading: 'Matching tracks',
+      success: (matchedTracks) => {
+        const matchedCount = matchedTracks.filter(
+          (match) => match.status === 'MATCHED',
+        ).length
+
+        return `Matched ${matchedCount} of ${matchedTracks.length} tracks`
+      },
+      error: 'Track matching failed',
+    })
   }
 
   async function exportPlaylist(input: { playlistId: string; name?: string }) {
-    return await exportMutation.mutateAsync(input)
+    return await toast.promise(exportMutation.mutateAsync(input), {
+      loading: 'Exporting to Spotify',
+      success: (result) =>
+        `Exported ${result.exportedTrackCount} tracks to Spotify`,
+      error: 'Spotify export failed',
+    })
   }
 
   function reset() {

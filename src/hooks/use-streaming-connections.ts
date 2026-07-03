@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { authClient } from '@/lib/auth-client'
 import { getErrorMessage } from '@/lib/errors'
+import { toast } from '@/lib/toast'
 import {
   disconnectStreamingProvider,
   listStreamingConnections,
@@ -55,7 +56,11 @@ export function useStreamingConnections({
   })
 
   async function disconnect(provider: StreamingProvider) {
-    return await disconnectMutation.mutateAsync(provider)
+    return await toast.promise(disconnectMutation.mutateAsync(provider), {
+      loading: 'Disconnecting Spotify',
+      success: 'Spotify disconnected',
+      error: 'Spotify disconnect failed',
+    })
   }
 
   async function connectSpotify() {
@@ -63,6 +68,8 @@ export function useStreamingConnections({
     setIsConnectingSpotify(true)
 
     try {
+      toast.info('Opening Spotify connection')
+
       const result = await authClient.linkSocial({
         provider: 'spotify',
         scopes: ['playlist-modify-private'],
@@ -70,17 +77,22 @@ export function useStreamingConnections({
       })
 
       if (result.error) {
-        setConnectError(result.error.message ?? 'Spotify connection failed')
+        const message = result.error.message ?? 'Spotify connection failed'
+        setConnectError(message)
+        toast.error(result.error, message)
         return false
       }
 
       if (!result.data.redirect) {
         await connectionsQuery.refetch()
+        toast.success('Spotify connected')
       }
 
       return true
     } catch (error) {
-      setConnectError(getErrorMessage(error) ?? 'Spotify connection failed')
+      const message = getErrorMessage(error) ?? 'Spotify connection failed'
+      setConnectError(message)
+      toast.error(error, message)
       return false
     } finally {
       setIsConnectingSpotify(false)
