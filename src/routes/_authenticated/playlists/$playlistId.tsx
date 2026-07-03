@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { PlaylistTrackList } from '@/components/product/playlist-track-list'
 import { SpotifyActionsPanel } from '@/components/product/spotify-actions-panel'
 import { StatusPanel } from '@/components/product/status-panel'
+import { Heading4, Text } from '@/components/ui/typography'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
 import { useSpotify } from '@/hooks/use-spotify'
 
@@ -47,15 +48,15 @@ function PlaylistDetailRoute() {
       ) : playlist ? (
         <section className="grid gap-5 xl:grid-cols-[1fr_24rem]">
           <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-            <p className="text-sm font-bold text-muted-foreground">
+            <Text size="sm" weight="semibold" className="text-muted-foreground">
               Saved playlist
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-foreground">
+            </Text>
+            <Heading4 className="mt-1 text-foreground">
               {playlist.name}
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+            </Heading4>
+            <Text size="sm" className="mt-2 text-muted-foreground">
               {playlist.trackCount} tracks from {playlist.artist.name}.
-            </p>
+            </Text>
             <PlaylistTrackList playlist={playlist} />
           </section>
 

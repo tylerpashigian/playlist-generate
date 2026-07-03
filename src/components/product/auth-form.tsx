@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Heading4, Text } from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
 
 import type {
@@ -87,7 +88,9 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
   if (auth.isSessionLoading) {
     return (
       <AuthCard>
-        <p className="text-sm text-muted-foreground">Checking session</p>
+        <Text size="sm" className="text-muted-foreground">
+          Checking session
+        </Text>
       </AuthCard>
     )
   }
@@ -96,11 +99,15 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
     return (
       <AuthCard>
         <div className="space-y-1">
-          <p className="text-sm font-bold text-muted-foreground">Account</p>
-          <h1 className="text-2xl font-semibold text-foreground">
+          <Text size="sm" weight="semibold" className="text-muted-foreground">
+            Account
+          </Text>
+          <Heading4 className="text-foreground">
             {auth.user.name}
-          </h1>
-          <p className="text-sm text-muted-foreground">{auth.user.email}</p>
+          </Heading4>
+          <Text size="sm" className="text-muted-foreground">
+            {auth.user.email}
+          </Text>
         </div>
         <div className="mt-6 grid gap-3">
           <Button
@@ -128,13 +135,15 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
   return (
     <AuthCard>
       <div className="space-y-1">
-        <p className="text-sm font-bold text-muted-foreground">Account</p>
-        <h1 className="text-2xl font-semibold text-foreground">
+        <Text size="sm" weight="semibold" className="text-muted-foreground">
+          Account
+        </Text>
+        <Heading4 className="text-foreground">
           {isSignUp ? 'Create account' : 'Sign in'}
-        </h1>
-        <p className="text-sm text-muted-foreground">
+        </Heading4>
+        <Text size="sm" className="text-muted-foreground">
           Use your app account first, then connect Spotify from your profile.
-        </p>
+        </Text>
       </div>
 
       <form
@@ -205,7 +214,9 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
         </form.Field>
 
         {auth.authError ? (
-          <p className="text-sm text-red-600">{auth.authError}</p>
+          <Text size="sm" className="text-red-600">
+            {auth.authError}
+          </Text>
         ) : null}
 
         <form.Subscribe
@@ -283,7 +294,7 @@ function Field({
   autoComplete?: string
 }) {
   return (
-    <label className="grid gap-2 text-sm font-medium text-foreground">
+    <label className="grid gap-2 text-body-sm leading-body-sm font-medium text-foreground">
       {label}
       <Input
         id={id}
@@ -298,9 +309,14 @@ function Field({
         required
       />
       {error ? (
-        <span id={`${id}-error`} className="text-sm font-normal text-red-600">
+        <Text
+          as="span"
+          id={`${id}-error`}
+          size="sm"
+          className="text-red-600"
+        >
           {error}
-        </span>
+        </Text>
       ) : null}
     </label>
   )

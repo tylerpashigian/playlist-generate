@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Heading4, Text } from '@/components/ui/typography'
 import type { StreamingConnection } from '@/models/streaming/models'
 
 export function ConnectionPanel({
@@ -24,13 +25,11 @@ export function ConnectionPanel({
     <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-muted-foreground">
+          <Text size="sm" weight="semibold" className="text-muted-foreground">
             Streaming service
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-foreground">
-            Spotify
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </Text>
+          <Heading4 className="mt-1 text-foreground">Spotify</Heading4>
+          <Text size="sm" className="mt-1 text-muted-foreground">
             {isLoading
               ? 'Checking connection'
               : connected
@@ -38,15 +37,22 @@ export function ConnectionPanel({
                   connection?.providerAccountId ||
                   'Connected'
                 : 'Not connected'}
-          </p>
+          </Text>
         </div>
-        <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+        <Text
+          as="span"
+          size="xs"
+          weight="medium"
+          className="rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground"
+        >
           {connected ? 'Connected' : 'Disconnected'}
-        </span>
+        </Text>
       </div>
 
       {errorMessage ? (
-        <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
+        <Text size="sm" className="mt-3 text-red-600">
+          {errorMessage}
+        </Text>
       ) : null}
 
       <Button

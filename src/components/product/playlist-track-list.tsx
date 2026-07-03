@@ -2,6 +2,7 @@ import type {
   GeneratedPlaylist,
   SavedPlaylist,
 } from '@/models/playlists/models'
+import { Text } from '@/components/ui/typography'
 
 export function PlaylistTrackList({
   playlist,
@@ -16,20 +17,20 @@ export function PlaylistTrackList({
           className="grid gap-1 border border-border bg-background p-3 sm:grid-cols-[1fr_auto]"
         >
           <div>
-            <p className="text-sm font-semibold text-foreground">
+            <Text size="sm" weight="semibold" className="text-foreground">
               {track.position}. {track.title}
-            </p>
-            <p className="text-xs text-muted-foreground">
+            </Text>
+            <Text size="xs" className="text-muted-foreground">
               Played {track.appearanceCount} of {track.totalSetlistsConsidered}{' '}
               setlists
               {track.isCover && track.originalArtistName
                 ? ` - cover: ${track.originalArtistName}`
                 : ''}
-            </p>
+            </Text>
           </div>
-          <p className="text-sm font-semibold text-primary">
+          <Text size="sm" weight="semibold" className="text-primary">
             {Math.round(track.confidenceScore)}%
-          </p>
+          </Text>
         </li>
       ))}
     </ol>

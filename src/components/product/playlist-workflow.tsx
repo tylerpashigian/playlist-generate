@@ -21,6 +21,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from '../ui/combobox'
+import { Heading4, Text } from '../ui/typography'
 
 export function PlaylistWorkflow() {
   const auth = useAuthSession()
@@ -72,16 +73,16 @@ export function PlaylistWorkflow() {
   return (
     <section className="grid gap-5">
       <div className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-        <p className="text-sm font-bold text-muted-foreground">
+        <Text size="sm" weight="semibold" className="text-muted-foreground">
           Playlist builder
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-foreground">
+        </Text>
+        <Heading4 className="mt-1 text-foreground">
           Build a show-ready playlist
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        </Heading4>
+        <Text size="sm" className="mt-2 max-w-2xl text-muted-foreground">
           Search an artist, generate a recent-setlist playlist, save it, then
           match and export it to Spotify.
-        </p>
+        </Text>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_24rem]">
@@ -177,7 +178,7 @@ function ArtistSearchPanel({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">Search artists</h2>
+      <Heading4 className="text-foreground">Search artists</Heading4>
       <Combobox<Artist>
         items={artists}
         filteredItems={artists}
@@ -213,12 +214,18 @@ function ArtistSearchPanel({
                 disabled={isGenerating}
               >
                 <span className="grid min-w-0 gap-0.5">
-                  <span className="truncate font-medium">{artist.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <Text as="span" size="sm" weight="medium" className="truncate">
+                    {artist.name}
+                  </Text>
+                  <Text
+                    as="span"
+                    size="xs"
+                    className="truncate text-muted-foreground"
+                  >
                     {artist.disambiguation ||
                       artist.sortName ||
                       'Generate a recent-setlist playlist'}
-                  </span>
+                  </Text>
                 </span>
               </ComboboxItem>
             )}
@@ -227,9 +234,9 @@ function ArtistSearchPanel({
       </Combobox>
 
       {selectedArtist ? (
-        <p className="mt-4 text-xs text-muted-foreground">
+        <Text size="xs" className="mt-4 text-muted-foreground">
           Selected: {selectedArtist.name}
-        </p>
+        </Text>
       ) : null}
     </section>
   )
@@ -280,14 +287,14 @@ function GeneratedPlaylistPanel({
     <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">
+          <Heading4 className="text-foreground">
             Generated playlist
-          </h2>
-          <p className="text-sm text-muted-foreground">
+          </Heading4>
+          <Text size="sm" className="text-muted-foreground">
             {playlist
               ? `${playlist.tracks.length} tracks from ${playlist.recentSetlistCount} setlists`
               : 'Generate a playlist from an artist search result.'}
-          </p>
+          </Text>
         </div>
         <div className="flex gap-2">
           <Button
@@ -329,13 +336,15 @@ function GeneratedPlaylistPanel({
       </div>
 
       {errorMessage ? (
-        <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
+        <Text size="sm" className="mt-3 text-red-600">
+          {errorMessage}
+        </Text>
       ) : null}
 
       {isGenerating ? (
-        <p className="mt-4 text-sm text-muted-foreground">
+        <Text size="sm" className="mt-4 text-muted-foreground">
           Generating playlist
-        </p>
+        </Text>
       ) : null}
 
       {playlist ? <PlaylistTrackList playlist={playlist} /> : null}
@@ -352,8 +361,10 @@ function AuthGatePanel({
 }) {
   return (
     <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      <Heading4 className="text-foreground">{title}</Heading4>
+      <Text size="sm" className="mt-1 text-muted-foreground">
+        {description}
+      </Text>
       <Button type="button" className="mt-4" asChild>
         <Link to="/auth" search={{ redirect: '/app' }}>
           Sign in
@@ -381,18 +392,24 @@ export function SavedPlaylistsPanel({
   return (
     <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">
+        <Heading4 className="text-foreground">
           Saved playlists
-        </h2>
-        <Link to="/profile" className="text-sm font-medium">
-          Profile
+        </Heading4>
+        <Link to="/profile">
+          <Text as="span" size="sm" weight="medium">
+            Profile
+          </Text>
         </Link>
       </div>
       {errorMessage ? (
-        <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
+        <Text size="sm" className="mt-3 text-red-600">
+          {errorMessage}
+        </Text>
       ) : null}
       {isLoading ? (
-        <p className="mt-3 text-sm text-muted-foreground">Loading playlists</p>
+        <Text size="sm" className="mt-3 text-muted-foreground">
+          Loading playlists
+        </Text>
       ) : null}
       <div className="mt-4 grid gap-2">
         {playlists.map((playlist) => (
@@ -405,32 +422,39 @@ export function SavedPlaylistsPanel({
               className="grid flex-1 gap-1 text-left"
               onClick={() => onSelect?.(playlist.id)}
             >
-              <span className="block text-sm font-semibold">
+              <Text as="span" size="sm" weight="semibold" className="block">
                 {playlist.name}
-              </span>
-              <span className="block text-xs text-muted-foreground">
+              </Text>
+              <Text as="span" size="xs" className="block text-muted-foreground">
                 {playlist.trackCount} tracks - {playlist.status}
-              </span>
+              </Text>
               {playlist.id === selectedPlaylistId ? (
-                <span className="text-xs font-medium text-primary">
+                <Text
+                  as="span"
+                  size="xs"
+                  weight="medium"
+                  className="text-primary"
+                >
                   Selected
-                </span>
+                </Text>
               ) : null}
             </button>
             <Link
               to="/playlists/$playlistId"
               params={{ playlistId: playlist.id }}
-              className="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-muted"
+              className="rounded-md px-2 py-1 no-underline hover:bg-muted"
             >
-              Open
+              <Text as="span" size="xs" weight="semibold">
+                Open
+              </Text>
             </Link>
           </div>
         ))}
       </div>
       {selectedPlaylist ? (
-        <p className="mt-4 text-xs text-muted-foreground">
+        <Text size="xs" className="mt-4 text-muted-foreground">
           Selected for Spotify: {selectedPlaylist.name}
-        </p>
+        </Text>
       ) : null}
     </section>
   )

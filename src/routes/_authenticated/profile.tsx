@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { Heading4, Text } from '@/components/ui/typography'
 import { ConnectionPanel } from '@/components/product/connection-panel'
 import { SavedPlaylistsPanel } from '@/components/product/playlist-workflow'
 import { StatusPanel } from '@/components/product/status-panel'
@@ -33,13 +34,15 @@ function ProfileRoute() {
       <section className="grid gap-5 lg:grid-cols-[22rem_1fr]">
         <div className="grid h-fit gap-5">
           <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-            <p className="text-sm font-bold text-muted-foreground">Profile</p>
-            <h1 className="mt-1 text-2xl font-semibold text-foreground">
+            <Text size="sm" weight="semibold" className="text-muted-foreground">
+              Profile
+            </Text>
+            <Heading4 className="mt-1 text-foreground">
               {auth.user.name}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            </Heading4>
+            <Text size="sm" className="mt-1 text-muted-foreground">
               {auth.user.email}
-            </p>
+            </Text>
             <Button
               type="button"
               variant="outline"
