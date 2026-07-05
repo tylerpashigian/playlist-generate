@@ -22,7 +22,7 @@ export function ConnectionPanel({
   const connected = Boolean(connection?.connected)
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
+    <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <Text size="sm" weight="semibold" className="text-muted-foreground">

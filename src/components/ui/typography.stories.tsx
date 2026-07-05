@@ -1,4 +1,10 @@
-import { Heading1, Heading2, Heading3, Heading4, Text } from './typography'
+import {
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Text,
+} from './typography'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
@@ -16,7 +22,7 @@ export const Headings: Story = {
       <div>
         <Heading1>Heading1</Heading1>
         <Text size="sm" className="mt-2 text-muted-foreground">
-          56 / 60 / 760 / -0.045em
+          72 / 76 / 760 / -0.035em
         </Text>
       </div>
       <div>
@@ -84,6 +90,18 @@ export const InlineEmphasis: Story = {
         review confidence scores
       </Text>{' '}
       before exporting.
+    </Text>
+  ),
+}
+
+export const MixedClassNames: Story = {
+  render: () => (
+    <Text
+      size="xs"
+      weight="semibold"
+      className="max-w-xl text-muted-foreground"
+    >
+      Generate a playlist from recent setlists
     </Text>
   ),
 }

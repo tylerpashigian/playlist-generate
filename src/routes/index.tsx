@@ -1,72 +1,157 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import Footer from '@/components/Footer'
+import { ExportReadinessMetrics } from '@/components/product/export-actions-panel'
+import { PlaylistPreview } from '@/components/product/playlist-preview'
+import { WithNavbar } from '@/components/product/product-navbar'
 import { Button } from '@/components/ui/button'
-import { Heading1, Heading4, Text } from '@/components/ui/typography'
+import { Heading1, Heading2, Heading4, Text } from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
+
+import type { PlaylistPreviewTrack } from '@/components/product/playlist-preview'
 
 export const Route = createFileRoute('/')({ component: LandingRoute })
 
+const previewTracks: Array<PlaylistPreviewTrack> = [
+  {
+    key: '1-innerbloom',
+    position: 1,
+    title: 'Innerbloom',
+    detail: 'Exact recording',
+    evidence: '6/6 setlists',
+    confidenceScore: 100,
+  },
+  {
+    key: '2-surrender',
+    position: 2,
+    title: 'Surrender',
+    detail: 'Recent encore rotation',
+    evidence: '5/6 setlists',
+    confidenceScore: 85,
+  },
+  {
+    key: '3-levitating',
+    position: 3,
+    title: 'Levitating',
+    detail: 'Mid-set rotation',
+    evidence: '4/6 setlists',
+    confidenceScore: 67,
+  },
+  {
+    key: '4-until-the-sun-needs-to-rise',
+    position: 4,
+    title: 'Until the Sun Needs to Rise',
+    detail: 'Needs review',
+    evidence: '3/6 setlists',
+    confidenceScore: 49,
+  },
+]
+
 function LandingRoute() {
   const { isAuthenticated, isSessionLoading } = useAuthSession()
-  return (
-    <main className="page-wrap px-4 pb-12 pt-14">
-      <section className="rise-in rounded-2xl border border-border bg-card px-6 py-10 text-card-foreground shadow-sm sm:px-10 sm:py-14">
-        <Text
-          size="sm"
-          weight="semibold"
-          className="mb-3 text-muted-foreground"
-        >
-          Setlist-based playlist builder
-        </Text>
-        <Heading1 className="mb-5 max-w-3xl text-foreground">
-          Build playlists from what artists are actually playing.
-        </Heading1>
-        <Text size="lg" className="mb-8 max-w-2xl text-muted-foreground">
-          Search an artist, generate a ranked setlist playlist with confidence
-          scores, then export it to Spotify when you are ready.
-        </Text>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link to="/app">Open app</Link>
-          </Button>
-          {!isAuthenticated && !isSessionLoading && (
-            <Button asChild variant="outline">
-              <Link to="/auth">Sign in</Link>
-            </Button>
-          )}
-        </div>
-      </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          [
-            'Artist search',
-            'Find the artist you are seeing and start from Setlist.fm data.',
-          ],
-          [
-            'Confidence scores',
-            'Rank songs by how often they appear in recent shows.',
-          ],
-          [
-            'Saved playlists',
-            'Keep generated playlists tied to your app account.',
-          ],
-          [
-            'Spotify export',
-            'Connect Spotify as a provider without making it your app login.',
-          ],
-        ].map(([title, desc], index) => (
-          <article
-            key={title}
-            className="rise-in rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm"
-            style={{ animationDelay: `${index * 90 + 80}ms` }}
-          >
-            <Heading4 className="mb-2 text-foreground">{title}</Heading4>
-            <Text size="sm" className="m-0 text-muted-foreground">
-              {desc}
+  return (
+    <WithNavbar>
+      <main className="flex min-h-dvh w-full flex-col items-center justify-center gap-5 bg-background pb-14 pt-28 md:pb-20 md:pt-36 lg:gap-10">
+        <section className="flex max-w-295 flex-col items-center gap-10 px-5 text-center sm:px-8">
+          <div className="flex w-full max-w-225 flex-col items-center gap-5">
+            <Text
+              as="span"
+              size="xs"
+              weight="semibold"
+              className="rounded-full border border-border bg-background px-3 py-2 uppercase text-muted-foreground"
+            >
+              Setlist-powered playlists
             </Text>
-          </article>
-        ))}
-      </section>
-    </main>
+            <LandingDisplayHeading className="max-w-220 text-foreground">
+              Know what they&apos;re playing before you go.
+            </LandingDisplayHeading>
+            <Text size="lg" className="max-w-152 text-muted-foreground">
+              Search an artist, generate a ranked playlist from recent shows,
+              and export the songs you are most likely to hear.
+            </Text>
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
+              <Button asChild>
+                <Link to="/app">Start a playlist</Link>
+              </Button>
+              {!isAuthenticated && !isSessionLoading ? (
+                <Button asChild variant="outline">
+                  <Link to="/auth">Sign in</Link>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mx-auto grid w-full max-w-260 rounded-2xl border border-border bg-card p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,0.06)] lg:grid-cols-[minmax(0,1fr)_320px] lg:divide-x">
+            <PlaylistPreview
+              title="Rufus Du Sol recent setlist"
+              subtitle="4 tracks from 6 recent setlists"
+              tracks={previewTracks}
+              compact
+            />
+
+            <section className="border-t border-border pt-5 text-card-foreground lg:border-t-0 lg:pl-5 lg:pt-0">
+              <Text
+                size="xs"
+                weight="semibold"
+                className="uppercase text-muted-foreground"
+              >
+                Export
+              </Text>
+              <Heading4 className="mt-1 text-foreground">
+                Streaming export
+              </Heading4>
+              <Text size="sm" className="mt-1 text-muted-foreground">
+                Review streaming matches before exporting to connected services.
+              </Text>
+              <ExportReadinessMetrics
+                className="mt-5"
+                matchedCount={3}
+                reviewCount={1}
+              />
+            </section>
+          </div>
+        </section>
+
+        <section className="flex w-full max-w-230 flex-col gap-4 px-5 sm:px-8 md:flex-row">
+          {[
+            [
+              'Search',
+              'Find the artist and pull recent public setlist history.',
+            ],
+            [
+              'Score',
+              'Weight repeated songs and recency into confidence scores.',
+            ],
+            [
+              'Export',
+              'Save drafts and send matched tracks to connected services.',
+            ],
+          ].map(([title, description], index) => (
+            <article
+              key={title}
+              className="rise-in flex-1 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.06)]"
+              style={{ animationDelay: `${index * 90 + 80}ms` }}
+            >
+              <Heading4 className="text-foreground">{title}</Heading4>
+              <Text size="sm" className="mt-2 text-muted-foreground">
+                {description}
+              </Text>
+            </article>
+          ))}
+        </section>
+      </main>
+      <Footer />
+    </WithNavbar>
+  )
+}
+
+function LandingDisplayHeading({
+  children,
+}: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <>
+      <Heading1 className={'hidden lg:block'}>{children}</Heading1>
+      <Heading2 className={'block lg:hidden'}>{children}</Heading2>
+    </>
   )
 }

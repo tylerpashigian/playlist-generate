@@ -102,9 +102,7 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
           <Text size="sm" weight="semibold" className="text-muted-foreground">
             Account
           </Text>
-          <Heading4 className="text-foreground">
-            {auth.user.name}
-          </Heading4>
+          <Heading4 className="text-foreground">{auth.user.name}</Heading4>
           <Text size="sm" className="text-muted-foreground">
             {auth.user.email}
           </Text>
@@ -294,7 +292,7 @@ function Field({
   autoComplete?: string
 }) {
   return (
-    <label className="grid gap-2 text-body-sm leading-body-sm font-medium text-foreground">
+    <label className="grid gap-2 text-sm font-medium text-foreground">
       {label}
       <Input
         id={id}
@@ -313,7 +311,7 @@ function Field({
           as="span"
           id={`${id}-error`}
           size="sm"
-          className="text-red-600"
+          className="text-destructive"
         >
           {error}
         </Text>

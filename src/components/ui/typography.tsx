@@ -3,10 +3,10 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const textSizeClasses = {
-  xs: 'text-body-xs leading-body-xs',
-  sm: 'text-body-sm leading-body-sm',
-  md: 'text-body-md leading-body-md',
-  lg: 'text-body-lg leading-body-lg',
+  xs: 'text-xs',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
 } as const
 
 const textWeightClasses = {
@@ -35,10 +35,7 @@ type DivTextProps = BaseTextProps &
     as: 'div'
   }
 
-export type TextProps =
-  | ParagraphTextProps
-  | SpanTextProps
-  | DivTextProps
+export type TextProps = ParagraphTextProps | SpanTextProps | DivTextProps
 
 function getTextClassName({
   size = 'md',

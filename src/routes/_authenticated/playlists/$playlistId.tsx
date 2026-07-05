@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { PlaylistTrackList } from '@/components/product/playlist-track-list'
-import { SpotifyActionsPanel } from '@/components/product/spotify-actions-panel'
+import { PlaylistReviewExportSection } from '@/components/product/playlist-review-export-section'
+import { NavbarOffset, WithNavbar } from '@/components/product/product-navbar'
 import { StatusPanel } from '@/components/product/status-panel'
-import { Heading4, Text } from '@/components/ui/typography'
+import { Heading3, Text } from '@/components/ui/typography'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
 import { useSpotify } from '@/hooks/use-spotify'
 
@@ -18,7 +18,7 @@ function PlaylistDetailRoute() {
 
   useEffect(() => {
     savedPlaylists.selectPlaylist(playlistId)
-  }, [playlistId])
+  }, [playlistId, savedPlaylists.selectPlaylist])
 
   async function handleMatch() {
     if (!savedPlaylists.selectedPlaylist) {
@@ -42,43 +42,66 @@ function PlaylistDetailRoute() {
   const playlist = savedPlaylists.selectedPlaylist
 
   return (
-    <main className="page-wrap px-4 py-10">
-      {savedPlaylists.isLoadingSelectedPlaylist ? (
-        <StatusPanel message="Loading playlist" />
-      ) : playlist ? (
-        <section className="grid gap-5 xl:grid-cols-[1fr_24rem]">
-          <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-            <Text size="sm" weight="semibold" className="text-muted-foreground">
+    <WithNavbar>
+      <main className="min-h-dvh bg-primary-foreground">
+        <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-14 sm:px-8">
+          <section className="border-b border-border pb-8">
+            <Text
+              size="xs"
+              weight="semibold"
+              className="uppercase text-muted-foreground"
+            >
               Saved playlist
             </Text>
-            <Heading4 className="mt-1 text-foreground">
-              {playlist.name}
-            </Heading4>
-            <Text size="sm" className="mt-2 text-muted-foreground">
-              {playlist.trackCount} tracks from {playlist.artist.name}.
+            <Heading3 className="mt-3 text-foreground">
+              {playlist?.name ?? 'Playlist detail'}
+            </Heading3>
+            <Text size="sm" className="mt-2 max-w-150 text-muted-foreground">
+              {playlist
+                ? `${playlist.trackCount} tracks from ${playlist.artist.name}`
+                : 'Review confidence scores and export status.'}
             </Text>
-            <PlaylistTrackList playlist={playlist} />
           </section>
 
-          <SpotifyActionsPanel
-            selectedPlaylist={playlist}
-            matches={spotify.matches}
-            exportResult={spotify.exportResult}
-            isMatching={spotify.isMatching}
-            isExporting={spotify.isExporting}
-            errorMessage={spotify.errorMessage}
-            onMatch={handleMatch}
-            onExport={handleExport}
-          />
-        </section>
-      ) : (
-        <StatusPanel
-          message={
-            savedPlaylists.errorMessage ??
-            'Playlist not found or still loading.'
-          }
-        />
-      )}
-    </main>
+          <div className="pt-8">
+            {savedPlaylists.isLoadingSelectedPlaylist ? (
+              <StatusPanel message="Loading playlist" />
+            ) : playlist ? (
+              <PlaylistReviewExportSection
+                review={{
+                  playlist,
+                  title: playlist.artist.name
+                    ? `${playlist.artist.name} recent setlist`
+                    : playlist.name,
+                  subtitle: 'Confidence score and recent-setlist evidence',
+                }}
+                exports={{
+                  groups: [
+                    {
+                      provider: 'SPOTIFY',
+                      selectedPlaylist: playlist,
+                      matches: spotify.matches,
+                      exportResult: spotify.exportResult,
+                      isMatching: spotify.isMatching,
+                      isExporting: spotify.isExporting,
+                      errorMessage: spotify.errorMessage,
+                      onMatchTracks: handleMatch,
+                      onExport: handleExport,
+                    },
+                  ],
+                }}
+              />
+            ) : (
+              <StatusPanel
+                message={
+                  savedPlaylists.errorMessage ??
+                  'Playlist not found or still loading.'
+                }
+              />
+            )}
+          </div>
+        </NavbarOffset>
+      </main>
+    </WithNavbar>
   )
 }

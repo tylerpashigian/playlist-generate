@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { AuthForm } from '@/components/product/auth-form'
+import { NavbarOffset, WithNavbar } from '@/components/product/product-navbar'
 import { sanitizeAuthRedirect } from '@/lib/auth-redirect'
 
 interface AuthSearch {
@@ -17,8 +18,12 @@ function AuthRoute() {
   const search = Route.useSearch()
 
   return (
-    <main className="page-wrap px-4 py-12">
-      <AuthForm redirect={search.redirect ?? '/app'} />
-    </main>
+    <WithNavbar>
+      <main className="min-h-dvh bg-background px-5">
+        <NavbarOffset className="mx-auto grid max-w-130 gap-8 pb-12 pt-10">
+          <AuthForm redirect={search.redirect ?? '/app'} />
+        </NavbarOffset>
+      </main>
+    </WithNavbar>
   )
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from '@/lib/toast'
 import {
@@ -59,14 +59,14 @@ export function useSavedPlaylists({
   async function save(playlist: GeneratedPlaylist) {
     return await toast.promise(saveMutation.mutateAsync(playlist), {
       loading: 'Saving playlist',
-      success: (savedPlaylist) => `${savedPlaylist.name} saved`,
+      success: (savedPlaylistResult) => `${savedPlaylistResult.name} saved`,
       error: 'Playlist could not be saved',
     })
   }
 
-  function selectPlaylist(playlistId: string | null) {
+  const selectPlaylist = useCallback((playlistId: string | null) => {
     setSelectedPlaylistId(playlistId)
-  }
+  }, [])
 
   function resetSavedPlaylist() {
     setSavedPlaylist(null)

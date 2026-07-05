@@ -5,8 +5,7 @@ import { useArtist } from '@/hooks/use-artist'
 import { useGeneratedPlaylist } from '@/hooks/use-generated-playlist'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
 import { useSpotify } from '@/hooks/use-spotify'
-import { PlaylistTrackList } from './playlist-track-list'
-import { SpotifyActionsPanel } from './spotify-actions-panel'
+import { PlaylistReviewExportSection } from './playlist-review-export-section'
 import type { Artist } from '@/models/artists/models'
 import type {
   GeneratedPlaylist,
@@ -71,82 +70,66 @@ export function PlaylistWorkflow() {
   }
 
   return (
-    <section className="grid gap-5">
-      <div className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-        <Text size="sm" weight="semibold" className="text-muted-foreground">
-          Playlist builder
-        </Text>
-        <Heading4 className="mt-1 text-foreground">
-          Build a show-ready playlist
-        </Heading4>
-        <Text size="sm" className="mt-2 max-w-2xl text-muted-foreground">
-          Search an artist, generate a recent-setlist playlist, save it, then
-          match and export it to Spotify.
-        </Text>
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[1fr_24rem]">
-        <div className="grid gap-5 xl:grid-rows-[auto_minmax(0,1fr)]">
-          <ArtistSearchPanel
-            query={artistSearch.query}
-            artists={artistSearch.artists}
-            selectedArtist={artistSearch.selectedArtist}
-            isLoading={artistSearch.isLoading}
-            errorMessage={artistSearch.errorMessage}
-            onQueryChange={handleArtistQueryChange}
-            onGenerate={handleGenerate}
-            isGenerating={generatedPlaylist.isGenerating}
-          />
-
-          <GeneratedPlaylistPanel
+    <PlaylistReviewExportSection
+      review={{
+        playlist: generatedPlaylist.playlist,
+        title: 'Generated playlist',
+        subtitle: generatedPlaylist.playlist
+          ? `${generatedPlaylist.playlist.tracks.length} tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
+          : '',
+        actions: (
+          <GeneratedPlaylistActions
             playlist={generatedPlaylist.playlist}
             isAuthenticated={auth.isAuthenticated}
             isGenerating={generatedPlaylist.isGenerating}
             isSaving={savedPlaylists.isSaving}
-            errorMessage={generatedPlaylist.errorMessage}
             onSave={handleSave}
             onRegenerate={generatedPlaylist.regenerate}
           />
-        </div>
-
-        <div className="grid gap-5">
-          {auth.isAuthenticated ? (
-            <>
-              <SavedPlaylistsPanel
-                playlists={savedPlaylists.playlists}
-                selectedPlaylist={savedPlaylists.selectedPlaylist}
-                selectedPlaylistId={savedPlaylists.selectedPlaylistId}
-                isLoading={savedPlaylists.isLoadingPlaylists}
-                errorMessage={savedPlaylists.errorMessage}
-                onSelect={savedPlaylists.selectPlaylist}
-              />
-
-              <SpotifyActionsPanel
-                selectedPlaylist={savedPlaylists.selectedPlaylist}
-                matches={spotify.matches}
-                exportResult={spotify.exportResult}
-                isMatching={spotify.isMatching}
-                isExporting={spotify.isExporting}
-                errorMessage={spotify.errorMessage}
-                onMatch={handleMatch}
-                onExport={handleExport}
-              />
-            </>
-          ) : (
-            <>
-              <AuthGatePanel
-                title="Saved playlists"
-                description="Sign in to save playlists and return to them later."
-              />
-              <AuthGatePanel
-                title="Spotify export"
-                description="Sign in to match tracks and export playlists to Spotify."
-              />
-            </>
-          )}
-        </div>
-      </div>
-    </section>
+        ),
+        isLoading: generatedPlaylist.isGenerating,
+        loadingMessage: 'Generating playlist',
+        errorMessage: generatedPlaylist.errorMessage,
+      }}
+      exports={{
+        groups: [
+          {
+            provider: 'SPOTIFY',
+            selectedPlaylist: savedPlaylists.selectedPlaylist,
+            matches: spotify.matches,
+            exportResult: spotify.exportResult,
+            isMatching: spotify.isMatching,
+            isExporting: spotify.isExporting,
+            errorMessage: spotify.errorMessage,
+            onMatchTracks: handleMatch,
+            onExport: handleExport,
+          },
+        ],
+        fallback: auth.isAuthenticated ? undefined : (
+          <AuthGatePanel
+            title="Streaming exports"
+            description="Sign in to save drafts, match tracks, and export playlists to connected services."
+          />
+        ),
+      }}
+      topContent={
+        <ArtistSearchPanel
+          query={artistSearch.query}
+          artists={artistSearch.artists}
+          selectedArtist={artistSearch.selectedArtist}
+          isLoading={artistSearch.isLoading}
+          errorMessage={artistSearch.errorMessage}
+          onQueryChange={handleArtistQueryChange}
+          onSelect={(artist) => {
+            if (!artist) {
+              artistSearch.setSelectedArtist(null)
+            }
+          }}
+          onGenerate={handleGenerate}
+          isGenerating={generatedPlaylist.isGenerating}
+        />
+      }
+    />
   )
 }
 
@@ -158,6 +141,7 @@ function ArtistSearchPanel({
   isGenerating,
   errorMessage,
   onQueryChange,
+  onSelect,
   onGenerate,
 }: {
   query: string
@@ -167,6 +151,7 @@ function ArtistSearchPanel({
   isGenerating: boolean
   errorMessage: string | null
   onQueryChange: (value: string) => void
+  onSelect: (artist: Artist | null) => void
   onGenerate: (artist: Artist) => Promise<void>
 }) {
   const trimmedQuery = query.trim()
@@ -177,67 +162,71 @@ function ArtistSearchPanel({
   })
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-      <Heading4 className="text-foreground">Search artists</Heading4>
-      <Combobox<Artist>
-        items={artists}
-        filteredItems={artists}
-        filter={null}
-        inputValue={query}
-        onInputValueChange={onQueryChange}
-        value={selectedArtist ?? undefined}
-        onValueChange={(artist) => {
-          if (!artist) {
-            return
-          }
+    <section className="flex flex-col gap-3 sm:flex-row sm:items-center w-full lg:pb-8">
+      <Text size="sm" weight="semibold" className="text-foreground shrink-0">
+        Artist
+      </Text>
+      <div className="w-full">
+        <Combobox<Artist>
+          items={artists}
+          filteredItems={artists}
+          filter={null}
+          inputValue={query}
+          onInputValueChange={onQueryChange}
+          value={selectedArtist ?? undefined}
+          onValueChange={(artist) => {
+            if (!artist) {
+              onSelect(null)
+              return
+            }
 
-          void onGenerate(artist)
-        }}
-        itemToStringLabel={(artist) => artist.name}
-        itemToStringValue={(artist) => artist.mbid}
-        isItemEqualToValue={(item, value) => item.mbid === value.mbid}
-        autoComplete="none"
-      >
-        <ComboboxInput
-          className="mt-4 w-full"
-          placeholder="Search for an artist"
-          disabled={isGenerating}
-          showClear
-        />
-        <ComboboxContent>
-          <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
-          <ComboboxList>
-            {(artist) => (
-              <ComboboxItem
-                key={artist.mbid}
-                value={artist}
-                disabled={isGenerating}
-              >
-                <span className="grid min-w-0 gap-0.5">
-                  <Text as="span" size="sm" weight="medium" className="truncate">
-                    {artist.name}
-                  </Text>
-                  <Text
-                    as="span"
-                    size="xs"
-                    className="truncate text-muted-foreground"
-                  >
-                    {artist.disambiguation ||
-                      artist.sortName ||
-                      'Generate a recent-setlist playlist'}
-                  </Text>
-                </span>
-              </ComboboxItem>
-            )}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-
-      {selectedArtist ? (
-        <Text size="xs" className="mt-4 text-muted-foreground">
-          Selected: {selectedArtist.name}
-        </Text>
-      ) : null}
+            void onGenerate(artist)
+          }}
+          itemToStringLabel={(artist) => artist.name}
+          itemToStringValue={(artist) => artist.mbid}
+          isItemEqualToValue={(item, value) => item.mbid === value.mbid}
+          autoComplete="none"
+        >
+          <ComboboxInput
+            className="w-full"
+            placeholder="Search for an artist"
+            disabled={isGenerating}
+            showClear
+          />
+          <ComboboxContent>
+            <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
+            <ComboboxList>
+              {(artist) => (
+                <ComboboxItem
+                  key={artist.mbid}
+                  value={artist}
+                  disabled={isGenerating}
+                >
+                  <span className="grid min-w-0 gap-0.5">
+                    <Text
+                      as="span"
+                      size="sm"
+                      weight="medium"
+                      className="truncate"
+                    >
+                      {artist.name}
+                    </Text>
+                    <Text
+                      as="span"
+                      size="xs"
+                      className="truncate text-muted-foreground"
+                    >
+                      {artist.disambiguation ||
+                        artist.sortName ||
+                        'Generate a recent-setlist playlist'}
+                    </Text>
+                  </span>
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </div>
     </section>
   )
 }
@@ -266,12 +255,11 @@ function getArtistSearchEmptyMessage({
   return 'No artists found.'
 }
 
-function GeneratedPlaylistPanel({
+function GeneratedPlaylistActions({
   playlist,
   isAuthenticated,
   isGenerating,
   isSaving,
-  errorMessage,
   onSave,
   onRegenerate,
 }: {
@@ -279,76 +267,47 @@ function GeneratedPlaylistPanel({
   isAuthenticated: boolean
   isGenerating: boolean
   isSaving: boolean
-  errorMessage: string | null
   onSave: () => Promise<void>
   onRegenerate: () => Promise<GeneratedPlaylist | null>
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Heading4 className="text-foreground">
-            Generated playlist
-          </Heading4>
-          <Text size="sm" className="text-muted-foreground">
-            {playlist
-              ? `${playlist.tracks.length} tracks from ${playlist.recentSetlistCount} setlists`
-              : 'Generate a playlist from an artist search result.'}
-          </Text>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!playlist || isGenerating}
-            onClick={() => {
-              void onRegenerate()
-            }}
-          >
-            Regenerate
-          </Button>
-          {isAuthenticated ? (
-            <Button
-              type="button"
-              disabled={!playlist || isSaving}
-              onClick={() => {
-                void onSave()
-              }}
-            >
-              {isSaving ? 'Saving' : 'Save'}
+    <div className="flex gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={!playlist || isGenerating}
+        onClick={() => {
+          void onRegenerate()
+        }}
+      >
+        Regenerate
+      </Button>
+      {isAuthenticated ? (
+        <Button
+          type="button"
+          disabled={!playlist || isSaving}
+          onClick={() => {
+            void onSave()
+          }}
+        >
+          {isSaving ? 'Saving' : 'Save draft'}
+        </Button>
+      ) : (
+        <>
+          {playlist ? (
+            <Button type="button" asChild>
+              <Link to="/auth" search={{ redirect: '/app' }}>
+                Sign in to save
+              </Link>
             </Button>
           ) : (
-            <>
-              {playlist ? (
-                <Button type="button" asChild>
-                  <Link to="/auth" search={{ redirect: '/app' }}>
-                    Sign in to save
-                  </Link>
-                </Button>
-              ) : (
-                <Button type="button" disabled>
-                  Sign in to save
-                </Button>
-              )}
-            </>
+            <Button type="button" disabled>
+              Save draft
+            </Button>
           )}
-        </div>
-      </div>
-
-      {errorMessage ? (
-        <Text size="sm" className="mt-3 text-red-600">
-          {errorMessage}
-        </Text>
-      ) : null}
-
-      {isGenerating ? (
-        <Text size="sm" className="mt-4 text-muted-foreground">
-          Generating playlist
-        </Text>
-      ) : null}
-
-      {playlist ? <PlaylistTrackList playlist={playlist} /> : null}
-    </section>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -360,7 +319,7 @@ function AuthGatePanel({
   description: string
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
+    <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
       <Heading4 className="text-foreground">{title}</Heading4>
       <Text size="sm" className="mt-1 text-muted-foreground">
         {description}
@@ -390,11 +349,18 @@ export function SavedPlaylistsPanel({
   onSelect?: (playlistId: string | null) => void
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
+    <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
       <div className="flex items-center justify-between gap-3">
-        <Heading4 className="text-foreground">
-          Saved playlists
-        </Heading4>
+        <div>
+          <Text
+            size="xs"
+            weight="semibold"
+            className="uppercase text-muted-foreground"
+          >
+            Drafts
+          </Text>
+          <Heading4 className="mt-1 text-foreground">Saved playlists</Heading4>
+        </div>
         <Link to="/profile">
           <Text as="span" size="sm" weight="medium">
             Profile
@@ -415,7 +381,7 @@ export function SavedPlaylistsPanel({
         {playlists.map((playlist) => (
           <div
             key={playlist.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-border bg-background p-3"
+            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
           >
             <button
               type="button"
