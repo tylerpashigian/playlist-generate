@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
+import { AccountDrawer } from '@/components/product/account-drawer'
 import { Text } from '@/components/ui/typography'
-import { useAuthSession } from '@/hooks/use-auth-session'
-import { useStreamingConnections } from '@/hooks/use-streaming-connections'
+import { useHasScrolled } from '@/hooks/use-has-scrolled'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -33,16 +32,23 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
 }
 
 export function ProductNavbar() {
-  const auth = useAuthSession()
-  const streamingConnections = useStreamingConnections({
-    enabled: auth.isAuthenticated,
-  })
-
-  const isConnected = streamingConnections.isSpotifyConnected
+  const hasScrolled = useHasScrolled()
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 h-(--app-navbar-height) bg-transparent">
-      <div className="mx-auto flex h-full max-w-295 items-center justify-between gap-4 px-5 sm:px-8">
+    <header
+      className={cn(
+        'fixed inset-x-0 top-0 z-50 h-(--app-navbar-height) bg-transparent transition-[padding] duration-200',
+        hasScrolled && 'p-2 sm:px-4',
+      )}
+    >
+      <div
+        className={cn(
+          'mx-auto flex h-full items-center justify-between gap-4 transition-[background-color,border-color,box-shadow,backdrop-filter,border-radius] duration-200',
+          hasScrolled
+            ? 'rounded-lg border border-border/70 bg-background/80 px-4 shadow-xs backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-8'
+            : 'w-full border border-transparent px-4 sm:px-8',
+        )}
+      >
         <BrandMark />
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -59,11 +65,7 @@ export function ProductNavbar() {
           ))}
         </nav>
 
-        <NavbarAction
-          isAuthenticated={auth.isAuthenticated}
-          isSessionLoading={auth.isSessionLoading}
-          isConnected={isConnected}
-        />
+        <AccountDrawer />
       </div>
     </header>
   )
@@ -75,37 +77,6 @@ export function WithNavbar({ children }: { children: ReactNode }) {
       <ProductNavbar />
       {children}
     </>
-  )
-}
-
-function NavbarAction({
-  isAuthenticated,
-  isSessionLoading,
-  isConnected,
-}: {
-  isAuthenticated: boolean
-  isSessionLoading: boolean
-  isConnected: boolean
-}) {
-  if (!isAuthenticated && !isSessionLoading) {
-    return (
-      <Button asChild variant="outline" size="sm">
-        <Link to="/auth">Sign in</Link>
-      </Button>
-    )
-  }
-
-  const label = isConnected ? 'Connected' : 'Profile'
-
-  return (
-    <Button
-      asChild
-      variant="outline"
-      size="sm"
-      className={cn('rounded-full', isConnected && 'text-foreground')}
-    >
-      <Link to="/profile">{label}</Link>
-    </Button>
   )
 }
 
