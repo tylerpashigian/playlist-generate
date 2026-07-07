@@ -5,6 +5,7 @@ import {
   artistSetlistsResponseSchema,
   searchArtistsResponseSchema,
 } from './schemas'
+import { normalizeSetlistSong } from './normalization'
 import type { ArtistDto } from '@/server/contracts/artists'
 import type { NormalizedSetlist } from '@/server/models/setlists'
 
@@ -70,7 +71,11 @@ export async function fetchRecentSetlistsForArtist(
   const maxPages = options.maxPages ?? 3
   const setlists: Array<NormalizedSetlist> = []
 
-  for (let page = 1; page <= maxPages && setlists.length < validSetlistLimit; page += 1) {
+  for (
+    let page = 1;
+    page <= maxPages && setlists.length < validSetlistLimit;
+    page += 1
+  ) {
     const payload = artistSetlistsResponseSchema.parse(
       await setlistFmFetch(
         `/artist/${artist.mbid}/setlists`,
@@ -81,12 +86,10 @@ export async function fetchRecentSetlistsForArtist(
     for (const setlist of asArray(payload.setlist)) {
       const sets = asArray(setlist.sets?.set)
       const songs = sets.flatMap((set) =>
-        asArray(set.song).map((song) => ({
-          title: song.name,
-          isCover: Boolean(song.cover),
-          originalArtistName: song.cover?.name ?? null,
-          originalArtistMbid: song.cover?.mbid ?? null,
-        })),
+        asArray(set.song).flatMap((song) => {
+          const normalizedSong = normalizeSetlistSong(song)
+          return normalizedSong ? [normalizedSong] : []
+        }),
       )
 
       if (songs.length === 0) continue
