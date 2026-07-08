@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 
 export function useHasScrolled(threshold = 8) {
-  const [hasScrolled, setHasScrolled] = useState(() =>
-    getInitialScrolledState(threshold),
-  )
+  const [hasScrolled, setHasScrolled] = useState(false)
 
   useEffect(() => {
     function handleScroll() {
@@ -19,12 +17,4 @@ export function useHasScrolled(threshold = 8) {
   }, [threshold])
 
   return hasScrolled
-}
-
-function getInitialScrolledState(threshold: number) {
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  return window.scrollY > threshold
 }

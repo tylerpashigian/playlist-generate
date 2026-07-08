@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PlaylistReviewExportSection } from './playlist-review-export-section'
 import type { GeneratedPlaylist, SavedPlaylist } from '@/models/playlists/models'
 
@@ -47,6 +47,10 @@ const savedPlaylist: SavedPlaylist = {
   updatedAt: new Date('2026-07-04T00:00:00.000Z'),
   trackCount: generatedPlaylist.tracks.length,
 }
+
+afterEach(() => {
+  cleanup()
+})
 
 describe('PlaylistReviewExportSection', () => {
   it('renders playlist review content, export content, and caller-owned actions', () => {

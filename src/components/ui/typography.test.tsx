@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   Heading1,
   Heading2,
@@ -9,6 +9,10 @@ import {
   Heading4,
   Text,
 } from './typography'
+
+afterEach(() => {
+  cleanup()
+})
 
 describe('typography components', () => {
   it('renders fixed semantic heading components', () => {
