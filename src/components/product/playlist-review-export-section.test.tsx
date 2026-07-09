@@ -102,6 +102,7 @@ describe('PlaylistReviewExportSection', () => {
           playlist: null,
           title: 'Generated playlist',
           subtitle: '',
+          emptyTitle: 'Find an artist',
           emptyMessage: 'Select an artist first.',
         }}
         exports={{
@@ -122,7 +123,8 @@ describe('PlaylistReviewExportSection', () => {
       />,
     )
 
-    expect(screen.getByText('Generated playlist')).toBeTruthy()
+    expect(screen.queryByText('Generated playlist')).toBeNull()
+    expect(screen.getByText('Find an artist')).toBeTruthy()
     expect(screen.getByText('Select an artist first.')).toBeTruthy()
     expect(screen.queryByRole('listitem')).toBeNull()
   })

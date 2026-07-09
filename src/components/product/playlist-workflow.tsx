@@ -77,6 +77,10 @@ export function PlaylistWorkflow() {
         subtitle: generatedPlaylist.playlist
           ? `${generatedPlaylist.playlist.tracks.length} tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
           : '',
+        emptyTitle: artistSearch.selectedArtist ? undefined : 'Find an artist',
+        emptyMessage: artistSearch.selectedArtist
+          ? 'Generating a confidence-ranked preview from recent setlists.'
+          : 'Search for an artist to generate a setlist-informed playlist.',
         actions: (
           <GeneratedPlaylistActions
             playlist={generatedPlaylist.playlist}

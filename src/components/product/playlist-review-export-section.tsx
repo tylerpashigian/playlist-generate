@@ -4,6 +4,12 @@ import {
   PlaylistPreview,
   playlistToPreviewTracks,
 } from '@/components/product/playlist-preview'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { Text } from '@/components/ui/typography'
 import type { ExportActionGroup } from '@/components/product/export-actions-panel'
 import type {
@@ -15,6 +21,7 @@ export interface PlaylistReviewConfig {
   playlist: GeneratedPlaylist | SavedPlaylist | null
   title: string
   subtitle: string
+  emptyTitle?: string
   emptyMessage?: string
   actions?: ReactNode
   isLoading?: boolean
@@ -40,6 +47,7 @@ export function PlaylistReviewExportSection({
     playlist,
     title,
     subtitle,
+    emptyTitle,
     emptyMessage = 'Select an artist to build a confidence-ranked preview.',
     actions,
     isLoading = false,
@@ -53,12 +61,21 @@ export function PlaylistReviewExportSection({
         {topContent}
 
         <section className={topContent ? 'lg:pt-8' : ''}>
-          <PlaylistPreview
-            title={title}
-            subtitle={playlist ? subtitle : emptyMessage}
-            tracks={playlist ? playlistToPreviewTracks({ playlist }) : []}
-            actions={actions}
-          />
+          {!playlist && emptyTitle ? (
+            <Empty className="min-h-70 border border-border bg-card">
+              <EmptyHeader>
+                <EmptyTitle>{emptyTitle}</EmptyTitle>
+                <EmptyDescription>{emptyMessage}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <PlaylistPreview
+              title={title}
+              subtitle={playlist ? subtitle : emptyMessage}
+              tracks={playlist ? playlistToPreviewTracks({ playlist }) : []}
+              actions={actions}
+            />
+          )}
 
           {errorMessage ? (
             <Text size="sm" className="mt-3 text-destructive">
