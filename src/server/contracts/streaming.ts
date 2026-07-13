@@ -7,6 +7,8 @@ export const streamingConnectionDtoSchema = z.object({
   connected: z.boolean(),
   displayName: z.string().nullable(),
   providerAccountId: z.string().nullable(),
+  canDisconnect: z.boolean(),
+  disconnectDisabledReason: z.string().nullable(),
   updatedAt: z.date().nullable(),
 })
 

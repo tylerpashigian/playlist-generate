@@ -1,6 +1,7 @@
 import {
   ExternalProviderError,
   NoMatchedTracksError,
+  OnlyLoginMethodError,
   SpotifyNotConnectedError,
 } from '@/server/errors'
 
@@ -15,6 +16,14 @@ export function toTRPCError(error: unknown): TRPCError {
     return new TRPCError({
       code: 'BAD_REQUEST',
       message: 'Connect Spotify before continuing.',
+      cause: error,
+    })
+  }
+
+  if (error instanceof OnlyLoginMethodError) {
+    return new TRPCError({
+      code: 'BAD_REQUEST',
+      message: error.message,
       cause: error,
     })
   }

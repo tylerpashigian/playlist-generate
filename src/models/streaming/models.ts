@@ -5,5 +5,7 @@ export interface StreamingConnection {
   connected: boolean
   displayName: string | null
   providerAccountId: string | null
+  canDisconnect: boolean
+  disconnectDisabledReason: string | null
   updatedAt: Date | null
 }

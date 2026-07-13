@@ -1,7 +1,5 @@
 import { generatedPlaylistDtoSchema } from '@/server/contracts/playlists'
-import type {
-  ArtistDto,
-} from '@/server/contracts/artists'
+import type { ArtistDto } from '@/server/contracts/artists'
 import type {
   GeneratedPlaylistDto,
   PlaylistItemDto,
@@ -53,20 +51,18 @@ export function scoreSetlistsForArtist(
       songsSeenInSetlist.add(normalizedSongTitle)
 
       const existing = songs.get(normalizedSongTitle)
-      const next: SongAccumulator =
-        existing ??
-        {
-          songTitle: song.title,
-          normalizedSongTitle,
-          isCover: song.isCover,
-          originalArtistName: song.originalArtistName,
-          originalArtistMbid: song.originalArtistMbid,
-          weightedScore: 0,
-          appearanceCount: 0,
-          lastPlayedAt: null,
-          setlistfmIds: [],
-          playedAt: [],
-        }
+      const next: SongAccumulator = existing ?? {
+        songTitle: song.title,
+        normalizedSongTitle,
+        isCover: song.isCover,
+        originalArtistName: song.originalArtistName,
+        originalArtistMbid: song.originalArtistMbid,
+        weightedScore: 0,
+        appearanceCount: 0,
+        lastPlayedAt: null,
+        setlistfmIds: [],
+        playedAt: [],
+      }
 
       next.weightedScore += weight
       next.appearanceCount += 1

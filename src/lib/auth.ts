@@ -7,6 +7,7 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start'
 export const auth = betterAuth({
   account: {
     accountLinking: {
+      requireLocalEmailVerified: false,
       updateUserInfoOnLink: false,
       trustedProviders: ['spotify'],
     },

@@ -118,6 +118,8 @@ describe('frontend services', () => {
       connected: false,
       displayName: null,
       providerAccountId: null,
+      canDisconnect: false,
+      disconnectDisabledReason: null,
       updatedAt: null,
     })
 

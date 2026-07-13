@@ -20,6 +20,14 @@ export function ConnectionPanel({
   onDisconnect: () => Promise<StreamingConnection>
 }) {
   const connected = Boolean(connection?.connected)
+  const disconnectDisabledReason = connected
+    ? connection?.disconnectDisabledReason
+    : null
+  const disableAction =
+    isLoading ||
+    isConnecting ||
+    isDisconnecting ||
+    (connected && !connection?.canDisconnect)
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
@@ -55,13 +63,19 @@ export function ConnectionPanel({
         </Text>
       ) : null}
 
+      {disconnectDisabledReason ? (
+        <Text size="sm" className="mt-3 text-muted-foreground">
+          {disconnectDisabledReason}
+        </Text>
+      ) : null}
+
       <Button
         type="button"
-        disabled={isLoading || isConnecting || isDisconnecting}
+        disabled={disableAction}
         variant={connected ? 'outline' : 'default'}
         className="mt-4 w-full"
         onClick={() => {
-          if (connected) {
+          if (connected && connection?.canDisconnect) {
             void onDisconnect()
           } else {
             void onConnect()

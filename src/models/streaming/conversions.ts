@@ -24,6 +24,8 @@ export function toStreamingConnection(
     connected: dto.connected,
     displayName: dto.displayName,
     providerAccountId: dto.providerAccountId,
+    canDisconnect: dto.canDisconnect,
+    disconnectDisabledReason: dto.disconnectDisabledReason,
     updatedAt: dto.updatedAt,
   }
 }

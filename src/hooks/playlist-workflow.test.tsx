@@ -12,6 +12,7 @@ import { useStreamingConnections } from './use-streaming-connections'
 import type { ReactNode } from 'react'
 import type { Artist } from '@/models/artists/models'
 import type { GeneratedPlaylist } from '@/models/playlists/models'
+import { spotifyPlaylistExportScopes } from '@/lib/spotify-scopes'
 
 const serviceMocks = vi.hoisted(() => ({
   searchArtists: vi.fn(),
@@ -27,6 +28,7 @@ const serviceMocks = vi.hoisted(() => ({
 
 const authMocks = vi.hoisted(() => ({
   linkSocial: vi.fn(),
+  signInSocial: vi.fn(),
 }))
 
 const notificationMocks = vi.hoisted(() => ({
@@ -60,6 +62,9 @@ vi.mock('@/services/spotify', () => ({
 vi.mock('@/lib/auth-client', () => ({
   authClient: {
     linkSocial: authMocks.linkSocial,
+    signIn: {
+      social: authMocks.signInSocial,
+    },
   },
 }))
 
@@ -383,6 +388,8 @@ describe('playlist workflow hooks', () => {
       connected: false,
       displayName: null,
       providerAccountId: null,
+      canDisconnect: false,
+      disconnectDisabledReason: null,
       updatedAt: null,
     })
     const { result } = renderHook(() => useStreamingConnections(), {
@@ -420,7 +427,7 @@ describe('playlist workflow hooks', () => {
 
     expect(authMocks.linkSocial).toHaveBeenCalledWith({
       provider: 'spotify',
-      scopes: ['playlist-modify-private'],
+      scopes: [...spotifyPlaylistExportScopes],
       callbackURL: '/profile',
     })
     expect(notificationMocks.info).toHaveBeenCalledWith(

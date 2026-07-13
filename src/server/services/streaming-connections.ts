@@ -1,10 +1,11 @@
 import { prisma } from '@/db'
 import { auth } from '@/lib/auth'
+import { spotifyPlaylistExportScopes } from '@/lib/spotify-scopes'
 import {
   streamingConnectionDtoSchema,
   streamingProviderSchema,
 } from '@/server/contracts/streaming'
-import { SpotifyNotConnectedError } from '@/server/errors'
+import { OnlyLoginMethodError, SpotifyNotConnectedError } from '@/server/errors'
 import { resolveSpotifyConnectionMetadata } from '@/server/providers/spotify/connection'
 import type {
   StreamingConnectionDto,
@@ -15,6 +16,7 @@ type BetterAuthProviderId = 'spotify'
 
 type ProviderConfig = {
   betterAuthProviderId: BetterAuthProviderId
+  displayName: string
   requiredScopes: Array<string>
   resolveMetadata: (input: {
     accessToken: string
@@ -35,13 +37,18 @@ type StreamingProviderAccessToken = {
 const STREAMING_PROVIDER_CONFIG = {
   SPOTIFY: {
     betterAuthProviderId: 'spotify',
-    requiredScopes: ['playlist-modify-private'],
+    displayName: 'Spotify',
+    requiredScopes: [...spotifyPlaylistExportScopes],
     resolveMetadata: resolveSpotifyConnectionMetadata,
   },
 } satisfies StreamingProviderConfig
 
 function getProviderConfig(provider: StreamingProviderDto) {
   return STREAMING_PROVIDER_CONFIG[provider]
+}
+
+function getOnlyLoginMethodReason(providerConfig: ProviderConfig) {
+  return `${providerConfig.displayName} is your only login method.`
 }
 
 async function findBetterAuthAccount(
@@ -58,6 +65,34 @@ async function findBetterAuthAccount(
     orderBy: {
       updatedAt: 'desc',
     },
+  })
+}
+
+async function hasAlternateLoginAccount(
+  userId: string,
+  provider: StreamingProviderDto,
+) {
+  const providerConfig = getProviderConfig(provider)
+  const accounts = await prisma.account.findMany({
+    where: {
+      userId,
+    },
+    select: {
+      password: true,
+      providerId: true,
+    },
+  })
+
+  return accounts.some((account) => {
+    if (account.providerId === providerConfig.betterAuthProviderId) {
+      return false
+    }
+
+    if (account.providerId === 'credential') {
+      return Boolean(account.password)
+    }
+
+    return true
   })
 }
 
@@ -80,14 +115,19 @@ async function syncStreamingConnectionMetadata(
       connected: false,
       displayName: null,
       providerAccountId: null,
+      canDisconnect: false,
+      disconnectDisabledReason: null,
       updatedAt: null,
     })
   }
 
+  const providerConfig = getProviderConfig(provider)
+  const canDisconnect = await hasAlternateLoginAccount(userId, provider)
+
   const resolvedMetadata = await resolveStreamingConnectionMetadata(
     userId,
     account.accountId,
-    getProviderConfig(provider),
+    providerConfig,
   )
   const metadata = await prisma.streamingConnection.upsert({
     where: {
@@ -113,6 +153,10 @@ async function syncStreamingConnectionMetadata(
     connected: true,
     displayName: metadata.displayName,
     providerAccountId: metadata.providerAccountId,
+    canDisconnect,
+    disconnectDisabledReason: canDisconnect
+      ? null
+      : getOnlyLoginMethodReason(providerConfig),
     updatedAt: metadata.updatedAt,
   })
 }
@@ -167,6 +211,11 @@ export async function disconnectStreamingProvider(
 
   if (account) {
     const providerConfig = getProviderConfig(provider)
+    const canDisconnect = await hasAlternateLoginAccount(userId, provider)
+
+    if (!canDisconnect) {
+      throw new OnlyLoginMethodError(providerConfig.displayName)
+    }
 
     await auth.api.unlinkAccount({
       body: {
@@ -189,6 +238,8 @@ export async function disconnectStreamingProvider(
     connected: false,
     displayName: null,
     providerAccountId: null,
+    canDisconnect: false,
+    disconnectDisabledReason: null,
     updatedAt: null,
   })
 }

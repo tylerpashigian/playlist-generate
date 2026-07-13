@@ -16,6 +16,13 @@ export class SpotifyNotConnectedError extends Error {
   }
 }
 
+export class OnlyLoginMethodError extends Error {
+  constructor(public readonly providerName: string) {
+    super(`${providerName} is your only login method.`)
+    this.name = 'OnlyLoginMethodError'
+  }
+}
+
 export class NoMatchedTracksError extends Error {
   constructor() {
     super('No matched Spotify tracks are available to export.')

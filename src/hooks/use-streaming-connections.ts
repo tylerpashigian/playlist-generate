@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { authClient } from '@/lib/auth-client'
 import { getErrorMessage } from '@/lib/errors'
+import { spotifyPlaylistExportScopes } from '@/lib/spotify-scopes'
 import { toast } from '@/lib/toast'
 import {
   disconnectStreamingProvider,
@@ -72,7 +73,7 @@ export function useStreamingConnections({
 
       const result = await authClient.linkSocial({
         provider: 'spotify',
-        scopes: ['playlist-modify-private'],
+        scopes: [...spotifyPlaylistExportScopes],
         callbackURL: spotifyCallbackURL,
       })
 

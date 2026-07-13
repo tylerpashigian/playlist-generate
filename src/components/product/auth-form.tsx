@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Heading4, Text } from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { SpotifyIcon } from '@hugeicons/core-free-icons'
 
 import type {
   ValidationLogicFn,
@@ -140,12 +142,33 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
           {isSignUp ? 'Create account' : 'Sign in'}
         </Heading4>
         <Text size="sm" className="text-muted-foreground">
-          Use your app account first, then connect Spotify from your profile.
+          Use email or Spotify to access your app account.
         </Text>
       </div>
 
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-6 w-full"
+        disabled={auth.isAuthenticating}
+        onClick={() => {
+          void auth.signInWithSpotify(redirect)
+        }}
+      >
+        <>{auth.isAuthenticating ? 'Please wait' : 'Continue with Spotify'}</>
+        <HugeiconsIcon icon={SpotifyIcon} />
+      </Button>
+
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <Text as="span" size="xs" className="text-muted-foreground">
+          or
+        </Text>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
       <form
-        className="mt-6 grid gap-4"
+        className="grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           event.stopPropagation()

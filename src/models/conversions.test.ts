@@ -126,6 +126,8 @@ describe('frontend model conversions', () => {
       connected: true,
       displayName: 'Spotify User',
       providerAccountId: 'spotify-user-id',
+      canDisconnect: true,
+      disconnectDisabledReason: null,
       updatedAt: generatedAt,
     }
 
@@ -134,6 +136,8 @@ describe('frontend model conversions', () => {
       connected: true,
       displayName: 'Spotify User',
       providerAccountId: 'spotify-user-id',
+      canDisconnect: true,
+      disconnectDisabledReason: null,
       updatedAt: generatedAt,
     })
   })
