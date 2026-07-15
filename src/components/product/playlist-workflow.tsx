@@ -28,6 +28,7 @@ export function PlaylistWorkflow() {
   const generatedPlaylist = useGeneratedPlaylist()
   const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
   const spotify = useSpotify()
+  const authGate = getAuthGate(auth)
 
   async function handleGenerate(artist: Artist) {
     artistSearch.selectArtist(artist)
@@ -84,7 +85,7 @@ export function PlaylistWorkflow() {
         actions: (
           <GeneratedPlaylistActions
             playlist={generatedPlaylist.playlist}
-            isAuthenticated={auth.isAuthenticated}
+            authGate={authGate}
             isGenerating={generatedPlaylist.isGenerating}
             isSaving={savedPlaylists.isSaving}
             onSave={handleSave}
@@ -112,7 +113,12 @@ export function PlaylistWorkflow() {
         fallback: auth.isAuthenticated ? undefined : (
           <AuthGatePanel
             title="Streaming exports"
-            description="Sign in to save drafts, match tracks, and export playlists to connected services."
+            description={getAuthGateDescription(
+              authGate,
+              'Sign in to save drafts, match tracks, and export playlists to connected services.',
+              'Verify your email before matching tracks or exporting playlists.',
+            )}
+            action={authGate === 'verify' ? 'Verify email' : 'Sign in'}
           />
         ),
       }}
@@ -261,14 +267,14 @@ function getArtistSearchEmptyMessage({
 
 function GeneratedPlaylistActions({
   playlist,
-  isAuthenticated,
+  authGate,
   isGenerating,
   isSaving,
   onSave,
   onRegenerate,
 }: {
   playlist: GeneratedPlaylist | null
-  isAuthenticated: boolean
+  authGate: AuthGateState
   isGenerating: boolean
   isSaving: boolean
   onSave: () => Promise<void>
@@ -286,7 +292,7 @@ function GeneratedPlaylistActions({
       >
         Regenerate
       </Button>
-      {isAuthenticated ? (
+      {authGate === 'authenticated' ? (
         <Button
           type="button"
           disabled={!playlist || isSaving}
@@ -295,6 +301,19 @@ function GeneratedPlaylistActions({
           }}
         >
           {isSaving ? 'Saving' : 'Save draft'}
+        </Button>
+      ) : authGate === 'verify' ? (
+        <Button type="button" disabled={!playlist} asChild={Boolean(playlist)}>
+          {playlist ? (
+            <Link
+              to="/auth"
+              search={{ redirect: '/app', verificationRequired: true }}
+            >
+              Verify email to save
+            </Link>
+          ) : (
+            'Save draft'
+          )}
         </Button>
       ) : (
         <>
@@ -318,9 +337,11 @@ function GeneratedPlaylistActions({
 function AuthGatePanel({
   title,
   description,
+  action = 'Sign in',
 }: {
   title: string
   description: string
+  action?: string
 }) {
   return (
     <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
@@ -329,12 +350,40 @@ function AuthGatePanel({
         {description}
       </Text>
       <Button type="button" className="mt-4" asChild>
-        <Link to="/auth" search={{ redirect: '/app' }}>
-          Sign in
+        <Link
+          to="/auth"
+          search={{
+            redirect: '/app',
+            verificationRequired: action === 'Verify email',
+          }}
+        >
+          {action}
         </Link>
       </Button>
     </section>
   )
+}
+
+type AuthGateState = 'authenticated' | 'signed-out' | 'verify'
+
+function getAuthGate(auth: ReturnType<typeof useAuthSession>): AuthGateState {
+  if (auth.isAuthenticated) {
+    return 'authenticated'
+  }
+
+  if (auth.isSignedIn) {
+    return 'verify'
+  }
+
+  return 'signed-out'
+}
+
+function getAuthGateDescription(
+  authGate: AuthGateState,
+  signedOutDescription: string,
+  verifyDescription: string,
+) {
+  return authGate === 'verify' ? verifyDescription : signedOutDescription
 }
 
 export function SavedPlaylistsPanel({

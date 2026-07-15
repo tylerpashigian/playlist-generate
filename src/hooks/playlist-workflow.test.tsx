@@ -258,9 +258,9 @@ describe('playlist workflow hooks', () => {
           }
         }
 
-        async function generate(artist: Artist) {
-          artistSearch.selectArtist(artist)
-          await generated.generate(artist)
+        async function generate(generatedArtist: Artist) {
+          artistSearch.selectArtist(generatedArtist)
+          await generated.generate(generatedArtist)
         }
 
         return {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthSession } from './use-auth-session'
 import type { ReactNode } from 'react'
@@ -11,7 +11,22 @@ const authMocks = vi.hoisted(() => ({
   signInEmail: vi.fn(),
   signInSocial: vi.fn(),
   signUpEmail: vi.fn(),
+  sendVerificationEmail: vi.fn(),
   signOut: vi.fn(),
+}))
+
+const sessionMocks = vi.hoisted(() => ({
+  currentSession: null as null | {
+    user: {
+      canUseApp: boolean
+      email: string
+      emailVerified: boolean
+      hasPasswordLogin: boolean
+      id: string
+      name: string
+      requiresEmailVerification: boolean
+    }
+  },
 }))
 
 vi.mock('@/lib/auth-client', () => ({
@@ -23,6 +38,7 @@ vi.mock('@/lib/auth-client', () => ({
     signUp: {
       email: authMocks.signUpEmail,
     },
+    sendVerificationEmail: authMocks.sendVerificationEmail,
     signOut: authMocks.signOut,
   },
 }))
@@ -31,7 +47,7 @@ vi.mock('@/lib/auth-session', () => ({
   authSessionQueryKey: ['auth-session'],
   authSessionQueryOptions: () => ({
     queryKey: ['auth-session'],
-    queryFn: vi.fn().mockResolvedValue(null),
+    queryFn: vi.fn().mockResolvedValue(sessionMocks.currentSession),
     retry: false,
   }),
 }))
@@ -54,6 +70,82 @@ function createWrapper() {
 describe('useAuthSession', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    sessionMocks.currentSession = null
+  })
+
+  it('distinguishes signed-in from verified app authentication', async () => {
+    sessionMocks.currentSession = {
+      user: {
+        id: 'user-id',
+        name: 'Unverified User',
+        email: 'user@example.com',
+        canUseApp: false,
+        emailVerified: false,
+        hasPasswordLogin: true,
+        requiresEmailVerification: true,
+      },
+    }
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSessionLoading).toBe(false)
+    })
+
+    expect(result.current.isSignedIn).toBe(true)
+    expect(result.current.isVerified).toBe(false)
+    expect(result.current.isAuthenticated).toBe(false)
+  })
+
+  it('treats unverified social-only users as authenticated', async () => {
+    sessionMocks.currentSession = {
+      user: {
+        id: 'user-id',
+        name: 'Spotify User',
+        email: 'spotify@example.com',
+        canUseApp: true,
+        emailVerified: false,
+        hasPasswordLogin: false,
+        requiresEmailVerification: false,
+      },
+    }
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSessionLoading).toBe(false)
+    })
+
+    expect(result.current.isSignedIn).toBe(true)
+    expect(result.current.isVerified).toBe(false)
+    expect(result.current.isAuthenticated).toBe(true)
+  })
+
+  it('treats verified signed-in users as authenticated', async () => {
+    sessionMocks.currentSession = {
+      user: {
+        id: 'user-id',
+        name: 'Verified User',
+        email: 'user@example.com',
+        canUseApp: true,
+        emailVerified: true,
+        hasPasswordLogin: true,
+        requiresEmailVerification: false,
+      },
+    }
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSessionLoading).toBe(false)
+    })
+
+    expect(result.current.isSignedIn).toBe(true)
+    expect(result.current.isVerified).toBe(true)
+    expect(result.current.isAuthenticated).toBe(true)
   })
 
   it('starts Spotify social sign in with playlist scope and redirect', async () => {
@@ -73,6 +165,98 @@ describe('useAuthSession', () => {
       provider: 'spotify',
       scopes: [...spotifyLoginScopes],
       callbackURL: '/app',
+    })
+  })
+
+  it('returns verification pending after email sign up', async () => {
+    authMocks.signUpEmail.mockResolvedValue({
+      data: {
+        token: null,
+        user: { email: 'new@example.com' },
+      },
+      error: null,
+    })
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await expect(
+      act(async () => {
+        return await result.current.signUp({
+          callbackURL: '/auth?verified=true&redirect=%2Fapp',
+          email: 'new@example.com',
+          name: 'New User',
+          password: 'password123',
+        })
+      }),
+    ).resolves.toEqual({
+      email: 'new@example.com',
+      status: 'verification-pending',
+    })
+
+    expect(authMocks.signUpEmail).toHaveBeenCalledWith({
+      callbackURL: '/auth?verified=true&redirect=%2Fapp',
+      email: 'new@example.com',
+      name: 'New User',
+      password: 'password123',
+    })
+    expect(result.current.verificationEmail).toBe('new@example.com')
+  })
+
+  it('stores verification pending state for unverified sign in', async () => {
+    authMocks.signInEmail.mockResolvedValue({
+      data: null,
+      error: {
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Email not verified',
+      },
+    })
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await expect(
+      act(async () => {
+        return await result.current.signIn({
+          callbackURL: '/auth?verified=true&redirect=%2Fapp',
+          email: 'new@example.com',
+          password: 'password123',
+        })
+      }),
+    ).resolves.toEqual({
+      email: 'new@example.com',
+      status: 'verification-pending',
+    })
+
+    expect(result.current.authError).toContain('verify your email')
+    expect(result.current.verificationEmail).toBe('new@example.com')
+    expect(authMocks.signInEmail).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      password: 'password123',
+    })
+  })
+
+  it('resends verification email with the selected callback URL', async () => {
+    authMocks.sendVerificationEmail.mockResolvedValue({
+      data: { status: true },
+      error: null,
+    })
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await expect(
+      act(async () => {
+        return await result.current.resendVerificationEmail(
+          'new@example.com',
+          '/auth?verified=true&redirect=%2Fapp',
+        )
+      }),
+    ).resolves.toBe(true)
+
+    expect(authMocks.sendVerificationEmail).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      callbackURL: '/auth?verified=true&redirect=%2Fapp',
     })
   })
 })

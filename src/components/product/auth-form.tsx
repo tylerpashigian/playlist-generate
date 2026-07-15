@@ -62,27 +62,47 @@ const touchedFieldValidationLogic: ValidationLogicFn = ({
   })
 }
 
-export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
+export function AuthForm({
+  redirect = '/app',
+  verificationError,
+  verificationRequired = false,
+  verificationSucceeded = false,
+}: {
+  redirect?: string
+  verificationError?: string
+  verificationRequired?: boolean
+  verificationSucceeded?: boolean
+}) {
   const auth = useAuthSession()
   const navigate = useNavigate()
   const [isSignUp, setIsSignUp] = useState(false)
+  const [verificationPendingEmail, setVerificationPendingEmail] = useState<
+    string | null
+  >(null)
+  const [verificationResent, setVerificationResent] = useState(false)
   const form = useForm({
     defaultValues: defaultAuthFormValues,
     validationLogic: touchedFieldValidationLogic,
     onSubmit: async ({ value }) => {
-      const success = isSignUp
+      const result = isSignUp
         ? await auth.signUp({
+            callbackURL: getVerificationCallbackURL(redirect),
             email: value.email,
             password: value.password,
             name: value.name,
           })
         : await auth.signIn({
+            callbackURL: getVerificationCallbackURL(redirect),
             email: value.email,
             password: value.password,
           })
 
-      if (success) {
+      if (result.status === 'authenticated') {
         await navigate({ to: redirect })
+      }
+
+      if (result.status === 'verification-pending') {
+        setVerificationPendingEmail(result.email)
       }
     },
   })
@@ -93,6 +113,71 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
         <Text size="sm" className="text-muted-foreground">
           Checking session
         </Text>
+      </AuthCard>
+    )
+  }
+
+  if (auth.user?.requiresEmailVerification) {
+    return (
+      <AuthCard>
+        <div className="space-y-1">
+          <Text size="sm" weight="semibold" className="text-muted-foreground">
+            Verify email
+          </Text>
+          <Heading4 className="text-foreground">Check your inbox</Heading4>
+          <Text size="sm" className="text-muted-foreground">
+            Verify {auth.user.email} before continuing.
+          </Text>
+        </div>
+
+        {verificationRequired ? (
+          <StatusMessage tone="info">
+            Your account is signed in, but email verification is required before
+            you can use the app.
+          </StatusMessage>
+        ) : null}
+
+        {verificationResent ? (
+          <StatusMessage tone="success">
+            Verification email sent. Check your inbox.
+          </StatusMessage>
+        ) : null}
+
+        {auth.authError ? (
+          <Text size="sm" className="mt-4 text-red-600">
+            {auth.authError}
+          </Text>
+        ) : null}
+
+        <div className="mt-6 grid gap-3">
+          <Button
+            type="button"
+            disabled={auth.isSendingVerificationEmail}
+            onClick={async () => {
+              const sent = await auth.resendVerificationEmail(
+                auth.user?.email,
+                getVerificationCallbackURL(redirect),
+              )
+
+              if (sent) {
+                setVerificationResent(true)
+              }
+            }}
+          >
+            {auth.isSendingVerificationEmail
+              ? 'Sending'
+              : 'Resend verification email'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              void auth.signOut()
+            }}
+          >
+            Sign out
+          </Button>
+        </div>
       </AuthCard>
     )
   }
@@ -145,6 +230,31 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
           Use email or Spotify to access your app account.
         </Text>
       </div>
+
+      {verificationSucceeded ? (
+        <StatusMessage tone="success">
+          Your email is verified. Sign in to continue.
+        </StatusMessage>
+      ) : null}
+
+      {verificationError ? (
+        <StatusMessage tone="error">
+          {getVerificationErrorMessage(verificationError)}
+        </StatusMessage>
+      ) : null}
+
+      {verificationPendingEmail ? (
+        <StatusMessage tone="info">
+          Check {verificationPendingEmail} to verify your email before signing
+          in.
+        </StatusMessage>
+      ) : null}
+
+      {verificationResent ? (
+        <StatusMessage tone="success">
+          Verification email sent. Check your inbox.
+        </StatusMessage>
+      ) : null}
 
       <Button
         type="button"
@@ -240,6 +350,33 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
           </Text>
         ) : null}
 
+        {verificationPendingEmail || auth.verificationEmail ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={auth.isSendingVerificationEmail}
+            onClick={async () => {
+              const email =
+                verificationPendingEmail ?? auth.verificationEmail ?? undefined
+              const sent = await auth.resendVerificationEmail(
+                email,
+                getVerificationCallbackURL(redirect),
+              )
+
+              if (sent) {
+                setVerificationResent(true)
+                if (email) {
+                  setVerificationPendingEmail(email)
+                }
+              }
+            }}
+          >
+            {auth.isSendingVerificationEmail
+              ? 'Sending'
+              : 'Resend verification email'}
+          </Button>
+        ) : null}
+
         <form.Subscribe
           selector={(state) =>
             [state.values, state.isFieldsValid, state.isSubmitting] as const
@@ -285,6 +422,46 @@ export function AuthForm({ redirect = '/app' }: { redirect?: string }) {
       </Button>
     </AuthCard>
   )
+}
+
+function StatusMessage({
+  children,
+  tone,
+}: {
+  children: React.ReactNode
+  tone: 'error' | 'info' | 'success'
+}) {
+  const toneClassName =
+    tone === 'error'
+      ? 'border-destructive/30 bg-destructive/10 text-destructive'
+      : tone === 'success'
+        ? 'border-green-600/30 bg-green-600/10 text-green-700'
+        : 'border-border bg-muted text-muted-foreground'
+
+  return (
+    <Text
+      size="sm"
+      className={`mt-4 rounded-md border px-3 py-2 ${toneClassName}`}
+    >
+      {children}
+    </Text>
+  )
+}
+
+function getVerificationErrorMessage(error: string) {
+  if (error === 'TOKEN_EXPIRED') {
+    return 'That verification link expired. Request a new verification email and try again.'
+  }
+
+  if (error === 'INVALID_TOKEN') {
+    return 'That verification link is invalid. Request a new verification email and try again.'
+  }
+
+  return 'Email verification failed. Request a new verification email and try again.'
+}
+
+function getVerificationCallbackURL(redirect: string) {
+  return `/auth?verified=true&redirect=${encodeURIComponent(redirect)}`
 }
 
 function AuthCard({ children }: { children: React.ReactNode }) {

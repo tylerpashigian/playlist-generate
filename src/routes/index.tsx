@@ -85,7 +85,7 @@ const accuracyPoints = [
 ] as const
 
 function LandingRoute() {
-  const { isAuthenticated, isSessionLoading } = useAuthSession()
+  const { isAuthenticated, isSessionLoading, isSignedIn } = useAuthSession()
   const shouldReduceMotion = useReducedMotion()
 
   return (
@@ -112,9 +112,18 @@ function LandingRoute() {
               <Button asChild>
                 <Link to="/app">Start a playlist</Link>
               </Button>
-              {!isAuthenticated && !isSessionLoading ? (
+              {!isSignedIn && !isSessionLoading ? (
                 <Button asChild variant="outline">
                   <Link to="/auth">Sign in</Link>
+                </Button>
+              ) : isSignedIn && !isAuthenticated ? (
+                <Button asChild variant="outline">
+                  <Link
+                    to="/auth"
+                    search={{ redirect: '/app', verificationRequired: true }}
+                  >
+                    Verify email
+                  </Link>
                 </Button>
               ) : null}
             </div>

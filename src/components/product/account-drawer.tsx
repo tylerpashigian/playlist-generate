@@ -26,6 +26,8 @@ const mobileNavItems = [
   { label: 'Profile', to: '/profile', detail: 'Account' },
 ] as const
 const authenticatedRouteId = '/_authenticated'
+const drawerSwipeDirection = { base: 'down', md: 'right' } as const
+const drawerSwipeHandleVisibility = { base: true, md: false } as const
 
 export function AccountDrawer() {
   const [open, setOpen] = useState(false)
@@ -34,8 +36,8 @@ export function AccountDrawer() {
     select: (state) =>
       state.matches.some((match) => match.routeId === authenticatedRouteId),
   })
-  const swipeDirection = useBreakpointValue({ base: 'down', md: 'right' })
-  const showSwipeHandle = useBreakpointValue({ base: true, md: false })
+  const swipeDirection = useBreakpointValue(drawerSwipeDirection)
+  const showSwipeHandle = useBreakpointValue(drawerSwipeHandleVisibility)
   const auth = useAuthSession()
   const streamingConnections = useStreamingConnections({
     enabled: auth.isAuthenticated,
@@ -75,23 +77,35 @@ export function AccountDrawer() {
           </DrawerHeader>
 
           <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 md:pt-6">
-            {auth.isAuthenticated && auth.user ? (
+            {auth.isSignedIn && auth.user ? (
               <>
                 <AccountIdentity
                   name={auth.user.name}
                   email={auth.user.email}
                 />
+                {!auth.isAuthenticated ? (
+                  <Text size="sm" className="text-muted-foreground">
+                    Verify your email before saving playlists, managing
+                    connected services, or exporting to streaming providers.
+                  </Text>
+                ) : null}
                 <MobileNavigation
                   isAuthenticated={auth.isAuthenticated}
                   onNavigate={() => setOpen(false)}
                 />
-                <AccountMetrics
-                  playlistCount={savedPlaylists.playlists.length}
-                  serviceCount={connectedServiceCount}
-                />
-                <ConnectedServices
-                  isSpotifyConnected={streamingConnections.isSpotifyConnected}
-                />
+                {auth.isAuthenticated ? (
+                  <>
+                    <AccountMetrics
+                      playlistCount={savedPlaylists.playlists.length}
+                      serviceCount={connectedServiceCount}
+                    />
+                    <ConnectedServices
+                      isSpotifyConnected={
+                        streamingConnections.isSpotifyConnected
+                      }
+                    />
+                  </>
+                ) : null}
               </>
             ) : (
               <>
@@ -108,11 +122,22 @@ export function AccountDrawer() {
           </div>
 
           <DrawerFooter className="border-t border-border p-4 md:p-8 md:pt-4">
-            {auth.isAuthenticated ? (
+            {auth.isSignedIn ? (
               <>
-                <Button asChild onClick={() => setOpen(false)}>
-                  <Link to="/profile">Manage profile</Link>
-                </Button>
+                {auth.isAuthenticated ? (
+                  <Button asChild onClick={() => setOpen(false)}>
+                    <Link to="/profile">Manage profile</Link>
+                  </Button>
+                ) : (
+                  <Button asChild onClick={() => setOpen(false)}>
+                    <Link
+                      to="/auth"
+                      search={{ redirect: '/app', verificationRequired: true }}
+                    >
+                      Verify email
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
@@ -148,7 +173,7 @@ function AccountDrawerTrigger({
 }: React.ComponentPropsWithoutRef<'button'> & {
   auth: ReturnType<typeof useAuthSession>
 }) {
-  if (!auth.isAuthenticated && !auth.isSessionLoading) {
+  if (!auth.isSignedIn && !auth.isSessionLoading) {
     return (
       <Button variant="outline" size="sm" {...props}>
         Login
