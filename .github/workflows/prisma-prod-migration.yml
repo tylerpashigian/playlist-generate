@@ -3,9 +3,11 @@
 name: Prisma Prod Migration
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
     paths:
+      - ".github/workflows/prisma-prod-migration.yml"
       - "prisma/schema.prisma"
       - "prisma/migrations/**"
 
