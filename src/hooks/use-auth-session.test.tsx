@@ -6,6 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthSession } from './use-auth-session'
 import type { ReactNode } from 'react'
 import { spotifyLoginScopes } from '@/lib/spotify-scopes'
+import {
+  savedPlaylistDetailQueryKey,
+  savedPlaylistsQueryKey,
+  streamingConnectionsQueryKey,
+} from '@/lib/user-data-cache'
 
 const authMocks = vi.hoisted(() => ({
   signInEmail: vi.fn(),
@@ -52,14 +57,16 @@ vi.mock('@/lib/auth-session', () => ({
   }),
 }))
 
-function createWrapper() {
-  const queryClient = new QueryClient({
+function createQueryClient() {
+  return new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
   })
+}
 
+function createWrapper(queryClient = createQueryClient()) {
   return function TestWrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -71,6 +78,32 @@ describe('useAuthSession', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     sessionMocks.currentSession = null
+  })
+
+  it('clears user-owned query data after signing out', async () => {
+    const queryClient = createQueryClient()
+    queryClient.setQueryData(savedPlaylistsQueryKey, [{ id: 'playlist-id' }])
+    queryClient.setQueryData(savedPlaylistDetailQueryKey('playlist-id'), {
+      id: 'playlist-id',
+    })
+    queryClient.setQueryData(streamingConnectionsQueryKey, [
+      { provider: 'SPOTIFY' },
+    ])
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await act(async () => {
+      await result.current.signOut()
+    })
+
+    expect(queryClient.getQueryData(savedPlaylistsQueryKey)).toBeUndefined()
+    expect(
+      queryClient.getQueryData(savedPlaylistDetailQueryKey('playlist-id')),
+    ).toBeUndefined()
+    expect(
+      queryClient.getQueryData(streamingConnectionsQueryKey),
+    ).toBeUndefined()
   })
 
   it('distinguishes signed-in from verified app authentication', async () => {

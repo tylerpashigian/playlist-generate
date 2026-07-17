@@ -9,6 +9,7 @@ import { trpcClient } from '@/lib/trpc-client'
 import type { Artist } from '@/models/artists/models'
 import type {
   GeneratedPlaylist,
+  SavePlaylistMode,
   SavedPlaylist,
   SavedPlaylistSummary,
 } from '@/models/playlists/models'
@@ -35,9 +36,15 @@ export async function generatePlaylist(
 
 export async function saveGeneratedPlaylist(
   playlist: GeneratedPlaylist,
+  {
+    mode = 'create',
+  }: {
+    mode?: SavePlaylistMode
+  } = {},
 ): Promise<SavedPlaylist> {
   const input: SavePlaylistInput = {
     playlist: toGeneratedPlaylistDto(playlist),
+    mode,
   }
   const savedPlaylist: SavedPlaylistDto =
     await trpcClient.playlists.save.mutate(input)

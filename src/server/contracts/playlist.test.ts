@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   generatedPlaylistDtoSchema,
+  savePlaylistInputSchema,
 } from './playlists'
 import { trackMatchDtoSchema } from './spotify'
 import type { GeneratedPlaylistDto } from './playlists'
@@ -42,5 +43,27 @@ describe('playlist contracts', () => {
         matchConfidenceScore: 101,
       }),
     ).toThrow()
+  })
+
+  it('defaults playlist saves to create mode', () => {
+    const input = savePlaylistInputSchema.parse({
+      playlist: {
+        artist: {
+          mbid: 'artist-mbid',
+          name: 'Artist',
+          sortName: null,
+          disambiguation: null,
+          setlistfmUrl: null,
+        },
+        name: 'Artist recent setlist',
+        description: null,
+        scoringVersion: 'recent-weighted-v1',
+        recentSetlistCount: 1,
+        generatedAt: new Date(),
+        items: [],
+      },
+    })
+
+    expect(input.mode).toBe('create')
   })
 })

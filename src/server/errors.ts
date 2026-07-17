@@ -29,3 +29,10 @@ export class NoMatchedTracksError extends Error {
     this.name = 'NoMatchedTracksError'
   }
 }
+
+export class DuplicateSavedPlaylistError extends Error {
+  constructor(public readonly artistMbid: string) {
+    super('A saved playlist already exists for this artist.')
+    this.name = 'DuplicateSavedPlaylistError'
+  }
+}

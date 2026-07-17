@@ -1,6 +1,7 @@
 import type { Artist } from '../artists/models'
 
 export type PlaylistStatus = 'DRAFT' | 'EXPORTED' | 'ARCHIVED'
+export type SavePlaylistMode = 'create' | 'replace'
 
 export interface TrackEvidence {
   setlistfmIds: Array<string>

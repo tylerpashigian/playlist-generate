@@ -1,4 +1,14 @@
 import { Link } from '@tanstack/react-router'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useArtist } from '@/hooks/use-artist'
@@ -31,12 +41,14 @@ export function PlaylistWorkflow() {
   const authGate = getAuthGate(auth)
 
   async function handleGenerate(artist: Artist) {
+    savedPlaylists.cancelPendingReplacement()
     artistSearch.selectArtist(artist)
     await generatedPlaylist.generate(artist)
   }
 
   function handleArtistQueryChange(query: string) {
     artistSearch.setQuery(query)
+    savedPlaylists.cancelPendingReplacement()
 
     if (!query.trim()) {
       generatedPlaylist.reset()
@@ -49,6 +61,14 @@ export function PlaylistWorkflow() {
     }
 
     await savedPlaylists.save(generatedPlaylist.playlist)
+  }
+
+  async function handleReplaceSavedPlaylist() {
+    if (!auth.isAuthenticated) {
+      return
+    }
+
+    await savedPlaylists.replacePendingPlaylist()
   }
 
   async function handleMatch() {
@@ -71,75 +91,139 @@ export function PlaylistWorkflow() {
   }
 
   return (
-    <PlaylistReviewExportSection
-      review={{
-        playlist: generatedPlaylist.playlist,
-        title: 'Generated playlist',
-        subtitle: generatedPlaylist.playlist
-          ? `${generatedPlaylist.playlist.tracks.length} tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
-          : '',
-        emptyTitle: artistSearch.selectedArtist ? undefined : 'Find an artist',
-        emptyMessage: artistSearch.selectedArtist
-          ? 'Generating a confidence-ranked preview from recent setlists.'
-          : 'Search for an artist to generate a setlist-informed playlist.',
-        actions: (
-          <GeneratedPlaylistActions
-            playlist={generatedPlaylist.playlist}
-            authGate={authGate}
+    <>
+      <ReplacementConfirmationDialog
+        open={savedPlaylists.needsReplacementConfirmation}
+        playlist={generatedPlaylist.playlist}
+        existingPlaylistName={
+          savedPlaylists.existingPlaylistForReplacement?.name ?? null
+        }
+        isSaving={savedPlaylists.isSaving}
+        onReplace={handleReplaceSavedPlaylist}
+        onCancel={savedPlaylists.cancelPendingReplacement}
+      />
+
+      <PlaylistReviewExportSection
+        review={{
+          playlist: generatedPlaylist.playlist,
+          title: 'Generated playlist',
+          subtitle: generatedPlaylist.playlist
+            ? `${generatedPlaylist.playlist.tracks.length} tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
+            : '',
+          emptyTitle: artistSearch.selectedArtist
+            ? undefined
+            : 'Find an artist',
+          emptyMessage: artistSearch.selectedArtist
+            ? 'Generating a confidence-ranked preview from recent setlists.'
+            : 'Search for an artist to generate a setlist-informed playlist.',
+          actions: (
+            <GeneratedPlaylistActions
+              playlist={generatedPlaylist.playlist}
+              authGate={authGate}
+              isGenerating={generatedPlaylist.isGenerating}
+              isSaving={savedPlaylists.isSaving}
+              onSave={handleSave}
+              onRegenerate={generatedPlaylist.regenerate}
+            />
+          ),
+          isLoading: generatedPlaylist.isGenerating,
+          loadingMessage: 'Generating playlist',
+          errorMessage: generatedPlaylist.errorMessage,
+        }}
+        exports={{
+          groups: [
+            {
+              provider: 'SPOTIFY',
+              selectedPlaylist: savedPlaylists.selectedPlaylist,
+              matches: spotify.matches,
+              exportResult: spotify.exportResult,
+              isMatching: spotify.isMatching,
+              isExporting: spotify.isExporting,
+              errorMessage: spotify.errorMessage,
+              onMatchTracks: handleMatch,
+              onExport: handleExport,
+            },
+          ],
+          fallback: auth.isAuthenticated ? undefined : (
+            <AuthGatePanel
+              title="Streaming exports"
+              description={getAuthGateDescription(
+                authGate,
+                'Sign in to save drafts, match tracks, and export playlists to connected services.',
+                'Verify your email before matching tracks or exporting playlists.',
+              )}
+              action={authGate === 'verify' ? 'Verify email' : 'Sign in'}
+            />
+          ),
+        }}
+        topContent={
+          <ArtistSearchPanel
+            query={artistSearch.query}
+            artists={artistSearch.artists}
+            selectedArtist={artistSearch.selectedArtist}
+            isLoading={artistSearch.isLoading}
+            errorMessage={artistSearch.errorMessage}
+            onQueryChange={handleArtistQueryChange}
+            onSelect={(artist) => {
+              if (!artist) {
+                artistSearch.setSelectedArtist(null)
+              }
+            }}
+            onGenerate={handleGenerate}
             isGenerating={generatedPlaylist.isGenerating}
-            isSaving={savedPlaylists.isSaving}
-            onSave={handleSave}
-            onRegenerate={generatedPlaylist.regenerate}
           />
-        ),
-        isLoading: generatedPlaylist.isGenerating,
-        loadingMessage: 'Generating playlist',
-        errorMessage: generatedPlaylist.errorMessage,
+        }
+      />
+    </>
+  )
+}
+
+function ReplacementConfirmationDialog({
+  open,
+  playlist,
+  existingPlaylistName,
+  isSaving,
+  onReplace,
+  onCancel,
+}: {
+  open: boolean
+  playlist: GeneratedPlaylist | null
+  existingPlaylistName: string | null
+  isSaving: boolean
+  onReplace: () => Promise<void>
+  onCancel: () => void
+}) {
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !isSaving) {
+          onCancel()
+        }
       }}
-      exports={{
-        groups: [
-          {
-            provider: 'SPOTIFY',
-            selectedPlaylist: savedPlaylists.selectedPlaylist,
-            matches: spotify.matches,
-            exportResult: spotify.exportResult,
-            isMatching: spotify.isMatching,
-            isExporting: spotify.isExporting,
-            errorMessage: spotify.errorMessage,
-            onMatchTracks: handleMatch,
-            onExport: handleExport,
-          },
-        ],
-        fallback: auth.isAuthenticated ? undefined : (
-          <AuthGatePanel
-            title="Streaming exports"
-            description={getAuthGateDescription(
-              authGate,
-              'Sign in to save drafts, match tracks, and export playlists to connected services.',
-              'Verify your email before matching tracks or exporting playlists.',
-            )}
-            action={authGate === 'verify' ? 'Verify email' : 'Sign in'}
-          />
-        ),
-      }}
-      topContent={
-        <ArtistSearchPanel
-          query={artistSearch.query}
-          artists={artistSearch.artists}
-          selectedArtist={artistSearch.selectedArtist}
-          isLoading={artistSearch.isLoading}
-          errorMessage={artistSearch.errorMessage}
-          onQueryChange={handleArtistQueryChange}
-          onSelect={(artist) => {
-            if (!artist) {
-              artistSearch.setSelectedArtist(null)
-            }
-          }}
-          onGenerate={handleGenerate}
-          isGenerating={generatedPlaylist.isGenerating}
-        />
-      }
-    />
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Replace existing draft?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {existingPlaylistName
+              ? `${existingPlaylistName} already exists for this artist. Replacing it will update that draft with this generated playlist.`
+              : 'A saved playlist already exists for this artist. Replacing it will update that draft with this generated playlist.'}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={!playlist || isSaving}
+            onClick={() => {
+              void onReplace()
+            }}
+          >
+            {isSaving ? 'Replacing' : 'Replace existing draft'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 
@@ -281,7 +365,7 @@ function GeneratedPlaylistActions({
   onRegenerate: () => Promise<GeneratedPlaylist | null>
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap justify-end gap-2">
       <Button
         type="button"
         variant="outline"

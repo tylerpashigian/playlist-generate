@@ -1,12 +1,15 @@
 import { prisma } from '@/db'
+import { Prisma } from '@/generated/prisma/client'
 import {
   generatedPlaylistDtoSchema,
   savedPlaylistDtoSchema,
   savedPlaylistSummaryDtoSchema,
 } from '@/server/contracts/playlists'
+import { DuplicateSavedPlaylistError } from '@/server/errors'
 import type {
   GeneratedPlaylistDto,
   PlaylistItemDto,
+  SavePlaylistModeDto,
 } from '@/server/contracts/playlists'
 
 type PlaylistWithRelations = Awaited<ReturnType<typeof findUserPlaylistById>>
@@ -102,71 +105,147 @@ async function findUserPlaylistById(userId: string, playlistId: string) {
 export async function saveGeneratedPlaylist(
   userId: string,
   playlist: GeneratedPlaylistDto,
+  mode: SavePlaylistModeDto = 'create',
 ) {
   const validatedPlaylist = generatedPlaylistDtoSchema.parse(playlist)
 
-  const savedPlaylist = await prisma.$transaction(async (tx) => {
-    const artist = await tx.artist.upsert({
-      where: { mbid: validatedPlaylist.artist.mbid },
-      update: {
-        name: validatedPlaylist.artist.name,
-        sortName: validatedPlaylist.artist.sortName,
-        disambiguation: validatedPlaylist.artist.disambiguation,
-        setlistfmUrl: validatedPlaylist.artist.setlistfmUrl,
-      },
-      create: {
-        mbid: validatedPlaylist.artist.mbid,
-        name: validatedPlaylist.artist.name,
-        sortName: validatedPlaylist.artist.sortName,
-        disambiguation: validatedPlaylist.artist.disambiguation,
-        setlistfmUrl: validatedPlaylist.artist.setlistfmUrl,
-      },
+  try {
+    const savedPlaylist = await prisma.$transaction(async (tx) => {
+      const artist = await tx.artist.upsert({
+        where: { mbid: validatedPlaylist.artist.mbid },
+        update: {
+          name: validatedPlaylist.artist.name,
+          sortName: validatedPlaylist.artist.sortName,
+          disambiguation: validatedPlaylist.artist.disambiguation,
+          setlistfmUrl: validatedPlaylist.artist.setlistfmUrl,
+        },
+        create: {
+          mbid: validatedPlaylist.artist.mbid,
+          name: validatedPlaylist.artist.name,
+          sortName: validatedPlaylist.artist.sortName,
+          disambiguation: validatedPlaylist.artist.disambiguation,
+          setlistfmUrl: validatedPlaylist.artist.setlistfmUrl,
+        },
+      })
+
+      const existingPlaylist = await tx.playlist.findFirst({
+        where: {
+          userId,
+          artistId: artist.id,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      })
+
+      if (existingPlaylist && mode !== 'replace') {
+        throw new DuplicateSavedPlaylistError(validatedPlaylist.artist.mbid)
+      }
+
+      if (existingPlaylist) {
+        await tx.playlist.update({
+          where: { id: existingPlaylist.id },
+          data: {
+            status: 'DRAFT',
+            name: validatedPlaylist.name,
+            description: validatedPlaylist.description,
+            scoringVersion: validatedPlaylist.scoringVersion,
+            recentSetlistCount: validatedPlaylist.recentSetlistCount,
+            generatedAt: validatedPlaylist.generatedAt,
+            generationSettings: getGenerationSettings(),
+            items: {
+              deleteMany: {},
+              create: getPlaylistItemCreateData(validatedPlaylist),
+            },
+          },
+        })
+
+        return tx.playlist.findFirstOrThrow({
+          where: { id: existingPlaylist.id, userId },
+          include: {
+            artist: true,
+            items: {
+              orderBy: { position: 'asc' },
+            },
+          },
+        })
+      }
+
+      const createdPlaylist = await tx.playlist.create({
+        data: {
+          userId,
+          artistId: artist.id,
+          name: validatedPlaylist.name,
+          description: validatedPlaylist.description,
+          scoringVersion: validatedPlaylist.scoringVersion,
+          recentSetlistCount: validatedPlaylist.recentSetlistCount,
+          generatedAt: validatedPlaylist.generatedAt,
+          generationSettings: getGenerationSettings(),
+          items: {
+            create: getPlaylistItemCreateData(validatedPlaylist),
+          },
+        },
+      })
+
+      return tx.playlist.findFirstOrThrow({
+        where: { id: createdPlaylist.id, userId },
+        include: {
+          artist: true,
+          items: {
+            orderBy: { position: 'asc' },
+          },
+        },
+      })
     })
 
-    const createdPlaylist = await tx.playlist.create({
-      data: {
-        userId,
-        artistId: artist.id,
-        name: validatedPlaylist.name,
-        description: validatedPlaylist.description,
-        scoringVersion: validatedPlaylist.scoringVersion,
-        recentSetlistCount: validatedPlaylist.recentSetlistCount,
-        generatedAt: validatedPlaylist.generatedAt,
-        generationSettings: {
-          source: 'setlistfm',
-          limit: 25,
-        },
-        items: {
-          create: validatedPlaylist.items.map((item) => ({
-            position: item.position,
-            songTitle: item.songTitle,
-            normalizedSongTitle: item.normalizedSongTitle,
-            isCover: item.isCover,
-            originalArtistName: item.originalArtistName,
-            originalArtistMbid: item.originalArtistMbid,
-            confidenceScore: item.confidenceScore,
-            weightedScore: item.weightedScore,
-            appearanceCount: item.appearanceCount,
-            totalSetlistsConsidered: item.totalSetlistsConsidered,
-            lastPlayedAt: item.lastPlayedAt,
-            evidence: item.evidence,
-          })),
-        },
-      },
-    })
+    return mapPlaylistDetail(savedPlaylist)
+  } catch (error) {
+    if (isPlaylistArtistUniquenessError(error)) {
+      throw new DuplicateSavedPlaylistError(validatedPlaylist.artist.mbid)
+    }
 
-    return tx.playlist.findFirstOrThrow({
-      where: { id: createdPlaylist.id, userId },
-      include: {
-        artist: true,
-        items: {
-          orderBy: { position: 'asc' },
-        },
-      },
-    })
-  })
+    throw error
+  }
+}
 
-  return mapPlaylistDetail(savedPlaylist)
+function isPlaylistArtistUniquenessError(error: unknown) {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== 'P2002'
+  ) {
+    return false
+  }
+
+  const target = error.meta?.target
+
+  return (
+    Array.isArray(target) &&
+    target.includes('userId') &&
+    target.includes('artistId')
+  )
+}
+
+function getGenerationSettings() {
+  return {
+    source: 'setlistfm',
+    limit: 25,
+  }
+}
+
+function getPlaylistItemCreateData(playlist: GeneratedPlaylistDto) {
+  return playlist.items.map((item) => ({
+    position: item.position,
+    songTitle: item.songTitle,
+    normalizedSongTitle: item.normalizedSongTitle,
+    isCover: item.isCover,
+    originalArtistName: item.originalArtistName,
+    originalArtistMbid: item.originalArtistMbid,
+    confidenceScore: item.confidenceScore,
+    weightedScore: item.weightedScore,
+    appearanceCount: item.appearanceCount,
+    totalSetlistsConsidered: item.totalSetlistsConsidered,
+    lastPlayedAt: item.lastPlayedAt,
+    evidence: item.evidence,
+  }))
 }
 
 export async function listUserPlaylists(userId: string) {

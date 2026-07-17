@@ -3,6 +3,7 @@ import { artistDtoSchema } from './artists'
 import { z } from 'zod'
 
 export const playlistStatusSchema = z.enum(['DRAFT', 'EXPORTED', 'ARCHIVED'])
+export const savePlaylistModeSchema = z.enum(['create', 'replace'])
 
 export const songEvidenceSchema = z.object({
   setlistfmIds: z.array(z.string()),
@@ -59,6 +60,7 @@ export const generatePlaylistInputSchema = z.object({
 
 export const savePlaylistInputSchema = z.object({
   playlist: generatedPlaylistDtoSchema,
+  mode: savePlaylistModeSchema.default('create'),
 })
 
 export const playlistIdInputSchema = z.object({
@@ -66,6 +68,7 @@ export const playlistIdInputSchema = z.object({
 })
 
 export type PlaylistStatusDto = z.infer<typeof playlistStatusSchema>
+export type SavePlaylistModeDto = z.infer<typeof savePlaylistModeSchema>
 export type SongEvidenceDto = z.infer<typeof songEvidenceSchema>
 export type PlaylistItemDto = z.infer<typeof playlistItemDtoSchema>
 export type GeneratedPlaylistDto = z.infer<typeof generatedPlaylistDtoSchema>

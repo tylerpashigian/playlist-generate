@@ -4,6 +4,7 @@ import { authClient } from '@/lib/auth-client'
 import { getErrorMessage } from '@/lib/errors'
 import { spotifyPlaylistExportScopes } from '@/lib/spotify-scopes'
 import { toast } from '@/lib/toast'
+import { streamingConnectionsQueryKey } from '@/lib/user-data-cache'
 import {
   disconnectStreamingProvider,
   listStreamingConnections,
@@ -12,8 +13,6 @@ import type {
   StreamingConnection,
   StreamingProvider,
 } from '@/models/streaming/models'
-
-const streamingConnectionsQueryKey = ['streaming-connections'] as const
 
 function getSpotifyProvider() {
   return 'SPOTIFY'

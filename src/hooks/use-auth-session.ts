@@ -7,6 +7,7 @@ import {
 } from '@/lib/auth-session'
 import { getErrorMessage } from '@/lib/errors'
 import { spotifyLoginScopes } from '@/lib/spotify-scopes'
+import { clearUserDataCache } from '@/lib/user-data-cache'
 
 interface EmailAuthInput {
   callbackURL?: string
@@ -166,6 +167,7 @@ export function useAuthSession() {
   async function signOut() {
     setAuthError(null)
     await authClient.signOut()
+    clearUserDataCache(queryClient)
     queryClient.setQueryData(authSessionQueryKey, null)
     await queryClient.invalidateQueries({ queryKey: authSessionQueryKey })
   }

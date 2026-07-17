@@ -38,7 +38,7 @@ export const playlistsRouter = {
     .output(savedPlaylistDtoSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        return await saveGeneratedPlaylist(ctx.userId, input.playlist)
+        return await saveGeneratedPlaylist(ctx.userId, input.playlist, input.mode)
       } catch (error) {
         throw toTRPCError(error)
       }

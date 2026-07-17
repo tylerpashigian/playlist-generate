@@ -3,21 +3,20 @@ import { useCallback, useState } from 'react'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from '@/lib/toast'
 import {
+  savedPlaylistDetailQueryKey,
+  savedPlaylistsQueryKey,
+} from '@/lib/user-data-cache'
+import {
   getSavedPlaylist,
   listSavedPlaylists,
   saveGeneratedPlaylist,
 } from '@/services/playlists'
 import type {
   GeneratedPlaylist,
+  SavePlaylistMode,
   SavedPlaylist,
   SavedPlaylistSummary,
 } from '@/models/playlists/models'
-
-const savedPlaylistsQueryKey = ['saved-playlists'] as const
-
-function savedPlaylistDetailQueryKey(playlistId: string | null) {
-  return ['saved-playlist', playlistId] as const
-}
 
 export function useSavedPlaylists({
   enabled = true,
@@ -29,6 +28,8 @@ export function useSavedPlaylists({
     null,
   )
   const [savedPlaylist, setSavedPlaylist] = useState<SavedPlaylist | null>(null)
+  const [pendingReplacementPlaylist, setPendingReplacementPlaylist] =
+    useState<GeneratedPlaylist | null>(null)
 
   const listQuery = useQuery({
     queryKey: savedPlaylistsQueryKey,
@@ -43,11 +44,17 @@ export function useSavedPlaylists({
   })
 
   const saveMutation = useMutation({
-    mutationFn: (playlist: GeneratedPlaylist) =>
-      saveGeneratedPlaylist(playlist),
+    mutationFn: ({
+      playlist,
+      mode,
+    }: {
+      playlist: GeneratedPlaylist
+      mode: SavePlaylistMode
+    }) => saveGeneratedPlaylist(playlist, { mode }),
     onSuccess: (playlist) => {
       setSavedPlaylist(playlist)
       setSelectedPlaylistId(playlist.id)
+      setPendingReplacementPlaylist(null)
       queryClient.setQueryData(
         savedPlaylistDetailQueryKey(playlist.id),
         playlist,
@@ -56,12 +63,56 @@ export function useSavedPlaylists({
     },
   })
 
-  async function save(playlist: GeneratedPlaylist) {
-    return await toast.promise(saveMutation.mutateAsync(playlist), {
+  async function save(
+    playlist: GeneratedPlaylist,
+    {
+      mode = 'create',
+    }: {
+      mode?: SavePlaylistMode
+    } = {},
+  ) {
+    if (mode === 'create' && findSavedPlaylistForArtist(playlist)) {
+      setPendingReplacementPlaylist(playlist)
+      return null
+    }
+
+    const savePromise = saveMutation.mutateAsync({ playlist, mode })
+
+    if (mode === 'create') {
+      try {
+        const savedPlaylistResult = await savePromise
+        toast.success(`${savedPlaylistResult.name} saved`)
+        return savedPlaylistResult
+      } catch (error) {
+        if (isDuplicatePlaylistConflict(error)) {
+          saveMutation.reset()
+          await listQuery.refetch()
+          setPendingReplacementPlaylist(playlist)
+          return null
+        }
+
+        toast.error(error, 'Playlist could not be saved')
+        throw error
+      }
+    }
+
+    return await toast.promise(savePromise, {
       loading: 'Saving playlist',
-      success: (savedPlaylistResult) => `${savedPlaylistResult.name} saved`,
+      success: (savedPlaylistResult) => `${savedPlaylistResult.name} replaced`,
       error: 'Playlist could not be saved',
     })
+  }
+
+  async function replacePendingPlaylist() {
+    if (!pendingReplacementPlaylist) {
+      return null
+    }
+
+    return await save(pendingReplacementPlaylist, { mode: 'replace' })
+  }
+
+  function cancelPendingReplacement() {
+    setPendingReplacementPlaylist(null)
   }
 
   const selectPlaylist = useCallback((playlistId: string | null) => {
@@ -71,6 +122,7 @@ export function useSavedPlaylists({
   function resetSavedPlaylist() {
     setSavedPlaylist(null)
     setSelectedPlaylistId(null)
+    setPendingReplacementPlaylist(null)
     saveMutation.reset()
   }
 
@@ -81,12 +133,21 @@ export function useSavedPlaylists({
         ? savedPlaylist
         : null
 
+  const existingPlaylistForReplacement = pendingReplacementPlaylist
+    ? findSavedPlaylistForArtist(pendingReplacementPlaylist)
+    : null
+
   return {
     playlists: listQuery.data ?? ([] satisfies Array<SavedPlaylistSummary>),
     selectedPlaylist,
     selectedPlaylistId,
+    pendingReplacementPlaylist,
+    existingPlaylistForReplacement,
+    needsReplacementConfirmation: Boolean(pendingReplacementPlaylist),
     selectPlaylist,
     save,
+    replacePendingPlaylist,
+    cancelPendingReplacement,
     resetSavedPlaylist,
     refetchPlaylists: listQuery.refetch,
     refetchSelectedPlaylist: detailQuery.refetch,
@@ -101,4 +162,27 @@ export function useSavedPlaylists({
       getErrorMessage(detailQuery.error) ??
       getErrorMessage(saveMutation.error),
   }
+
+  function findSavedPlaylistForArtist(playlist: GeneratedPlaylist) {
+    return (
+      (listQuery.data ?? []).find(
+        (savedPlaylistSummary) =>
+          savedPlaylistSummary.artist.mbid === playlist.artist.mbid,
+      ) ?? null
+    )
+  }
+}
+
+function isDuplicatePlaylistConflict(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+
+  const data = (error as { data?: { code?: unknown } }).data
+  const message = (error as { message?: unknown }).message
+
+  return (
+    data?.code === 'CONFLICT' ||
+    message === 'A saved playlist already exists for this artist.'
+  )
 }

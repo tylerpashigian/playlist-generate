@@ -72,7 +72,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             TanStackQueryDevtools,
           ]}
         />
-        <Analytics />
+        <Analytics debug={false} />
         <Toaster />
         <Scripts />
       </body>

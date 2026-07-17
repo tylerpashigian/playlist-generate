@@ -146,6 +146,7 @@ model Playlist {
   externalPlaylists  ExternalPlaylist[]
 
   @@index([userId, createdAt])
+  @@unique([userId, artistId])
   @@index([artistId])
   @@map("playlist")
 }

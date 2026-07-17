@@ -309,14 +309,72 @@ describe('playlist workflow hooks', () => {
 
     expect(serviceMocks.saveGeneratedPlaylist).toHaveBeenCalledWith(
       generatedPlaylist,
+      { mode: 'create' },
     )
     expect(result.current.selectedPlaylistId).toBe('playlist-id')
-    expect(notificationMocks.promise).toHaveBeenCalledWith(
-      expect.any(Promise),
-      expect.objectContaining({
-        loading: 'Saving playlist',
-        error: 'Playlist could not be saved',
-      }),
+    expect(notificationMocks.success).toHaveBeenCalledWith(
+      'Artist recent setlist saved',
+    )
+  })
+
+  it('requires confirmation before replacing an existing artist playlist', async () => {
+    const existingPlaylist = {
+      ...generatedPlaylist,
+      id: 'existing-playlist-id',
+      status: 'DRAFT',
+      createdAt: generatedPlaylist.generatedAt,
+      updatedAt: generatedPlaylist.generatedAt,
+      trackCount: 0,
+    }
+    serviceMocks.listSavedPlaylists.mockResolvedValue([existingPlaylist])
+    serviceMocks.saveGeneratedPlaylist.mockResolvedValue(existingPlaylist)
+    const { result } = renderHook(() => useSavedPlaylists(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.playlists).toHaveLength(1)
+    })
+
+    await act(async () => {
+      await result.current.save(generatedPlaylist)
+    })
+
+    expect(serviceMocks.saveGeneratedPlaylist).not.toHaveBeenCalled()
+    expect(result.current.needsReplacementConfirmation).toBe(true)
+    expect(result.current.existingPlaylistForReplacement?.id).toBe(
+      'existing-playlist-id',
+    )
+
+    await act(async () => {
+      await result.current.replacePendingPlaylist()
+    })
+
+    expect(serviceMocks.saveGeneratedPlaylist).toHaveBeenCalledWith(
+      generatedPlaylist,
+      { mode: 'replace' },
+    )
+    expect(result.current.needsReplacementConfirmation).toBe(false)
+    expect(result.current.selectedPlaylistId).toBe('existing-playlist-id')
+  })
+
+  it('shows replacement confirmation when the backend rejects a stale create save', async () => {
+    const conflictError = new Error(
+      'A saved playlist already exists for this artist.',
+    ) as Error & { data: { code: string } }
+    conflictError.data = { code: 'CONFLICT' }
+    serviceMocks.saveGeneratedPlaylist.mockRejectedValue(conflictError)
+    const { result } = renderHook(() => useSavedPlaylists(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      await result.current.save(generatedPlaylist)
+    })
+
+    expect(result.current.needsReplacementConfirmation).toBe(true)
+    expect(notificationMocks.error).not.toHaveBeenCalledWith(
+      'Playlist could not be saved',
     )
   })
 

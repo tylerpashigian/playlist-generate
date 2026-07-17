@@ -104,11 +104,47 @@ describe('frontend services', () => {
     })
     expect(trpcMocks.playlistsSaveMutate).toHaveBeenCalledWith({
       playlist: generatedPlaylistDto,
+      mode: 'create',
     })
     expect(savedPlaylist).toMatchObject({
       id: 'saved-playlist-id',
       trackCount: 0,
       tracks: [],
+    })
+  })
+
+  it('sends replace mode when replacing a saved playlist', async () => {
+    trpcMocks.playlistsSaveMutate.mockResolvedValue({
+      ...generatedPlaylistDto,
+      id: 'saved-playlist-id',
+      status: 'DRAFT',
+      createdAt: generatedAt,
+      updatedAt: generatedAt,
+      itemCount: 0,
+    })
+
+    await saveGeneratedPlaylist(
+      {
+        artist: {
+          mbid: 'artist-mbid',
+          name: 'Artist',
+          sortName: null,
+          disambiguation: null,
+          setlistfmUrl: null,
+        },
+        name: 'Artist recent setlist',
+        description: null,
+        scoringVersion: 'recent-weighted-v1',
+        recentSetlistCount: 1,
+        generatedAt,
+        tracks: [],
+      },
+      { mode: 'replace' },
+    )
+
+    expect(trpcMocks.playlistsSaveMutate).toHaveBeenCalledWith({
+      playlist: generatedPlaylistDto,
+      mode: 'replace',
     })
   })
 

@@ -1,4 +1,5 @@
 import {
+  DuplicateSavedPlaylistError,
   ExternalProviderError,
   NoMatchedTracksError,
   OnlyLoginMethodError,
@@ -32,6 +33,14 @@ export function toTRPCError(error: unknown): TRPCError {
     return new TRPCError({
       code: 'BAD_REQUEST',
       message: 'No matched Spotify tracks are available to export.',
+      cause: error,
+    })
+  }
+
+  if (error instanceof DuplicateSavedPlaylistError) {
+    return new TRPCError({
+      code: 'CONFLICT',
+      message: error.message,
       cause: error,
     })
   }
