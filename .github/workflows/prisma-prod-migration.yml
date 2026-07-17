@@ -1,5 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+# Applies committed Prisma migrations to the production database after migration changes reach main.
 
 name: Prisma Prod Migration
 
@@ -10,33 +9,34 @@ on:
       - "prisma/schema.prisma"
       - "prisma/migrations/**"
 
+permissions:
+  contents: read
+
 jobs:
   migrate-prod:
-
     runs-on: ubuntu-latest
 
     # One-at-a-time for your prod migrations on any branch (you only use main)
     concurrency:
       group: "db-migrate-production"
       cancel-in-progress: false
-      
+
     environment: production
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 22
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        cache: 'pnpm'
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: "8.15.5"
-    # This also generates the Prisma types
-    - name: Install Dependencies
-      run: pnpm i 
-    - name: Prisma migrate
-      env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: pnpm prisma migrate deploy --schema prisma/schema.prisma
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
