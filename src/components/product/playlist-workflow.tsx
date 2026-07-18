@@ -31,6 +31,8 @@ import {
   ComboboxList,
 } from '../ui/combobox'
 import { Heading4, Text } from '../ui/typography'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Delete02Icon } from '@hugeicons/core-free-icons'
 
 export function PlaylistWorkflow() {
   const auth = useAuthSession()
@@ -267,7 +269,7 @@ function ArtistSearchPanel({
           filter={null}
           inputValue={query}
           onInputValueChange={onQueryChange}
-          value={selectedArtist ?? undefined}
+          value={selectedArtist}
           onValueChange={(artist) => {
             if (!artist) {
               onSelect(null)
@@ -477,6 +479,7 @@ export function SavedPlaylistsPanel({
   isLoading,
   errorMessage,
   onSelect,
+  onDelete,
 }: {
   playlists: Array<SavedPlaylistSummary>
   selectedPlaylist?: SavedPlaylist | null
@@ -484,6 +487,7 @@ export function SavedPlaylistsPanel({
   isLoading: boolean
   errorMessage: string | null
   onSelect?: (playlistId: string | null) => void
+  onDelete?: (playlist: SavedPlaylistSummary) => void
 }) {
   return (
     <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
@@ -551,6 +555,17 @@ export function SavedPlaylistsPanel({
                 Open
               </Text>
             </Link>
+            {onDelete ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                aria-label={`Delete ${playlist.name}`}
+                onClick={() => onDelete(playlist)}
+              >
+                <HugeiconsIcon icon={Delete02Icon} />
+              </Button>
+            ) : null}
           </div>
         ))}
       </div>

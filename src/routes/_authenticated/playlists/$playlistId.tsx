@@ -1,8 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { DeletePlaylistDialog } from '@/components/product/delete-playlist-dialog'
 import { PlaylistReviewExportSection } from '@/components/product/playlist-review-export-section'
 import { NavbarOffset, WithNavbar } from '@/components/product/product-navbar'
 import { StatusPanel } from '@/components/product/status-panel'
+import { Button } from '@/components/ui/button'
 import { Heading3, Text } from '@/components/ui/typography'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
 import { useSpotify } from '@/hooks/use-spotify'
@@ -13,6 +15,7 @@ export const Route = createFileRoute('/_authenticated/playlists/$playlistId')({
 
 function PlaylistDetailRoute() {
   const { playlistId } = Route.useParams()
+  const navigate = useNavigate()
   const savedPlaylists = useSavedPlaylists()
   const spotify = useSpotify()
 
@@ -39,28 +42,54 @@ function PlaylistDetailRoute() {
     })
   }
 
+  async function handleDelete() {
+    const deletedPlaylistId = await savedPlaylists.confirmDeletion()
+
+    if (deletedPlaylistId) {
+      await navigate({ to: '/profile', replace: true })
+    }
+  }
+
   const playlist = savedPlaylists.selectedPlaylist
 
   return (
     <WithNavbar>
+      <DeletePlaylistDialog
+        open={savedPlaylists.needsDeletionConfirmation}
+        playlistName={savedPlaylists.pendingDeletionPlaylist?.name ?? null}
+        isDeleting={savedPlaylists.isDeleting}
+        onConfirm={handleDelete}
+        onCancel={savedPlaylists.cancelDeletion}
+      />
       <main className="min-h-dvh bg-primary-foreground">
         <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-14 sm:px-8">
-          <section className="border-b border-border pb-8">
-            <Text
-              size="xs"
-              weight="semibold"
-              className="uppercase text-muted-foreground"
-            >
-              Saved playlist
-            </Text>
-            <Heading3 className="mt-3 text-foreground">
-              {playlist?.name ?? 'Playlist detail'}
-            </Heading3>
-            <Text size="sm" className="mt-2 max-w-150 text-muted-foreground">
-              {playlist
-                ? `${playlist.trackCount} tracks from ${playlist.artist.name}`
-                : 'Review confidence scores and export status.'}
-            </Text>
+          <section className="flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Text
+                size="xs"
+                weight="semibold"
+                className="uppercase text-muted-foreground"
+              >
+                Saved playlist
+              </Text>
+              <Heading3 className="mt-3 text-foreground">
+                {playlist?.name ?? 'Playlist detail'}
+              </Heading3>
+              <Text size="sm" className="mt-2 max-w-150 text-muted-foreground">
+                {playlist
+                  ? `${playlist.trackCount} tracks from ${playlist.artist.name}`
+                  : 'Review confidence scores and export status.'}
+              </Text>
+            </div>
+            {playlist ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => savedPlaylists.requestDeletion(playlist)}
+              >
+                Delete playlist
+              </Button>
+            ) : null}
           </section>
 
           <div className="pt-8">

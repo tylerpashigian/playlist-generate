@@ -36,3 +36,10 @@ export class DuplicateSavedPlaylistError extends Error {
     this.name = 'DuplicateSavedPlaylistError'
   }
 }
+
+export class PlaylistNotFoundError extends Error {
+  constructor() {
+    super('Playlist not found.')
+    this.name = 'PlaylistNotFoundError'
+  }
+}

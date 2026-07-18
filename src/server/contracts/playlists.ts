@@ -67,6 +67,10 @@ export const playlistIdInputSchema = z.object({
   playlistId: z.string().min(1),
 })
 
+export const deletePlaylistResultDtoSchema = z.object({
+  playlistId: z.string(),
+})
+
 export type PlaylistStatusDto = z.infer<typeof playlistStatusSchema>
 export type SavePlaylistModeDto = z.infer<typeof savePlaylistModeSchema>
 export type SongEvidenceDto = z.infer<typeof songEvidenceSchema>
@@ -79,3 +83,6 @@ export type SavedPlaylistDto = z.infer<typeof savedPlaylistDtoSchema>
 export type GeneratePlaylistInput = z.infer<typeof generatePlaylistInputSchema>
 export type SavePlaylistInput = z.infer<typeof savePlaylistInputSchema>
 export type PlaylistIdInput = z.infer<typeof playlistIdInputSchema>
+export type DeletePlaylistResultDto = z.infer<
+  typeof deletePlaylistResultDtoSchema
+>

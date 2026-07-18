@@ -18,6 +18,7 @@ const serviceMocks = vi.hoisted(() => ({
   searchArtists: vi.fn(),
   generatePlaylist: vi.fn(),
   saveGeneratedPlaylist: vi.fn(),
+  deleteSavedPlaylist: vi.fn(),
   listSavedPlaylists: vi.fn(),
   getSavedPlaylist: vi.fn(),
   listStreamingConnections: vi.fn(),
@@ -45,6 +46,7 @@ vi.mock('@/services/artists', () => ({
 vi.mock('@/services/playlists', () => ({
   generatePlaylist: serviceMocks.generatePlaylist,
   saveGeneratedPlaylist: serviceMocks.saveGeneratedPlaylist,
+  deleteSavedPlaylist: serviceMocks.deleteSavedPlaylist,
   listSavedPlaylists: serviceMocks.listSavedPlaylists,
   getSavedPlaylist: serviceMocks.getSavedPlaylist,
 }))
@@ -376,6 +378,75 @@ describe('playlist workflow hooks', () => {
     expect(notificationMocks.error).not.toHaveBeenCalledWith(
       'Playlist could not be saved',
     )
+  })
+
+  it('confirms deletion, clears selection, and removes the cached detail', async () => {
+    const savedPlaylist = {
+      ...generatedPlaylist,
+      id: 'playlist-id',
+      status: 'DRAFT' as const,
+      createdAt: generatedPlaylist.generatedAt,
+      updatedAt: generatedPlaylist.generatedAt,
+      trackCount: 0,
+    }
+    serviceMocks.saveGeneratedPlaylist.mockResolvedValue(savedPlaylist)
+    serviceMocks.deleteSavedPlaylist.mockResolvedValue('playlist-id')
+    const { result } = renderHook(() => useSavedPlaylists(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      await result.current.save(generatedPlaylist)
+    })
+
+    act(() => {
+      result.current.requestDeletion(savedPlaylist)
+    })
+
+    expect(result.current.needsDeletionConfirmation).toBe(true)
+    expect(serviceMocks.deleteSavedPlaylist).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await result.current.confirmDeletion()
+    })
+
+    expect(serviceMocks.deleteSavedPlaylist).toHaveBeenCalledWith('playlist-id')
+    expect(result.current.selectedPlaylistId).toBeNull()
+    expect(result.current.selectedPlaylist).toBeNull()
+    expect(result.current.needsDeletionConfirmation).toBe(false)
+  })
+
+  it('cancels a pending playlist deletion without mutating', () => {
+    const { result } = renderHook(() => useSavedPlaylists(), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.requestDeletion({ id: 'playlist-id', name: 'Playlist' })
+      result.current.cancelDeletion()
+    })
+
+    expect(result.current.needsDeletionConfirmation).toBe(false)
+    expect(serviceMocks.deleteSavedPlaylist).not.toHaveBeenCalled()
+  })
+
+  it('retains deletion confirmation when deletion fails', async () => {
+    serviceMocks.deleteSavedPlaylist.mockRejectedValue(
+      new Error('Playlist could not be deleted'),
+    )
+    const { result } = renderHook(() => useSavedPlaylists(), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.requestDeletion({ id: 'playlist-id', name: 'Playlist' })
+    })
+
+    await expect(result.current.confirmDeletion()).rejects.toThrow(
+      'Playlist could not be deleted',
+    )
+
+    expect(result.current.needsDeletionConfirmation).toBe(true)
   })
 
   it('does not call protected saved playlist reads when disabled', async () => {

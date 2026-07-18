@@ -1,4 +1,5 @@
 import {
+  deletePlaylistResultDtoSchema,
   generatedPlaylistDtoSchema,
   generatePlaylistInputSchema,
   playlistIdInputSchema,
@@ -8,6 +9,7 @@ import {
 } from '@/server/contracts/playlists'
 import { fetchRecentSetlistsForArtist } from '@/server/providers/setlistfm/client'
 import {
+  deleteUserPlaylist,
   getUserPlaylist,
   listUserPlaylists,
   saveGeneratedPlaylist,
@@ -74,5 +76,16 @@ export const playlistsRouter = {
       }
 
       return playlist
+    }),
+
+  delete: protectedProcedure
+    .input(playlistIdInputSchema)
+    .output(deletePlaylistResultDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await deleteUserPlaylist(ctx.userId, input.playlistId)
+      } catch (error) {
+        throw toTRPCError(error)
+      }
     }),
 } satisfies TRPCRouterRecord

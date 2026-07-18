@@ -5,7 +5,10 @@ import {
   savedPlaylistDtoSchema,
   savedPlaylistSummaryDtoSchema,
 } from '@/server/contracts/playlists'
-import { DuplicateSavedPlaylistError } from '@/server/errors'
+import {
+  DuplicateSavedPlaylistError,
+  PlaylistNotFoundError,
+} from '@/server/errors'
 import type {
   GeneratedPlaylistDto,
   PlaylistItemDto,
@@ -269,4 +272,16 @@ export async function getUserPlaylist(userId: string, playlistId: string) {
   if (!playlist) return null
 
   return mapPlaylistDetail(playlist)
+}
+
+export async function deleteUserPlaylist(userId: string, playlistId: string) {
+  const result = await prisma.playlist.deleteMany({
+    where: { id: playlistId, userId },
+  })
+
+  if (result.count === 0) {
+    throw new PlaylistNotFoundError()
+  }
+
+  return { playlistId }
 }
