@@ -295,6 +295,7 @@ export type PlaylistOrderByWithRelationInput = {
 
 export type PlaylistWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  userId_artistId?: Prisma.PlaylistUserIdArtistIdCompoundUniqueInput
   AND?: Prisma.PlaylistWhereInput | Prisma.PlaylistWhereInput[]
   OR?: Prisma.PlaylistWhereInput[]
   NOT?: Prisma.PlaylistWhereInput | Prisma.PlaylistWhereInput[]
@@ -313,7 +314,7 @@ export type PlaylistWhereUniqueInput = Prisma.AtLeast<{
   artist?: Prisma.XOR<Prisma.ArtistScalarRelationFilter, Prisma.ArtistWhereInput>
   items?: Prisma.PlaylistItemListRelationFilter
   externalPlaylists?: Prisma.ExternalPlaylistListRelationFilter
-}, "id">
+}, "id" | "userId_artistId">
 
 export type PlaylistOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -472,6 +473,11 @@ export type PlaylistListRelationFilter = {
 
 export type PlaylistOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type PlaylistUserIdArtistIdCompoundUniqueInput = {
+  userId: string
+  artistId: string
 }
 
 export type PlaylistCountOrderByAggregateInput = {
