@@ -15,6 +15,7 @@ import type {
 } from '@/models/playlists/models'
 import type {
   GeneratedPlaylistDto,
+  DeletePlaylistResultDto,
   GeneratePlaylistInput,
   PlaylistIdInput,
   SavedPlaylistDto,
@@ -68,4 +69,12 @@ export async function getSavedPlaylist(
   const playlist: SavedPlaylistDto = await trpcClient.playlists.get.query(input)
 
   return toSavedPlaylist(playlist)
+}
+
+export async function deleteSavedPlaylist(playlistId: string): Promise<string> {
+  const input: PlaylistIdInput = { playlistId }
+  const result: DeletePlaylistResultDto =
+    await trpcClient.playlists.delete.mutate(input)
+
+  return result.playlistId
 }

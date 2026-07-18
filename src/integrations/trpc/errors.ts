@@ -3,6 +3,7 @@ import {
   ExternalProviderError,
   NoMatchedTracksError,
   OnlyLoginMethodError,
+  PlaylistNotFoundError,
   SpotifyNotConnectedError,
 } from '@/server/errors'
 
@@ -40,6 +41,14 @@ export function toTRPCError(error: unknown): TRPCError {
   if (error instanceof DuplicateSavedPlaylistError) {
     return new TRPCError({
       code: 'CONFLICT',
+      message: error.message,
+      cause: error,
+    })
+  }
+
+  if (error instanceof PlaylistNotFoundError) {
+    return new TRPCError({
+      code: 'NOT_FOUND',
       message: error.message,
       cause: error,
     })

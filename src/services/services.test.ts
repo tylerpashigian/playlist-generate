@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { searchArtists } from './artists'
-import { generatePlaylist, saveGeneratedPlaylist } from './playlists'
+import {
+  deleteSavedPlaylist,
+  generatePlaylist,
+  saveGeneratedPlaylist,
+} from './playlists'
 import { disconnectStreamingProvider } from './streaming'
 import { exportPlaylistToSpotify, matchPlaylistTracks } from './spotify'
 
@@ -10,6 +14,7 @@ const trpcMocks = vi.hoisted(() => ({
   playlistsSaveMutate: vi.fn(),
   playlistsListQuery: vi.fn(),
   playlistsGetQuery: vi.fn(),
+  playlistsDeleteMutate: vi.fn(),
   streamingConnectionsQuery: vi.fn(),
   streamingDisconnectMutate: vi.fn(),
   spotifyMatchTracksMutate: vi.fn(),
@@ -26,6 +31,7 @@ vi.mock('@/lib/trpc-client', () => ({
       save: { mutate: trpcMocks.playlistsSaveMutate },
       list: { query: trpcMocks.playlistsListQuery },
       get: { query: trpcMocks.playlistsGetQuery },
+      delete: { mutate: trpcMocks.playlistsDeleteMutate },
     },
     streaming: {
       connections: { query: trpcMocks.streamingConnectionsQuery },
@@ -145,6 +151,19 @@ describe('frontend services', () => {
     expect(trpcMocks.playlistsSaveMutate).toHaveBeenCalledWith({
       playlist: generatedPlaylistDto,
       mode: 'replace',
+    })
+  })
+
+  it('deletes saved playlists through tRPC', async () => {
+    trpcMocks.playlistsDeleteMutate.mockResolvedValue({
+      playlistId: 'saved-playlist-id',
+    })
+
+    await expect(deleteSavedPlaylist('saved-playlist-id')).resolves.toBe(
+      'saved-playlist-id',
+    )
+    expect(trpcMocks.playlistsDeleteMutate).toHaveBeenCalledWith({
+      playlistId: 'saved-playlist-id',
     })
   })
 

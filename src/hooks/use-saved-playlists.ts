@@ -7,6 +7,7 @@ import {
   savedPlaylistsQueryKey,
 } from '@/lib/user-data-cache'
 import {
+  deleteSavedPlaylist,
   getSavedPlaylist,
   listSavedPlaylists,
   saveGeneratedPlaylist,
@@ -17,6 +18,8 @@ import type {
   SavedPlaylist,
   SavedPlaylistSummary,
 } from '@/models/playlists/models'
+
+type PlaylistDeletionTarget = Pick<SavedPlaylistSummary, 'id' | 'name'>
 
 export function useSavedPlaylists({
   enabled = true,
@@ -30,6 +33,8 @@ export function useSavedPlaylists({
   const [savedPlaylist, setSavedPlaylist] = useState<SavedPlaylist | null>(null)
   const [pendingReplacementPlaylist, setPendingReplacementPlaylist] =
     useState<GeneratedPlaylist | null>(null)
+  const [pendingDeletionPlaylist, setPendingDeletionPlaylist] =
+    useState<PlaylistDeletionTarget | null>(null)
 
   const listQuery = useQuery({
     queryKey: savedPlaylistsQueryKey,
@@ -59,6 +64,28 @@ export function useSavedPlaylists({
         savedPlaylistDetailQueryKey(playlist.id),
         playlist,
       )
+      void queryClient.invalidateQueries({ queryKey: savedPlaylistsQueryKey })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (playlistId: string) => deleteSavedPlaylist(playlistId),
+    onSuccess: (playlistId) => {
+      queryClient.removeQueries({
+        queryKey: savedPlaylistDetailQueryKey(playlistId),
+      })
+      queryClient.setQueryData<Array<SavedPlaylistSummary>>(
+        savedPlaylistsQueryKey,
+        (playlists) =>
+          playlists?.filter((playlist) => playlist.id !== playlistId) ?? [],
+      )
+      setSavedPlaylist((currentPlaylist) =>
+        currentPlaylist?.id === playlistId ? null : currentPlaylist,
+      )
+      setSelectedPlaylistId((currentPlaylistId) =>
+        currentPlaylistId === playlistId ? null : currentPlaylistId,
+      )
+      setPendingDeletionPlaylist(null)
       void queryClient.invalidateQueries({ queryKey: savedPlaylistsQueryKey })
     },
   })
@@ -115,6 +142,30 @@ export function useSavedPlaylists({
     setPendingReplacementPlaylist(null)
   }
 
+  function requestDeletion(playlist: PlaylistDeletionTarget) {
+    setPendingDeletionPlaylist(playlist)
+  }
+
+  function cancelDeletion() {
+    if (!deleteMutation.isPending) {
+      setPendingDeletionPlaylist(null)
+    }
+  }
+
+  async function confirmDeletion() {
+    if (!pendingDeletionPlaylist) {
+      return null
+    }
+
+    const { id, name } = pendingDeletionPlaylist
+
+    return await toast.promise(deleteMutation.mutateAsync(id), {
+      loading: 'Deleting playlist',
+      success: `${name} deleted`,
+      error: 'Playlist could not be deleted',
+    })
+  }
+
   const selectPlaylist = useCallback((playlistId: string | null) => {
     setSelectedPlaylistId(playlistId)
   }, [])
@@ -123,7 +174,9 @@ export function useSavedPlaylists({
     setSavedPlaylist(null)
     setSelectedPlaylistId(null)
     setPendingReplacementPlaylist(null)
+    setPendingDeletionPlaylist(null)
     saveMutation.reset()
+    deleteMutation.reset()
   }
 
   const selectedPlaylist =
@@ -144,23 +197,30 @@ export function useSavedPlaylists({
     pendingReplacementPlaylist,
     existingPlaylistForReplacement,
     needsReplacementConfirmation: Boolean(pendingReplacementPlaylist),
+    pendingDeletionPlaylist,
+    needsDeletionConfirmation: Boolean(pendingDeletionPlaylist),
     selectPlaylist,
     save,
     replacePendingPlaylist,
     cancelPendingReplacement,
+    requestDeletion,
+    confirmDeletion,
+    cancelDeletion,
     resetSavedPlaylist,
     refetchPlaylists: listQuery.refetch,
     refetchSelectedPlaylist: detailQuery.refetch,
     isLoadingPlaylists: listQuery.isLoading,
     isLoadingSelectedPlaylist: detailQuery.isLoading,
     isSaving: saveMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     listError: listQuery.error,
     detailError: detailQuery.error,
     saveError: saveMutation.error,
     errorMessage:
       getErrorMessage(listQuery.error) ??
       getErrorMessage(detailQuery.error) ??
-      getErrorMessage(saveMutation.error),
+      getErrorMessage(saveMutation.error) ??
+      getErrorMessage(deleteMutation.error),
   }
 
   function findSavedPlaylistForArtist(playlist: GeneratedPlaylist) {

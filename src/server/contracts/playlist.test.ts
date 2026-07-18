@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  deletePlaylistResultDtoSchema,
   generatedPlaylistDtoSchema,
+  playlistIdInputSchema,
   savePlaylistInputSchema,
 } from './playlists'
 import { trackMatchDtoSchema } from './spotify'
@@ -65,5 +67,14 @@ describe('playlist contracts', () => {
     })
 
     expect(input.mode).toBe('create')
+  })
+
+  it('validates playlist deletion contracts', () => {
+    expect(playlistIdInputSchema.parse({ playlistId: 'playlist-id' })).toEqual({
+      playlistId: 'playlist-id',
+    })
+    expect(deletePlaylistResultDtoSchema.parse({ playlistId: 'playlist-id' })).toEqual({
+      playlistId: 'playlist-id',
+    })
   })
 })

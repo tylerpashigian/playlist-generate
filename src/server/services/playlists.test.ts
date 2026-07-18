@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { saveGeneratedPlaylist } from './playlists'
-import { DuplicateSavedPlaylistError } from '@/server/errors'
+import { deleteUserPlaylist, saveGeneratedPlaylist } from './playlists'
+import {
+  DuplicateSavedPlaylistError,
+  PlaylistNotFoundError,
+} from '@/server/errors'
 import { Prisma } from '@/generated/prisma/client'
 import type { GeneratedPlaylistDto } from '@/server/contracts/playlists'
 
@@ -11,6 +14,7 @@ const prismaMocks = vi.hoisted(() => ({
   playlistFindFirst: vi.fn(),
   playlistFindFirstOrThrow: vi.fn(),
   playlistUpdate: vi.fn(),
+  playlistDeleteMany: vi.fn(),
 }))
 
 vi.mock('@/db', () => ({
@@ -24,6 +28,7 @@ vi.mock('@/db', () => ({
       findFirst: prismaMocks.playlistFindFirst,
       findFirstOrThrow: prismaMocks.playlistFindFirstOrThrow,
       update: prismaMocks.playlistUpdate,
+      deleteMany: prismaMocks.playlistDeleteMany,
     },
   },
 }))
@@ -224,5 +229,25 @@ describe('playlist service', () => {
         }),
       }),
     })
+  })
+
+  it('deletes only the authenticated user playlist', async () => {
+    prismaMocks.playlistDeleteMany.mockResolvedValue({ count: 1 })
+
+    await expect(
+      deleteUserPlaylist('user-id', 'playlist-id'),
+    ).resolves.toEqual({ playlistId: 'playlist-id' })
+
+    expect(prismaMocks.playlistDeleteMany).toHaveBeenCalledWith({
+      where: { id: 'playlist-id', userId: 'user-id' },
+    })
+  })
+
+  it('does not reveal missing or non-owned playlists when deleting', async () => {
+    prismaMocks.playlistDeleteMany.mockResolvedValue({ count: 0 })
+
+    await expect(
+      deleteUserPlaylist('user-id', 'other-user-playlist-id'),
+    ).rejects.toBeInstanceOf(PlaylistNotFoundError)
   })
 })

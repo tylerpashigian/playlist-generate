@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "build": "vite build",
+    "dev": "vite dev --port 3000 --host 127.0.0.1",
+    "build": "pnpm prisma generate && vite build",
+    "build:local": "dotenv -e .env.local -- pnpm build",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",

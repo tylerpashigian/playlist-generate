@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ConnectionPanel } from '@/components/product/connection-panel'
+import { DeletePlaylistDialog } from '@/components/product/delete-playlist-dialog'
 import { NavbarOffset, WithNavbar } from '@/components/product/product-navbar'
 import { SavedPlaylistsPanel } from '@/components/product/playlist-workflow'
 import { StatusPanel } from '@/components/product/status-panel'
@@ -22,6 +23,10 @@ function ProfileRoute() {
     spotifyCallbackURL: '/profile',
   })
 
+  async function handleDelete() {
+    await savedPlaylists.confirmDeletion()
+  }
+
   if (!auth.user) {
     return (
       <WithNavbar>
@@ -36,6 +41,13 @@ function ProfileRoute() {
 
   return (
     <WithNavbar>
+      <DeletePlaylistDialog
+        open={savedPlaylists.needsDeletionConfirmation}
+        playlistName={savedPlaylists.pendingDeletionPlaylist?.name ?? null}
+        isDeleting={savedPlaylists.isDeleting}
+        onConfirm={handleDelete}
+        onCancel={savedPlaylists.cancelDeletion}
+      />
       <main className="min-h-dvh bg-primary-foreground">
         <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-14 sm:px-8">
           <section className="flex flex-col gap-4 border-b border-border pb-8 md:flex-row md:items-end md:justify-between">
@@ -77,6 +89,7 @@ function ProfileRoute() {
               isLoading={savedPlaylists.isLoadingPlaylists}
               errorMessage={savedPlaylists.errorMessage}
               onSelect={savedPlaylists.selectPlaylist}
+              onDelete={savedPlaylists.requestDeletion}
             />
 
             <div className="grid h-fit gap-4">
