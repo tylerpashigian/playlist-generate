@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 export const trackMatchStatusSchema = z.enum([
   'MATCHED',
+  'MANUALLY_MATCHED',
   'LOW_CONFIDENCE',
   'UNRESOLVED',
   'SKIPPED',
@@ -25,6 +26,16 @@ export const trackMatchDtoSchema = z.object({
   matchConfidenceScore: z.number().min(0).max(100).nullable(),
 })
 
+export const spotifyTrackCandidateDtoSchema = z.object({
+  id: z.string(),
+  uri: z.string(),
+  externalUrl: z.url().nullable(),
+  name: z.string(),
+  artistName: z.string(),
+  albumName: z.string(),
+  durationMs: z.number().int().nonnegative(),
+})
+
 export const exportPlaylistDtoSchema = z.object({
   provider: streamingProviderSchema,
   providerPlaylistId: z.string(),
@@ -40,8 +51,26 @@ export const exportPlaylistInputSchema = playlistIdInputSchema.extend({
   name: z.string().trim().min(1).optional(),
 })
 
+export const spotifyPlaylistItemInputSchema = playlistIdInputSchema.extend({
+  playlistItemId: z.string().min(1),
+})
+
+export const searchSpotifyTracksInputSchema = spotifyPlaylistItemInputSchema.extend({
+  query: z.string().trim().min(2).max(200),
+})
+
+export const selectSpotifyTrackInputSchema = spotifyPlaylistItemInputSchema.extend({
+  spotifyTrackId: z.string().min(1),
+})
+
 export type TrackMatchStatusDto = z.infer<typeof trackMatchStatusSchema>
 export type TrackMatchDto = z.infer<typeof trackMatchDtoSchema>
+export type SpotifyTrackCandidateDto = z.infer<typeof spotifyTrackCandidateDtoSchema>
 export type ExportPlaylistDto = z.infer<typeof exportPlaylistDtoSchema>
 export type MatchTracksInput = z.infer<typeof matchTracksInputSchema>
 export type ExportPlaylistInput = z.infer<typeof exportPlaylistInputSchema>
+export type SpotifyPlaylistItemInput = z.infer<
+  typeof spotifyPlaylistItemInputSchema
+>
+export type SearchSpotifyTracksInput = z.infer<typeof searchSpotifyTracksInputSchema>
+export type SelectSpotifyTrackInput = z.infer<typeof selectSpotifyTrackInputSchema>

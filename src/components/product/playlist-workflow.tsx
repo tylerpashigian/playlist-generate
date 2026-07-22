@@ -44,6 +44,8 @@ export function PlaylistWorkflow() {
 
   async function handleGenerate(artist: Artist) {
     savedPlaylists.cancelPendingReplacement()
+    savedPlaylists.selectPlaylist(null)
+    spotify.reset()
     artistSearch.selectArtist(artist)
     await generatedPlaylist.generate(artist)
   }
@@ -54,7 +56,18 @@ export function PlaylistWorkflow() {
 
     if (!query.trim()) {
       generatedPlaylist.reset()
+      savedPlaylists.selectPlaylist(null)
+      spotify.reset()
     }
+  }
+
+  function handleTrackInclusionChange(
+    position: number,
+    isIncluded: boolean,
+  ) {
+    generatedPlaylist.setTrackIncluded(position, isIncluded)
+    savedPlaylists.selectPlaylist(null)
+    spotify.reset()
   }
 
   async function handleSave() {
@@ -110,7 +123,7 @@ export function PlaylistWorkflow() {
           playlist: generatedPlaylist.playlist,
           title: 'Generated playlist',
           subtitle: generatedPlaylist.playlist
-            ? `${generatedPlaylist.playlist.tracks.length} tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
+            ? `${generatedPlaylist.playlist.tracks.filter((track) => track.isIncluded).length} included tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
             : '',
           emptyTitle: artistSearch.selectedArtist
             ? undefined
@@ -122,15 +135,28 @@ export function PlaylistWorkflow() {
             <GeneratedPlaylistActions
               playlist={generatedPlaylist.playlist}
               authGate={authGate}
-              isGenerating={generatedPlaylist.isGenerating}
               isSaving={savedPlaylists.isSaving}
               onSave={handleSave}
-              onRegenerate={generatedPlaylist.regenerate}
             />
           ),
           isLoading: generatedPlaylist.isGenerating,
           loadingMessage: 'Generating playlist',
           errorMessage: generatedPlaylist.errorMessage,
+          renderTrackAction: (track) => (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                handleTrackInclusionChange(
+                  track.position,
+                  track.isIncluded === false,
+                )
+              }
+            >
+              {track.isIncluded === false ? 'Restore' : 'Remove'}
+            </Button>
+          ),
         }}
         exports={{
           groups: [
@@ -354,30 +380,16 @@ function getArtistSearchEmptyMessage({
 function GeneratedPlaylistActions({
   playlist,
   authGate,
-  isGenerating,
   isSaving,
   onSave,
-  onRegenerate,
 }: {
   playlist: GeneratedPlaylist | null
   authGate: AuthGateState
-  isGenerating: boolean
   isSaving: boolean
   onSave: () => Promise<void>
-  onRegenerate: () => Promise<GeneratedPlaylist | null>
 }) {
   return (
     <div className="flex flex-wrap justify-end gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        disabled={!playlist || isGenerating}
-        onClick={() => {
-          void onRegenerate()
-        }}
-      >
-        Regenerate
-      </Button>
       {authGate === 'authenticated' ? (
         <Button
           type="button"

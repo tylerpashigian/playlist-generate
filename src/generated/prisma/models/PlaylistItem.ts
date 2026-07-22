@@ -48,6 +48,7 @@ export type PlaylistItemMinAggregateOutputType = {
   position: number | null
   songTitle: string | null
   normalizedSongTitle: string | null
+  isIncluded: boolean | null
   isCover: boolean | null
   originalArtistName: string | null
   originalArtistMbid: string | null
@@ -66,6 +67,7 @@ export type PlaylistItemMaxAggregateOutputType = {
   position: number | null
   songTitle: string | null
   normalizedSongTitle: string | null
+  isIncluded: boolean | null
   isCover: boolean | null
   originalArtistName: string | null
   originalArtistMbid: string | null
@@ -84,6 +86,7 @@ export type PlaylistItemCountAggregateOutputType = {
   position: number
   songTitle: number
   normalizedSongTitle: number
+  isIncluded: number
   isCover: number
   originalArtistName: number
   originalArtistMbid: number
@@ -121,6 +124,7 @@ export type PlaylistItemMinAggregateInputType = {
   position?: true
   songTitle?: true
   normalizedSongTitle?: true
+  isIncluded?: true
   isCover?: true
   originalArtistName?: true
   originalArtistMbid?: true
@@ -139,6 +143,7 @@ export type PlaylistItemMaxAggregateInputType = {
   position?: true
   songTitle?: true
   normalizedSongTitle?: true
+  isIncluded?: true
   isCover?: true
   originalArtistName?: true
   originalArtistMbid?: true
@@ -157,6 +162,7 @@ export type PlaylistItemCountAggregateInputType = {
   position?: true
   songTitle?: true
   normalizedSongTitle?: true
+  isIncluded?: true
   isCover?: true
   originalArtistName?: true
   originalArtistMbid?: true
@@ -263,6 +269,7 @@ export type PlaylistItemGroupByOutputType = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded: boolean
   isCover: boolean
   originalArtistName: string | null
   originalArtistMbid: string | null
@@ -305,6 +312,7 @@ export type PlaylistItemWhereInput = {
   position?: Prisma.IntFilter<"PlaylistItem"> | number
   songTitle?: Prisma.StringFilter<"PlaylistItem"> | string
   normalizedSongTitle?: Prisma.StringFilter<"PlaylistItem"> | string
+  isIncluded?: Prisma.BoolFilter<"PlaylistItem"> | boolean
   isCover?: Prisma.BoolFilter<"PlaylistItem"> | boolean
   originalArtistName?: Prisma.StringNullableFilter<"PlaylistItem"> | string | null
   originalArtistMbid?: Prisma.StringNullableFilter<"PlaylistItem"> | string | null
@@ -326,6 +334,7 @@ export type PlaylistItemOrderByWithRelationInput = {
   position?: Prisma.SortOrder
   songTitle?: Prisma.SortOrder
   normalizedSongTitle?: Prisma.SortOrder
+  isIncluded?: Prisma.SortOrder
   isCover?: Prisma.SortOrder
   originalArtistName?: Prisma.SortOrderInput | Prisma.SortOrder
   originalArtistMbid?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -351,6 +360,7 @@ export type PlaylistItemWhereUniqueInput = Prisma.AtLeast<{
   position?: Prisma.IntFilter<"PlaylistItem"> | number
   songTitle?: Prisma.StringFilter<"PlaylistItem"> | string
   normalizedSongTitle?: Prisma.StringFilter<"PlaylistItem"> | string
+  isIncluded?: Prisma.BoolFilter<"PlaylistItem"> | boolean
   isCover?: Prisma.BoolFilter<"PlaylistItem"> | boolean
   originalArtistName?: Prisma.StringNullableFilter<"PlaylistItem"> | string | null
   originalArtistMbid?: Prisma.StringNullableFilter<"PlaylistItem"> | string | null
@@ -372,6 +382,7 @@ export type PlaylistItemOrderByWithAggregationInput = {
   position?: Prisma.SortOrder
   songTitle?: Prisma.SortOrder
   normalizedSongTitle?: Prisma.SortOrder
+  isIncluded?: Prisma.SortOrder
   isCover?: Prisma.SortOrder
   originalArtistName?: Prisma.SortOrderInput | Prisma.SortOrder
   originalArtistMbid?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -399,6 +410,7 @@ export type PlaylistItemScalarWhereWithAggregatesInput = {
   position?: Prisma.IntWithAggregatesFilter<"PlaylistItem"> | number
   songTitle?: Prisma.StringWithAggregatesFilter<"PlaylistItem"> | string
   normalizedSongTitle?: Prisma.StringWithAggregatesFilter<"PlaylistItem"> | string
+  isIncluded?: Prisma.BoolWithAggregatesFilter<"PlaylistItem"> | boolean
   isCover?: Prisma.BoolWithAggregatesFilter<"PlaylistItem"> | boolean
   originalArtistName?: Prisma.StringNullableWithAggregatesFilter<"PlaylistItem"> | string | null
   originalArtistMbid?: Prisma.StringNullableWithAggregatesFilter<"PlaylistItem"> | string | null
@@ -417,6 +429,7 @@ export type PlaylistItemCreateInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -438,6 +451,7 @@ export type PlaylistItemUncheckedCreateInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -457,6 +471,7 @@ export type PlaylistItemUpdateInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -478,6 +493,7 @@ export type PlaylistItemUncheckedUpdateInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -498,6 +514,7 @@ export type PlaylistItemCreateManyInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -516,6 +533,7 @@ export type PlaylistItemUpdateManyMutationInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -535,6 +553,7 @@ export type PlaylistItemUncheckedUpdateManyInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -569,6 +588,7 @@ export type PlaylistItemCountOrderByAggregateInput = {
   position?: Prisma.SortOrder
   songTitle?: Prisma.SortOrder
   normalizedSongTitle?: Prisma.SortOrder
+  isIncluded?: Prisma.SortOrder
   isCover?: Prisma.SortOrder
   originalArtistName?: Prisma.SortOrder
   originalArtistMbid?: Prisma.SortOrder
@@ -596,6 +616,7 @@ export type PlaylistItemMaxOrderByAggregateInput = {
   position?: Prisma.SortOrder
   songTitle?: Prisma.SortOrder
   normalizedSongTitle?: Prisma.SortOrder
+  isIncluded?: Prisma.SortOrder
   isCover?: Prisma.SortOrder
   originalArtistName?: Prisma.SortOrder
   originalArtistMbid?: Prisma.SortOrder
@@ -614,6 +635,7 @@ export type PlaylistItemMinOrderByAggregateInput = {
   position?: Prisma.SortOrder
   songTitle?: Prisma.SortOrder
   normalizedSongTitle?: Prisma.SortOrder
+  isIncluded?: Prisma.SortOrder
   isCover?: Prisma.SortOrder
   originalArtistName?: Prisma.SortOrder
   originalArtistMbid?: Prisma.SortOrder
@@ -708,6 +730,7 @@ export type PlaylistItemCreateWithoutPlaylistInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -727,6 +750,7 @@ export type PlaylistItemUncheckedCreateWithoutPlaylistInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -776,6 +800,7 @@ export type PlaylistItemScalarWhereInput = {
   position?: Prisma.IntFilter<"PlaylistItem"> | number
   songTitle?: Prisma.StringFilter<"PlaylistItem"> | string
   normalizedSongTitle?: Prisma.StringFilter<"PlaylistItem"> | string
+  isIncluded?: Prisma.BoolFilter<"PlaylistItem"> | boolean
   isCover?: Prisma.BoolFilter<"PlaylistItem"> | boolean
   originalArtistName?: Prisma.StringNullableFilter<"PlaylistItem"> | string | null
   originalArtistMbid?: Prisma.StringNullableFilter<"PlaylistItem"> | string | null
@@ -794,6 +819,7 @@ export type PlaylistItemCreateWithoutTrackMatchesInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -814,6 +840,7 @@ export type PlaylistItemUncheckedCreateWithoutTrackMatchesInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -848,6 +875,7 @@ export type PlaylistItemUpdateWithoutTrackMatchesInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -868,6 +896,7 @@ export type PlaylistItemUncheckedUpdateWithoutTrackMatchesInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -886,6 +915,7 @@ export type PlaylistItemCreateManyPlaylistInput = {
   position: number
   songTitle: string
   normalizedSongTitle: string
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: string | null
   originalArtistMbid?: string | null
@@ -904,6 +934,7 @@ export type PlaylistItemUpdateWithoutPlaylistInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -923,6 +954,7 @@ export type PlaylistItemUncheckedUpdateWithoutPlaylistInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -942,6 +974,7 @@ export type PlaylistItemUncheckedUpdateManyWithoutPlaylistInput = {
   position?: Prisma.IntFieldUpdateOperationsInput | number
   songTitle?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedSongTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  isIncluded?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCover?: Prisma.BoolFieldUpdateOperationsInput | boolean
   originalArtistName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   originalArtistMbid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -992,6 +1025,7 @@ export type PlaylistItemSelect<ExtArgs extends runtime.Types.Extensions.Internal
   position?: boolean
   songTitle?: boolean
   normalizedSongTitle?: boolean
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: boolean
   originalArtistMbid?: boolean
@@ -1014,6 +1048,7 @@ export type PlaylistItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   position?: boolean
   songTitle?: boolean
   normalizedSongTitle?: boolean
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: boolean
   originalArtistMbid?: boolean
@@ -1034,6 +1069,7 @@ export type PlaylistItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   position?: boolean
   songTitle?: boolean
   normalizedSongTitle?: boolean
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: boolean
   originalArtistMbid?: boolean
@@ -1054,6 +1090,7 @@ export type PlaylistItemSelectScalar = {
   position?: boolean
   songTitle?: boolean
   normalizedSongTitle?: boolean
+  isIncluded?: boolean
   isCover?: boolean
   originalArtistName?: boolean
   originalArtistMbid?: boolean
@@ -1067,7 +1104,7 @@ export type PlaylistItemSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlaylistItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "playlistId" | "position" | "songTitle" | "normalizedSongTitle" | "isCover" | "originalArtistName" | "originalArtistMbid" | "confidenceScore" | "weightedScore" | "appearanceCount" | "totalSetlistsConsidered" | "lastPlayedAt" | "evidence" | "createdAt" | "updatedAt", ExtArgs["result"]["playlistItem"]>
+export type PlaylistItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "playlistId" | "position" | "songTitle" | "normalizedSongTitle" | "isIncluded" | "isCover" | "originalArtistName" | "originalArtistMbid" | "confidenceScore" | "weightedScore" | "appearanceCount" | "totalSetlistsConsidered" | "lastPlayedAt" | "evidence" | "createdAt" | "updatedAt", ExtArgs["result"]["playlistItem"]>
 export type PlaylistItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   playlist?: boolean | Prisma.PlaylistDefaultArgs<ExtArgs>
   trackMatches?: boolean | Prisma.PlaylistItem$trackMatchesArgs<ExtArgs>
@@ -1092,6 +1129,7 @@ export type $PlaylistItemPayload<ExtArgs extends runtime.Types.Extensions.Intern
     position: number
     songTitle: string
     normalizedSongTitle: string
+    isIncluded: boolean
     isCover: boolean
     originalArtistName: string | null
     originalArtistMbid: string | null
@@ -1533,6 +1571,7 @@ export interface PlaylistItemFieldRefs {
   readonly position: Prisma.FieldRef<"PlaylistItem", 'Int'>
   readonly songTitle: Prisma.FieldRef<"PlaylistItem", 'String'>
   readonly normalizedSongTitle: Prisma.FieldRef<"PlaylistItem", 'String'>
+  readonly isIncluded: Prisma.FieldRef<"PlaylistItem", 'Boolean'>
   readonly isCover: Prisma.FieldRef<"PlaylistItem", 'Boolean'>
   readonly originalArtistName: Prisma.FieldRef<"PlaylistItem", 'String'>
   readonly originalArtistMbid: Prisma.FieldRef<"PlaylistItem", 'String'>

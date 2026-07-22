@@ -199,6 +199,7 @@ export const PlaylistItemScalarFieldEnum = {
   position: 'position',
   songTitle: 'songTitle',
   normalizedSongTitle: 'normalizedSongTitle',
+  isIncluded: 'isIncluded',
   isCover: 'isCover',
   originalArtistName: 'originalArtistName',
   originalArtistMbid: 'originalArtistMbid',

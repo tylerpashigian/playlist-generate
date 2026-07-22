@@ -13,6 +13,7 @@ export interface PlaylistTrack {
   position: number
   title: string
   normalizedTitle: string
+  isIncluded: boolean
   isCover: boolean
   originalArtistName: string | null
   originalArtistMbid: string | null

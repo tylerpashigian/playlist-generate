@@ -10,12 +10,14 @@ import { calculateScoreColor } from '@/lib/scoring'
 
 export interface PlaylistPreviewTrack {
   key: string
+  id?: string
   position: number
   title: string
   detail: string
   evidence: string
   confidenceScore: number
   isCover?: boolean
+  isIncluded?: boolean
 }
 
 export function playlistToPreviewTracks({
@@ -43,12 +45,14 @@ export function trackToPreviewTrack(
 
   return {
     key: `${track.position}-${track.normalizedTitle}`,
+    id: track.id,
     position: track.position,
     title: track.title,
     detail: coverDetail,
     evidence: `${track.appearanceCount}/${track.totalSetlistsConsidered} setlists`,
     confidenceScore: track.confidenceScore,
     isCover: track.isCover,
+    isIncluded: track.isIncluded,
   }
 }
 
@@ -59,6 +63,7 @@ export function PlaylistPreview({
   actions,
   footer,
   compact = false,
+  renderTrackAction,
   className,
 }: {
   title?: string
@@ -67,6 +72,7 @@ export function PlaylistPreview({
   actions?: ReactNode
   footer?: ReactNode
   compact?: boolean
+  renderTrackAction?: (track: PlaylistPreviewTrack) => ReactNode
   className?: string
 }) {
   return (
@@ -94,7 +100,12 @@ export function PlaylistPreview({
         )}
       >
         {tracks.map((track) => (
-          <PlaylistPreviewRow key={track.key} track={track} compact={compact} />
+          <PlaylistPreviewRow
+            key={track.key}
+            track={track}
+            compact={compact}
+            action={renderTrackAction?.(track)}
+          />
         ))}
       </ol>
 
@@ -106,13 +117,21 @@ export function PlaylistPreview({
 function PlaylistPreviewRow({
   track,
   compact,
+  action,
 }: {
   track: PlaylistPreviewTrack
   compact: boolean
+  action?: ReactNode
 }) {
   const scoreColor = calculateScoreColor(track.confidenceScore)
   return (
-    <li className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 bg-background p-3">
+    <li
+      className={cn(
+        'grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 bg-background p-3',
+        action ? 'sm:grid-cols-[2rem_minmax(0,1fr)_auto_auto]' : '',
+        track.isIncluded === false ? 'opacity-50' : '',
+      )}
+    >
       <Text
         as="span"
         size="xs"
@@ -144,6 +163,7 @@ function PlaylistPreviewRow({
       >
         {Math.round(track.confidenceScore)}%
       </Text>
+      {action ? <div className="col-span-3 sm:col-auto">{action}</div> : null}
     </li>
   )
 }

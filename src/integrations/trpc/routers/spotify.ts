@@ -2,11 +2,19 @@ import {
   exportPlaylistDtoSchema,
   exportPlaylistInputSchema,
   matchTracksInputSchema,
+  searchSpotifyTracksInputSchema,
+  selectSpotifyTrackInputSchema,
+  spotifyPlaylistItemInputSchema,
+  spotifyTrackCandidateDtoSchema,
   trackMatchDtoSchema,
 } from '@/server/contracts/spotify'
 import {
   exportSpotifyPlaylist,
+  getSpotifyTrackMatches,
   matchSpotifyTracks,
+  searchSpotifyTrackCandidates,
+  selectSpotifyTrackMatch,
+  skipSpotifyTrackMatch,
 } from '@/server/services/spotify'
 import { getUserPlaylist } from '@/server/services/playlists'
 import { toTRPCError } from '../errors'
@@ -29,6 +37,19 @@ async function requirePlaylist(userId: string, playlistId: string) {
 }
 
 export const spotifyRouter = {
+  matches: protectedProcedure
+    .input(matchTracksInputSchema)
+    .output(trackMatchDtoSchema.array())
+    .query(async ({ ctx, input }) => {
+      await requirePlaylist(ctx.userId, input.playlistId)
+
+      try {
+        return await getSpotifyTrackMatches(ctx.userId, input.playlistId)
+      } catch (error) {
+        throw toTRPCError(error)
+      }
+    }),
+
   matchTracks: protectedProcedure
     .input(matchTracksInputSchema)
     .output(trackMatchDtoSchema.array())
@@ -37,6 +58,45 @@ export const spotifyRouter = {
 
       try {
         return await matchSpotifyTracks(ctx.userId, playlist)
+      } catch (error) {
+        throw toTRPCError(error)
+      }
+    }),
+
+  searchTracks: protectedProcedure
+    .input(searchSpotifyTracksInputSchema)
+    .output(spotifyTrackCandidateDtoSchema.array())
+    .mutation(async ({ ctx, input }) => {
+      await requirePlaylist(ctx.userId, input.playlistId)
+
+      try {
+        return await searchSpotifyTrackCandidates(ctx.userId, input)
+      } catch (error) {
+        throw toTRPCError(error)
+      }
+    }),
+
+  selectTrack: protectedProcedure
+    .input(selectSpotifyTrackInputSchema)
+    .output(trackMatchDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      await requirePlaylist(ctx.userId, input.playlistId)
+
+      try {
+        return await selectSpotifyTrackMatch(ctx.userId, input)
+      } catch (error) {
+        throw toTRPCError(error)
+      }
+    }),
+
+  skipTrack: protectedProcedure
+    .input(spotifyPlaylistItemInputSchema)
+    .output(trackMatchDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      await requirePlaylist(ctx.userId, input.playlistId)
+
+      try {
+        return await skipSpotifyTrackMatch(ctx.userId, input)
       } catch (error) {
         throw toTRPCError(error)
       }

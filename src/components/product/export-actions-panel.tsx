@@ -1,44 +1,93 @@
 import { Button } from '@/components/ui/button'
 import { Heading4, Text } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
-import type { SavedPlaylist } from '@/models/playlists/models'
-import type { PlaylistExportResult, TrackMatch } from '@/models/spotify/models'
-import type { StreamingProvider } from '@/models/streaming/models'
+import type { PlaylistTrack, SavedPlaylist } from '@/models/playlists/models'
+import type {
+  PlaylistExportResult,
+  StreamingProvider,
+  TrackMatch,
+} from '@/models/streaming/models'
 
 export interface ExportReadinessMetricCounts {
   matchedCount: number
   reviewCount: number
+  skippedCount: number
+  excludedCount: number
 }
 
 export function getExportReadinessMetrics(
-  matches: Array<Pick<TrackMatch, 'status'>>,
+  matches: Array<
+    Pick<TrackMatch, 'status'> & Partial<Pick<TrackMatch, 'playlistTrackId'>>
+  >,
+  tracks: Array<PlaylistTrack> = [],
 ): ExportReadinessMetricCounts {
+  if (tracks.length) {
+    const matchesByTrackId = new Map(
+      matches.map((match) => [match.playlistTrackId, match]),
+    )
+
+    return tracks.reduce(
+      (metrics, track) => {
+        if (!track.isIncluded) {
+          metrics.excludedCount += 1
+          return metrics
+        }
+
+        const match = track.id ? matchesByTrackId.get(track.id) : undefined
+
+        if (match?.status === 'MATCHED' || match?.status === 'MANUALLY_MATCHED') {
+          metrics.matchedCount += 1
+        } else if (match?.status === 'SKIPPED') {
+          metrics.skippedCount += 1
+        } else {
+          metrics.reviewCount += 1
+        }
+
+        return metrics
+      },
+      { matchedCount: 0, reviewCount: 0, skippedCount: 0, excludedCount: 0 },
+    )
+  }
+
   return matches.reduce(
     (metrics, match) => {
-      if (match.status === 'MATCHED') {
+      if (match.status === 'MATCHED' || match.status === 'MANUALLY_MATCHED') {
         metrics.matchedCount += 1
+      } else if (match.status === 'SKIPPED') {
+        metrics.skippedCount += 1
       } else {
         metrics.reviewCount += 1
       }
 
       return metrics
     },
-    { matchedCount: 0, reviewCount: 0 },
+    { matchedCount: 0, reviewCount: 0, skippedCount: 0, excludedCount: 0 },
   )
 }
 
 export function ExportReadinessMetrics({
   matchedCount,
   reviewCount,
+  skippedCount = 0,
+  excludedCount = 0,
+  showResolutionCounts = false,
   className,
-}: ExportReadinessMetricCounts & {
+}: Pick<ExportReadinessMetricCounts, 'matchedCount' | 'reviewCount'> &
+  Partial<Pick<ExportReadinessMetricCounts, 'skippedCount' | 'excludedCount'>> & {
   className?: string
+  showResolutionCounts?: boolean
 }) {
   return (
     <div className={className}>
       <div className="grid gap-3 sm:grid-cols-2">
         <MetricCard value={matchedCount} label="Matched" />
         <MetricCard value={reviewCount} label="Needs review" tone="review" />
+        {showResolutionCounts ? (
+          <>
+            <MetricCard value={skippedCount} label="Skipped" />
+            <MetricCard value={excludedCount} label="Excluded" />
+          </>
+        ) : null}
       </div>
     </div>
   )
@@ -81,6 +130,7 @@ export interface ExportActionGroup {
   errorMessage: string | null
   onMatchTracks: () => Promise<void>
   onExport: () => Promise<void>
+  onReviewTracks?: () => void
 }
 
 export function ExportActionsPanel({
@@ -129,8 +179,9 @@ function ExportActionProviderGroup({
     errorMessage,
     onMatchTracks,
     onExport,
+    onReviewTracks,
   } = group
-  const metrics = getExportReadinessMetrics(matches)
+  const metrics = getExportReadinessMetrics(matches, selectedPlaylist?.tracks)
   const providerName = label ?? formatProviderName(provider)
 
   return (
@@ -148,18 +199,21 @@ function ExportActionProviderGroup({
         </Text>
       ) : null}
 
-      {matches.length ? (
+      {selectedPlaylist || matches.length ? (
         <ExportReadinessMetrics
           className="mt-5"
           matchedCount={metrics.matchedCount}
           reviewCount={metrics.reviewCount}
+          skippedCount={metrics.skippedCount}
+          excludedCount={metrics.excludedCount}
+          showResolutionCounts
         />
       ) : null}
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      <div className="mt-5 grid gap-2 sm:grid-cols-3">
         <Button
           type="button"
-          disabled={!selectedPlaylist || isMatching}
+          disabled={!selectedPlaylist || isMatching || isExporting}
           variant="outline"
           onClick={() => {
             void onMatchTracks()
@@ -169,13 +223,28 @@ function ExportActionProviderGroup({
         </Button>
         <Button
           type="button"
-          disabled={!selectedPlaylist || isExporting}
+          disabled={
+            !selectedPlaylist ||
+            isMatching ||
+            isExporting ||
+            metrics.reviewCount > 0
+          }
           onClick={() => {
             void onExport()
           }}
         >
           {isExporting ? 'Exporting' : 'Export'}
         </Button>
+        {onReviewTracks ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!selectedPlaylist || metrics.reviewCount === 0}
+            onClick={onReviewTracks}
+          >
+            Review tracks
+          </Button>
+        ) : null}
       </div>
 
       {exportResult ? (

@@ -5,7 +5,12 @@ import {
   playlistIdInputSchema,
   savePlaylistInputSchema,
 } from './playlists'
-import { trackMatchDtoSchema } from './spotify'
+import {
+  searchSpotifyTracksInputSchema,
+  selectSpotifyTrackInputSchema,
+  spotifyTrackCandidateDtoSchema,
+  trackMatchDtoSchema,
+} from './spotify'
 import type { GeneratedPlaylistDto } from './playlists'
 
 describe('playlist contracts', () => {
@@ -76,5 +81,33 @@ describe('playlist contracts', () => {
     expect(deletePlaylistResultDtoSchema.parse({ playlistId: 'playlist-id' })).toEqual({
       playlistId: 'playlist-id',
     })
+  })
+
+  it('validates Spotify manual-review contracts', () => {
+    expect(
+      searchSpotifyTracksInputSchema.parse({
+        playlistId: 'playlist-id',
+        playlistItemId: 'item-id',
+        query: 'track',
+      }),
+    ).toMatchObject({ query: 'track' })
+    expect(
+      selectSpotifyTrackInputSchema.parse({
+        playlistId: 'playlist-id',
+        playlistItemId: 'item-id',
+        spotifyTrackId: 'spotify-track-id',
+      }),
+    ).toMatchObject({ spotifyTrackId: 'spotify-track-id' })
+    expect(
+      spotifyTrackCandidateDtoSchema.parse({
+        id: 'spotify-track-id',
+        uri: 'spotify:track:123',
+        externalUrl: 'https://open.spotify.com/track/123',
+        name: 'Track',
+        artistName: 'Artist',
+        albumName: 'Album',
+        durationMs: 123000,
+      }),
+    ).toMatchObject({ name: 'Track' })
   })
 })

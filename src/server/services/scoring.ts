@@ -102,6 +102,7 @@ export function scoreSetlistsForArtist(
       position: index + 1,
       songTitle: song.songTitle,
       normalizedSongTitle: song.normalizedSongTitle,
+      isIncluded: true,
       isCover: song.isCover,
       originalArtistName: song.originalArtistName,
       originalArtistMbid: song.originalArtistMbid,

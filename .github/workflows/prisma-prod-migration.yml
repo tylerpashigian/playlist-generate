@@ -1,11 +1,11 @@
-# Applies committed Prisma migrations to the production database after migration changes reach main.
+# Applies committed Prisma migrations after migration changes reach develop or main.
 
-name: Prisma Prod Migration
+name: Prisma Database Migrations
 
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "develop", "main" ]
     paths:
       - ".github/workflows/prisma-prod-migration.yml"
       - "prisma/schema.prisma"
@@ -15,10 +15,38 @@ permissions:
   contents: read
 
 jobs:
-  migrate-prod:
+  migrate-dev:
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
 
-    # One-at-a-time for your prod migrations on any branch (you only use main)
+    concurrency:
+      group: "db-migrate-development"
+      cancel-in-progress: false
+
+    environment: preview
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 8.15.5
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+
+  migrate-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
     concurrency:
       group: "db-migrate-production"
       cancel-in-progress: false

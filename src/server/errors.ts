@@ -30,6 +30,22 @@ export class NoMatchedTracksError extends Error {
   }
 }
 
+export class UnresolvedTrackMatchesError extends Error {
+  constructor(public readonly count: number) {
+    super(
+      `${count} included ${count === 1 ? 'track requires' : 'tracks require'} review before export.`,
+    )
+    this.name = 'UnresolvedTrackMatchesError'
+  }
+}
+
+export class PlaylistItemNotFoundError extends Error {
+  constructor() {
+    super('Playlist track not found.')
+    this.name = 'PlaylistItemNotFoundError'
+  }
+}
+
 export class DuplicateSavedPlaylistError extends Error {
   constructor(public readonly artistMbid: string) {
     super('A saved playlist already exists for this artist.')

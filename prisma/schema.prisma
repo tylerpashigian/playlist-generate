@@ -13,6 +13,7 @@ enum StreamingProvider {
 
 enum TrackMatchStatus {
   MATCHED
+  MANUALLY_MATCHED
   LOW_CONFIDENCE
   UNRESOLVED
   SKIPPED
@@ -157,6 +158,7 @@ model PlaylistItem {
   position                Int
   songTitle               String
   normalizedSongTitle     String
+  isIncluded              Boolean      @default(true)
   isCover                 Boolean      @default(false)
   originalArtistName      String?
   originalArtistMbid      String?

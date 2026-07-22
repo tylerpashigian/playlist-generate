@@ -7,13 +7,11 @@ import type { GeneratedPlaylist } from '@/models/playlists/models'
 
 export function useGeneratedPlaylist() {
   const [playlist, setPlaylist] = useState<GeneratedPlaylist | null>(null)
-  const [sourceArtist, setSourceArtist] = useState<Artist | null>(null)
 
   const generateMutation = useMutation({
     mutationFn: (artist: Artist) => generatePlaylist(artist),
-    onSuccess: (generatedPlaylist, artist) => {
+    onSuccess: (generatedPlaylist) => {
       setPlaylist(generatedPlaylist)
-      setSourceArtist(artist)
     },
   })
 
@@ -21,25 +19,30 @@ export function useGeneratedPlaylist() {
     return await generateMutation.mutateAsync(artist)
   }
 
-  async function regenerate() {
-    if (!sourceArtist) {
-      return null
-    }
+  function setTrackIncluded(position: number, isIncluded: boolean) {
+    setPlaylist((currentPlaylist) => {
+      if (!currentPlaylist) {
+        return currentPlaylist
+      }
 
-    return await generateMutation.mutateAsync(sourceArtist)
+      return {
+        ...currentPlaylist,
+        tracks: currentPlaylist.tracks.map((track) =>
+          track.position === position ? { ...track, isIncluded } : track,
+        ),
+      }
+    })
   }
 
   function reset() {
     setPlaylist(null)
-    setSourceArtist(null)
     generateMutation.reset()
   }
 
   return {
     playlist,
-    sourceArtist,
     generate,
-    regenerate,
+    setTrackIncluded,
     reset,
     isGenerating: generateMutation.isPending,
     error: generateMutation.error,
