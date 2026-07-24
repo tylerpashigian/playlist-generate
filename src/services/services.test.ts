@@ -3,10 +3,18 @@ import { searchArtists } from './artists'
 import {
   deleteSavedPlaylist,
   generatePlaylist,
+  refreshSavedPlaylist,
   saveGeneratedPlaylist,
 } from './playlists'
 import { disconnectStreamingProvider } from './streaming'
-import { exportPlaylistToSpotify, matchPlaylistTracks } from './spotify'
+import {
+  exportPlaylistToSpotify,
+  getSpotifyTrackMatches,
+  matchPlaylistTracks,
+  searchSpotifyTrackCandidates,
+  selectSpotifyTrack,
+  skipSpotifyTrack,
+} from './spotify'
 
 const trpcMocks = vi.hoisted(() => ({
   artistsSearchQuery: vi.fn(),
@@ -15,9 +23,14 @@ const trpcMocks = vi.hoisted(() => ({
   playlistsListQuery: vi.fn(),
   playlistsGetQuery: vi.fn(),
   playlistsDeleteMutate: vi.fn(),
+  playlistsRefreshMutate: vi.fn(),
   streamingConnectionsQuery: vi.fn(),
   streamingDisconnectMutate: vi.fn(),
   spotifyMatchTracksMutate: vi.fn(),
+  spotifyMatchesQuery: vi.fn(),
+  spotifySearchTracksMutate: vi.fn(),
+  spotifySelectTrackMutate: vi.fn(),
+  spotifySkipTrackMutate: vi.fn(),
   spotifyExportPlaylistMutate: vi.fn(),
 }))
 
@@ -32,6 +45,7 @@ vi.mock('@/lib/trpc-client', () => ({
       list: { query: trpcMocks.playlistsListQuery },
       get: { query: trpcMocks.playlistsGetQuery },
       delete: { mutate: trpcMocks.playlistsDeleteMutate },
+      refresh: { mutate: trpcMocks.playlistsRefreshMutate },
     },
     streaming: {
       connections: { query: trpcMocks.streamingConnectionsQuery },
@@ -39,6 +53,10 @@ vi.mock('@/lib/trpc-client', () => ({
     },
     spotify: {
       matchTracks: { mutate: trpcMocks.spotifyMatchTracksMutate },
+      matches: { query: trpcMocks.spotifyMatchesQuery },
+      searchTracks: { mutate: trpcMocks.spotifySearchTracksMutate },
+      selectTrack: { mutate: trpcMocks.spotifySelectTrackMutate },
+      skipTrack: { mutate: trpcMocks.spotifySkipTrackMutate },
       exportPlaylist: { mutate: trpcMocks.spotifyExportPlaylistMutate },
     },
   },
@@ -167,6 +185,24 @@ describe('frontend services', () => {
     })
   })
 
+  it('refreshes saved playlists through tRPC', async () => {
+    trpcMocks.playlistsRefreshMutate.mockResolvedValue({
+      ...generatedPlaylistDto,
+      id: 'saved-playlist-id',
+      status: 'DRAFT',
+      createdAt: generatedAt,
+      updatedAt: generatedAt,
+      itemCount: 0,
+    })
+
+    await expect(refreshSavedPlaylist('saved-playlist-id')).resolves.toMatchObject(
+      { id: 'saved-playlist-id', trackCount: 0 },
+    )
+    expect(trpcMocks.playlistsRefreshMutate).toHaveBeenCalledWith({
+      playlistId: 'saved-playlist-id',
+    })
+  })
+
   it('disconnects streaming providers and returns connection models', async () => {
     trpcMocks.streamingDisconnectMutate.mockResolvedValue({
       provider: 'SPOTIFY',
@@ -235,6 +271,83 @@ describe('frontend services', () => {
     expect(trpcMocks.spotifyExportPlaylistMutate).toHaveBeenCalledWith({
       playlistId: 'playlist-id',
       name: 'Export name',
+    })
+  })
+
+  it('searches, selects, and skips individual Spotify tracks through tRPC', async () => {
+    const trackMatch = {
+      playlistItemId: 'playlist-item-id',
+      provider: 'SPOTIFY',
+      status: 'MANUALLY_MATCHED',
+      providerTrackId: 'spotify-track-id',
+      providerTrackUri: 'spotify:track:123',
+      providerTrackUrl: 'https://open.spotify.com/track/123',
+      trackName: 'Track',
+      artistName: 'Artist',
+      albumName: 'Album',
+      durationMs: 123000,
+      matchConfidenceScore: null,
+    }
+    trpcMocks.spotifyMatchesQuery.mockResolvedValue([trackMatch])
+    trpcMocks.spotifySearchTracksMutate.mockResolvedValue([
+      {
+        id: 'spotify-track-id',
+        uri: 'spotify:track:123',
+        externalUrl: 'https://open.spotify.com/track/123',
+        name: 'Track',
+        artistName: 'Artist',
+        albumName: 'Album',
+        durationMs: 123000,
+      },
+    ])
+    trpcMocks.spotifySelectTrackMutate.mockResolvedValue(trackMatch)
+    trpcMocks.spotifySkipTrackMutate.mockResolvedValue({
+      ...trackMatch,
+      status: 'SKIPPED',
+      providerTrackId: null,
+      providerTrackUri: null,
+      providerTrackUrl: null,
+      trackName: null,
+      artistName: null,
+      albumName: null,
+      durationMs: null,
+    })
+
+    await expect(getSpotifyTrackMatches('playlist-id')).resolves.toHaveLength(1)
+    await expect(
+      searchSpotifyTrackCandidates({
+        playlistId: 'playlist-id',
+        playlistItemId: 'playlist-item-id',
+        query: 'track',
+      }),
+    ).resolves.toMatchObject([
+      {
+        provider: 'SPOTIFY',
+        providerTrackId: 'spotify-track-id',
+        title: 'Track',
+      },
+    ])
+    await expect(
+      selectSpotifyTrack({
+        playlistId: 'playlist-id',
+        playlistItemId: 'playlist-item-id',
+        spotifyTrackId: 'spotify-track-id',
+      }),
+    ).resolves.toMatchObject({ status: 'MANUALLY_MATCHED' })
+    await expect(
+      skipSpotifyTrack({
+        playlistId: 'playlist-id',
+        playlistItemId: 'playlist-item-id',
+      }),
+    ).resolves.toMatchObject({ status: 'SKIPPED' })
+
+    expect(trpcMocks.spotifyMatchesQuery).toHaveBeenCalledWith({
+      playlistId: 'playlist-id',
+    })
+    expect(trpcMocks.spotifySearchTracksMutate).toHaveBeenCalledWith({
+      playlistId: 'playlist-id',
+      playlistItemId: 'playlist-item-id',
+      query: 'track',
     })
   })
 })

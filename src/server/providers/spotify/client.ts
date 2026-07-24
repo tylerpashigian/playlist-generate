@@ -4,12 +4,14 @@ import {
   spotifyCreatePlaylistResponseSchema,
   spotifyProfileResponseSchema,
   spotifySearchResponseSchema,
+  spotifyTrackResponseSchema,
 } from './schemas'
 import type {
   SpotifyAddItemsResponse,
   SpotifyCreatePlaylistResponse,
   SpotifyProfileResponse,
   SpotifySearchResponse,
+  SpotifyTrackResponse,
 } from './schemas'
 
 const SPOTIFY_API_URL = 'https://api.spotify.com/v1'
@@ -55,6 +57,18 @@ export async function searchSpotifyTrack(
 
   return spotifySearchResponseSchema.parse(
     await spotifyFetch(`/search?${searchParams.toString()}`, accessToken),
+  )
+}
+
+export async function getSpotifyTrack(
+  accessToken: string,
+  spotifyTrackId: string,
+): Promise<SpotifyTrackResponse> {
+  return spotifyTrackResponseSchema.parse(
+    await spotifyFetch(
+      `/tracks/${encodeURIComponent(spotifyTrackId)}`,
+      accessToken,
+    ),
   )
 }
 

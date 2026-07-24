@@ -18,6 +18,7 @@ export type StreamingProvider = (typeof StreamingProvider)[keyof typeof Streamin
 
 export const TrackMatchStatus = {
   MATCHED: 'MATCHED',
+  MANUALLY_MATCHED: 'MANUALLY_MATCHED',
   LOW_CONFIDENCE: 'LOW_CONFIDENCE',
   UNRESOLVED: 'UNRESOLVED',
   SKIPPED: 'SKIPPED'

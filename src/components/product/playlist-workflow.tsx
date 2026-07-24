@@ -14,8 +14,9 @@ import { useAuthSession } from '@/hooks/use-auth-session'
 import { useArtist } from '@/hooks/use-artist'
 import { useGeneratedPlaylist } from '@/hooks/use-generated-playlist'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
-import { useSpotify } from '@/hooks/use-spotify'
+import { useSpotifyPlaylistReview } from '@/hooks/use-spotify-playlist-review'
 import { PlaylistReviewExportSection } from './playlist-review-export-section'
+import { StreamingPlaylistReviewDialog } from './streaming-playlist-review-dialog'
 import type { Artist } from '@/models/artists/models'
 import type {
   GeneratedPlaylist,
@@ -39,11 +40,17 @@ export function PlaylistWorkflow() {
   const artistSearch = useArtist()
   const generatedPlaylist = useGeneratedPlaylist()
   const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
-  const spotify = useSpotify()
+  const {
+    spotify,
+    review: trackReview,
+    resetSpotify,
+  } = useSpotifyPlaylistReview(savedPlaylists.selectedPlaylist)
   const authGate = getAuthGate(auth)
 
   async function handleGenerate(artist: Artist) {
     savedPlaylists.cancelPendingReplacement()
+    savedPlaylists.selectPlaylist(null)
+    resetSpotify()
     artistSearch.selectArtist(artist)
     await generatedPlaylist.generate(artist)
   }
@@ -54,7 +61,18 @@ export function PlaylistWorkflow() {
 
     if (!query.trim()) {
       generatedPlaylist.reset()
+      savedPlaylists.selectPlaylist(null)
+      resetSpotify()
     }
+  }
+
+  function handleTrackInclusionChange(
+    position: number,
+    isIncluded: boolean,
+  ) {
+    generatedPlaylist.setTrackIncluded(position, isIncluded)
+    savedPlaylists.selectPlaylist(null)
+    resetSpotify()
   }
 
   async function handleSave() {
@@ -104,13 +122,14 @@ export function PlaylistWorkflow() {
         onReplace={handleReplaceSavedPlaylist}
         onCancel={savedPlaylists.cancelPendingReplacement}
       />
+      <StreamingPlaylistReviewDialog review={trackReview} />
 
       <PlaylistReviewExportSection
         review={{
           playlist: generatedPlaylist.playlist,
           title: 'Generated playlist',
           subtitle: generatedPlaylist.playlist
-            ? `${generatedPlaylist.playlist.tracks.length} tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
+            ? `${generatedPlaylist.playlist.tracks.filter((track) => track.isIncluded).length} included tracks · ${generatedPlaylist.playlist.recentSetlistCount} setlists`
             : '',
           emptyTitle: artistSearch.selectedArtist
             ? undefined
@@ -122,15 +141,30 @@ export function PlaylistWorkflow() {
             <GeneratedPlaylistActions
               playlist={generatedPlaylist.playlist}
               authGate={authGate}
-              isGenerating={generatedPlaylist.isGenerating}
               isSaving={savedPlaylists.isSaving}
               onSave={handleSave}
-              onRegenerate={generatedPlaylist.regenerate}
             />
           ),
           isLoading: generatedPlaylist.isGenerating,
           loadingMessage: 'Generating playlist',
           errorMessage: generatedPlaylist.errorMessage,
+          renderTrackAction: savedPlaylists.selectedPlaylist
+            ? undefined
+            : (track) => (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    handleTrackInclusionChange(
+                      track.position,
+                      track.isIncluded === false,
+                    )
+                  }
+                >
+                  {track.isIncluded === false ? 'Restore' : 'Remove'}
+                </Button>
+              ),
         }}
         exports={{
           groups: [
@@ -144,6 +178,7 @@ export function PlaylistWorkflow() {
               errorMessage: spotify.errorMessage,
               onMatchTracks: handleMatch,
               onExport: handleExport,
+              onManageMatches: () => trackReview.openManager('SPOTIFY'),
             },
           ],
           fallback: auth.isAuthenticated ? undefined : (
@@ -354,30 +389,16 @@ function getArtistSearchEmptyMessage({
 function GeneratedPlaylistActions({
   playlist,
   authGate,
-  isGenerating,
   isSaving,
   onSave,
-  onRegenerate,
 }: {
   playlist: GeneratedPlaylist | null
   authGate: AuthGateState
-  isGenerating: boolean
   isSaving: boolean
   onSave: () => Promise<void>
-  onRegenerate: () => Promise<GeneratedPlaylist | null>
 }) {
   return (
     <div className="flex flex-wrap justify-end gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        disabled={!playlist || isGenerating}
-        onClick={() => {
-          void onRegenerate()
-        }}
-      >
-        Regenerate
-      </Button>
       {authGate === 'authenticated' ? (
         <Button
           type="button"

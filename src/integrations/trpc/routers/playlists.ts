@@ -12,6 +12,7 @@ import {
   deleteUserPlaylist,
   getUserPlaylist,
   listUserPlaylists,
+  refreshUserPlaylist,
   saveGeneratedPlaylist,
 } from '@/server/services/playlists'
 import { scoreSetlistsForArtist } from '@/server/services/scoring'
@@ -40,7 +41,11 @@ export const playlistsRouter = {
     .output(savedPlaylistDtoSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        return await saveGeneratedPlaylist(ctx.userId, input.playlist, input.mode)
+        return await saveGeneratedPlaylist(
+          ctx.userId,
+          input.playlist,
+          input.mode,
+        )
       } catch (error) {
         throw toTRPCError(error)
       }
@@ -76,6 +81,17 @@ export const playlistsRouter = {
       }
 
       return playlist
+    }),
+
+  refresh: protectedProcedure
+    .input(playlistIdInputSchema)
+    .output(savedPlaylistDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await refreshUserPlaylist(ctx.userId, input.playlistId)
+      } catch (error) {
+        throw toTRPCError(error)
+      }
     }),
 
   delete: protectedProcedure

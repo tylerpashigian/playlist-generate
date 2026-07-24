@@ -4,6 +4,7 @@ import {
   PlaylistPreview,
   playlistToPreviewTracks,
 } from '@/components/product/playlist-preview'
+import type { PlaylistPreviewTrack } from '@/components/product/playlist-preview'
 import {
   Empty,
   EmptyDescription,
@@ -24,6 +25,7 @@ export interface PlaylistReviewConfig {
   emptyTitle?: string
   emptyMessage?: string
   actions?: ReactNode
+  renderTrackAction?: (track: PlaylistPreviewTrack) => ReactNode
   isLoading?: boolean
   loadingMessage?: string
   errorMessage?: string | null
@@ -50,6 +52,7 @@ export function PlaylistReviewExportSection({
     emptyTitle,
     emptyMessage = 'Select an artist to build a confidence-ranked preview.',
     actions,
+    renderTrackAction,
     isLoading = false,
     loadingMessage = 'Loading playlist',
     errorMessage,
@@ -74,6 +77,7 @@ export function PlaylistReviewExportSection({
               subtitle={playlist ? subtitle : emptyMessage}
               tracks={playlist ? playlistToPreviewTracks({ playlist }) : []}
               actions={actions}
+              renderTrackAction={renderTrackAction}
             />
           )}
 

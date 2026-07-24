@@ -23,6 +23,7 @@ const generatedPlaylist: GeneratedPlaylist = {
       position: 1,
       title: 'Innerbloom',
       normalizedTitle: 'innerbloom',
+      isIncluded: true,
       isCover: false,
       originalArtistName: null,
       originalArtistMbid: null,
@@ -158,10 +159,13 @@ describe('PlaylistReviewExportSection', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Match tracks' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Export' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Auto-match tracks' }))
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Export' })
+        .disabled,
+    ).toBe(true)
 
     expect(onMatchTracks).toHaveBeenCalledOnce()
-    expect(onExport).toHaveBeenCalledOnce()
+    expect(onExport).not.toHaveBeenCalled()
   })
 })

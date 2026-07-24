@@ -71,6 +71,16 @@ export async function getSavedPlaylist(
   return toSavedPlaylist(playlist)
 }
 
+export async function refreshSavedPlaylist(
+  playlistId: string,
+): Promise<SavedPlaylist> {
+  const input: PlaylistIdInput = { playlistId }
+  const playlist: SavedPlaylistDto =
+    await trpcClient.playlists.refresh.mutate(input)
+
+  return toSavedPlaylist(playlist)
+}
+
 export async function deleteSavedPlaylist(playlistId: string): Promise<string> {
   const input: PlaylistIdInput = { playlistId }
   const result: DeletePlaylistResultDto =

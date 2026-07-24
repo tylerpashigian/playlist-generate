@@ -3,8 +3,10 @@ import {
   ExternalProviderError,
   NoMatchedTracksError,
   OnlyLoginMethodError,
+  PlaylistItemNotFoundError,
   PlaylistNotFoundError,
   SpotifyNotConnectedError,
+  UnresolvedTrackMatchesError,
 } from '@/server/errors'
 
 import { TRPCError } from '@trpc/server'
@@ -38,6 +40,14 @@ export function toTRPCError(error: unknown): TRPCError {
     })
   }
 
+  if (error instanceof UnresolvedTrackMatchesError) {
+    return new TRPCError({
+      code: 'BAD_REQUEST',
+      message: error.message,
+      cause: error,
+    })
+  }
+
   if (error instanceof DuplicateSavedPlaylistError) {
     return new TRPCError({
       code: 'CONFLICT',
@@ -47,6 +57,14 @@ export function toTRPCError(error: unknown): TRPCError {
   }
 
   if (error instanceof PlaylistNotFoundError) {
+    return new TRPCError({
+      code: 'NOT_FOUND',
+      message: error.message,
+      cause: error,
+    })
+  }
+
+  if (error instanceof PlaylistItemNotFoundError) {
     return new TRPCError({
       code: 'NOT_FOUND',
       message: error.message,

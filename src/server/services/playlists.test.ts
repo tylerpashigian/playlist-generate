@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deleteUserPlaylist, saveGeneratedPlaylist } from './playlists'
+import {
+  deleteUserPlaylist,
+  refreshUserPlaylist,
+  saveGeneratedPlaylist,
+} from './playlists'
 import {
   DuplicateSavedPlaylistError,
   PlaylistNotFoundError,
@@ -15,6 +19,20 @@ const prismaMocks = vi.hoisted(() => ({
   playlistFindFirstOrThrow: vi.fn(),
   playlistUpdate: vi.fn(),
   playlistDeleteMany: vi.fn(),
+  playlistItemUpdateMany: vi.fn(),
+  playlistItemUpdate: vi.fn(),
+  playlistItemCreate: vi.fn(),
+  playlistItemDeleteMany: vi.fn(),
+  fetchRecentSetlistsForArtist: vi.fn(),
+  scoreSetlistsForArtist: vi.fn(),
+}))
+
+vi.mock('@/server/providers/setlistfm/client', () => ({
+  fetchRecentSetlistsForArtist: prismaMocks.fetchRecentSetlistsForArtist,
+}))
+
+vi.mock('@/server/services/scoring', () => ({
+  scoreSetlistsForArtist: prismaMocks.scoreSetlistsForArtist,
 }))
 
 vi.mock('@/db', () => ({
@@ -29,6 +47,12 @@ vi.mock('@/db', () => ({
       findFirstOrThrow: prismaMocks.playlistFindFirstOrThrow,
       update: prismaMocks.playlistUpdate,
       deleteMany: prismaMocks.playlistDeleteMany,
+    },
+    playlistItem: {
+      updateMany: prismaMocks.playlistItemUpdateMany,
+      update: prismaMocks.playlistItemUpdate,
+      create: prismaMocks.playlistItemCreate,
+      deleteMany: prismaMocks.playlistItemDeleteMany,
     },
   },
 }))
@@ -52,6 +76,7 @@ const generatedPlaylist: GeneratedPlaylistDto = {
       position: 1,
       songTitle: 'Song',
       normalizedSongTitle: 'song',
+      isIncluded: true,
       isCover: false,
       originalArtistName: null,
       originalArtistMbid: null,
@@ -95,6 +120,7 @@ function savedPlaylistRecord(id = 'playlist-id') {
         position: 1,
         songTitle: 'Song',
         normalizedSongTitle: 'song',
+        isIncluded: true,
         isCover: false,
         originalArtistName: null,
         originalArtistMbid: null,
@@ -126,6 +152,12 @@ describe('playlist service', () => {
           findFirstOrThrow: prismaMocks.playlistFindFirstOrThrow,
           update: prismaMocks.playlistUpdate,
         },
+        playlistItem: {
+          updateMany: prismaMocks.playlistItemUpdateMany,
+          update: prismaMocks.playlistItemUpdate,
+          create: prismaMocks.playlistItemCreate,
+          deleteMany: prismaMocks.playlistItemDeleteMany,
+        },
       }),
     )
     prismaMocks.artistUpsert.mockResolvedValue(artistRecord)
@@ -133,6 +165,8 @@ describe('playlist service', () => {
     prismaMocks.playlistFindFirstOrThrow.mockResolvedValue(
       savedPlaylistRecord('created-playlist-id'),
     )
+    prismaMocks.fetchRecentSetlistsForArtist.mockResolvedValue([])
+    prismaMocks.scoreSetlistsForArtist.mockReturnValue(generatedPlaylist)
   })
 
   it('creates a playlist when no saved playlist exists for the artist', async () => {
@@ -201,7 +235,9 @@ describe('playlist service', () => {
   })
 
   it('replaces the newest existing playlist in place when replace mode is used', async () => {
-    prismaMocks.playlistFindFirst.mockResolvedValue({ id: 'existing-id' })
+    prismaMocks.playlistFindFirst
+      .mockResolvedValueOnce({ id: 'existing-id' })
+      .mockResolvedValueOnce(savedPlaylistRecord('existing-id'))
     prismaMocks.playlistFindFirstOrThrow.mockResolvedValue(
       savedPlaylistRecord('existing-id'),
     )
@@ -213,22 +249,131 @@ describe('playlist service', () => {
       items: [expect.objectContaining({ songTitle: 'Song' })],
     })
 
+    expect(prismaMocks.playlistItemUpdateMany).toHaveBeenCalledWith({
+      where: { playlistId: 'existing-id' },
+      data: { position: { increment: 3 } },
+    })
+    expect(prismaMocks.playlistItemUpdate).toHaveBeenCalledWith({
+      where: { id: 'playlist-item-id' },
+      data: expect.objectContaining({
+        songTitle: 'Song',
+        normalizedSongTitle: 'song',
+        isIncluded: true,
+      }),
+    })
     expect(prismaMocks.playlistUpdate).toHaveBeenCalledWith({
       where: { id: 'existing-id' },
       data: expect.objectContaining({
         status: 'DRAFT',
         name: generatedPlaylist.name,
-        items: expect.objectContaining({
-          deleteMany: {},
-          create: [
-            expect.objectContaining({
-              songTitle: 'Song',
-              normalizedSongTitle: 'song',
-            }),
-          ],
-        }),
       }),
     })
+  })
+
+  it('refreshes in place while preserving retained curation and removing stale items', async () => {
+    const existingPlaylist = savedPlaylistRecord('existing-id')
+    existingPlaylist.items[0].isIncluded = false
+    existingPlaylist.items.push({
+      ...existingPlaylist.items[0],
+      id: 'removed-item-id',
+      position: 2,
+      songTitle: 'Removed song',
+      normalizedSongTitle: 'removed song',
+    })
+    const refreshedPlaylist = {
+      ...generatedPlaylist,
+      generatedAt: new Date('2026-07-01T12:00:00.000Z'),
+      items: [
+        { ...generatedPlaylist.items[0], position: 2, confidenceScore: 80 },
+        {
+          ...generatedPlaylist.items[0],
+          position: 1,
+          songTitle: 'New song',
+          normalizedSongTitle: 'new song',
+        },
+      ],
+    }
+    const refreshedRecord = {
+      ...existingPlaylist,
+      generatedAt: refreshedPlaylist.generatedAt,
+      items: [
+        {
+          ...existingPlaylist.items[0],
+          position: 2,
+          confidenceScore: 80,
+          isIncluded: false,
+        },
+        {
+          ...existingPlaylist.items[0],
+          id: 'new-item-id',
+          position: 1,
+          songTitle: 'New song',
+          normalizedSongTitle: 'new song',
+          isIncluded: true,
+        },
+      ],
+    }
+    prismaMocks.playlistFindFirst
+      .mockResolvedValueOnce(existingPlaylist)
+      .mockResolvedValueOnce(existingPlaylist)
+    prismaMocks.scoreSetlistsForArtist.mockReturnValue(refreshedPlaylist)
+    prismaMocks.playlistFindFirstOrThrow.mockResolvedValue(refreshedRecord)
+
+    await expect(
+      refreshUserPlaylist('user-id', 'existing-id'),
+    ).resolves.toMatchObject({
+      id: 'existing-id',
+      items: [
+        expect.objectContaining({ normalizedSongTitle: 'song', isIncluded: false }),
+        expect.objectContaining({ normalizedSongTitle: 'new song', isIncluded: true }),
+      ],
+    })
+
+    expect(prismaMocks.fetchRecentSetlistsForArtist).toHaveBeenCalledWith(
+      expect.objectContaining({ mbid: 'artist-mbid' }),
+    )
+    expect(prismaMocks.transaction).toHaveBeenCalledTimes(1)
+    expect(prismaMocks.playlistItemUpdate).toHaveBeenCalledWith({
+      where: { id: 'playlist-item-id' },
+      data: expect.objectContaining({ isIncluded: false, position: 2 }),
+    })
+    expect(prismaMocks.playlistItemCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        playlistId: 'existing-id',
+        normalizedSongTitle: 'new song',
+        isIncluded: true,
+      }),
+    })
+    expect(prismaMocks.playlistItemDeleteMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ['removed-item-id'] },
+        playlistId: 'existing-id',
+      },
+    })
+  })
+
+  it('does not open a transaction when fetching fresh setlists fails', async () => {
+    prismaMocks.playlistFindFirst.mockResolvedValue(
+      savedPlaylistRecord('existing-id'),
+    )
+    prismaMocks.fetchRecentSetlistsForArtist.mockRejectedValue(
+      new Error('Setlist.fm unavailable'),
+    )
+
+    await expect(
+      refreshUserPlaylist('user-id', 'existing-id'),
+    ).rejects.toThrow('Setlist.fm unavailable')
+
+    expect(prismaMocks.transaction).not.toHaveBeenCalled()
+  })
+
+  it('does not reveal missing or non-owned playlists when refreshing', async () => {
+    prismaMocks.playlistFindFirst.mockResolvedValue(null)
+
+    await expect(
+      refreshUserPlaylist('user-id', 'other-user-playlist-id'),
+    ).rejects.toBeInstanceOf(PlaylistNotFoundError)
+    expect(prismaMocks.fetchRecentSetlistsForArtist).not.toHaveBeenCalled()
   })
 
   it('deletes only the authenticated user playlist', async () => {

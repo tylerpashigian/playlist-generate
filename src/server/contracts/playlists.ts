@@ -15,6 +15,7 @@ export const playlistItemDtoSchema = z.object({
   position: z.number().int().positive(),
   songTitle: z.string().min(1),
   normalizedSongTitle: z.string().min(1),
+  isIncluded: z.boolean().default(true),
   isCover: z.boolean(),
   originalArtistName: z.string().nullable(),
   originalArtistMbid: z.string().nullable(),

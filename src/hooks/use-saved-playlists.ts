@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
-import { getErrorMessage } from '@/lib/errors'
+import { getErrorMessage, hasErrorCode } from '@/lib/errors'
 import { toast } from '@/lib/toast'
 import {
   savedPlaylistDetailQueryKey,
@@ -10,6 +10,7 @@ import {
   deleteSavedPlaylist,
   getSavedPlaylist,
   listSavedPlaylists,
+  refreshSavedPlaylist,
   saveGeneratedPlaylist,
 } from '@/services/playlists'
 import type {
@@ -46,6 +47,8 @@ export function useSavedPlaylists({
     queryKey: savedPlaylistDetailQueryKey(selectedPlaylistId),
     queryFn: () => getSavedPlaylist(selectedPlaylistId ?? ''),
     enabled: enabled && Boolean(selectedPlaylistId),
+    retry: (failureCount, error) =>
+      !hasErrorCode(error, 'NOT_FOUND') && failureCount < 3,
   })
 
   const saveMutation = useMutation({
@@ -86,6 +89,19 @@ export function useSavedPlaylists({
         currentPlaylistId === playlistId ? null : currentPlaylistId,
       )
       setPendingDeletionPlaylist(null)
+      void queryClient.invalidateQueries({ queryKey: savedPlaylistsQueryKey })
+    },
+  })
+
+  const refreshMutation = useMutation({
+    mutationFn: (playlistId: string) => refreshSavedPlaylist(playlistId),
+    onSuccess: (playlist) => {
+      setSavedPlaylist(playlist)
+      setSelectedPlaylistId(playlist.id)
+      queryClient.setQueryData(
+        savedPlaylistDetailQueryKey(playlist.id),
+        playlist,
+      )
       void queryClient.invalidateQueries({ queryKey: savedPlaylistsQueryKey })
     },
   })
@@ -166,6 +182,14 @@ export function useSavedPlaylists({
     })
   }
 
+  async function refresh(playlistId: string) {
+    return await toast.promise(refreshMutation.mutateAsync(playlistId), {
+      loading: 'Refreshing playlist',
+      success: (playlist) => `${playlist.name} refreshed`,
+      error: 'Playlist could not be refreshed',
+    })
+  }
+
   const selectPlaylist = useCallback((playlistId: string | null) => {
     setSelectedPlaylistId(playlistId)
   }, [])
@@ -177,6 +201,7 @@ export function useSavedPlaylists({
     setPendingDeletionPlaylist(null)
     saveMutation.reset()
     deleteMutation.reset()
+    refreshMutation.reset()
   }
 
   const selectedPlaylist =
@@ -206,6 +231,7 @@ export function useSavedPlaylists({
     requestDeletion,
     confirmDeletion,
     cancelDeletion,
+    refresh,
     resetSavedPlaylist,
     refetchPlaylists: listQuery.refetch,
     refetchSelectedPlaylist: detailQuery.refetch,
@@ -213,13 +239,17 @@ export function useSavedPlaylists({
     isLoadingSelectedPlaylist: detailQuery.isLoading,
     isSaving: saveMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isRefreshing: refreshMutation.isPending,
     listError: listQuery.error,
     detailError: detailQuery.error,
+    isSelectedPlaylistNotFound: hasErrorCode(detailQuery.error, 'NOT_FOUND'),
     saveError: saveMutation.error,
+    refreshError: refreshMutation.error,
     errorMessage:
       getErrorMessage(listQuery.error) ??
       getErrorMessage(detailQuery.error) ??
       getErrorMessage(saveMutation.error) ??
+      getErrorMessage(refreshMutation.error) ??
       getErrorMessage(deleteMutation.error),
   }
 
@@ -234,15 +264,8 @@ export function useSavedPlaylists({
 }
 
 function isDuplicatePlaylistConflict(error: unknown) {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-
-  const data = (error as { data?: { code?: unknown } }).data
-  const message = (error as { message?: unknown }).message
-
   return (
-    data?.code === 'CONFLICT' ||
-    message === 'A saved playlist already exists for this artist.'
+    hasErrorCode(error, 'CONFLICT') ||
+    getErrorMessage(error) === 'A saved playlist already exists for this artist.'
   )
 }

@@ -7,7 +7,11 @@ import {
   toSavedPlaylistSummary,
 } from './playlists/conversions'
 import { toStreamingConnection } from './streaming/conversions'
-import { toPlaylistExportResult, toTrackMatch } from './spotify/conversions'
+import {
+  toPlaylistExportResult,
+  toStreamingTrackCandidate,
+  toTrackMatch,
+} from './spotify/conversions'
 import type { ArtistDto } from '@/server/contracts/artists'
 import type {
   GeneratedPlaylistDto,
@@ -17,6 +21,7 @@ import type {
 import type { StreamingConnectionDto } from '@/server/contracts/streaming'
 import type {
   ExportPlaylistDto,
+  SpotifyTrackCandidateDto,
   TrackMatchDto,
 } from '@/server/contracts/spotify'
 
@@ -35,6 +40,7 @@ const playlistItem = {
   position: 1,
   songTitle: 'Famous Cover',
   normalizedSongTitle: 'famous cover',
+  isIncluded: true,
   isCover: true,
   originalArtistName: 'Original Artist',
   originalArtistMbid: 'original-artist-mbid',
@@ -178,6 +184,28 @@ describe('frontend model conversions', () => {
       snapshotId: 'snapshot-id',
       exportedAt: generatedAt,
       exportedTrackCount: 20,
+    })
+  })
+
+  it('maps a Spotify candidate to the canonical streaming track shape', () => {
+    const candidateDto: SpotifyTrackCandidateDto = {
+      id: 'spotify-track-id',
+      uri: 'spotify:track:123',
+      externalUrl: 'https://open.spotify.com/track/123',
+      name: 'Track',
+      artistName: 'Artist',
+      albumName: 'Album',
+      durationMs: 123000,
+    }
+
+    expect(toStreamingTrackCandidate(candidateDto)).toEqual({
+      provider: 'SPOTIFY',
+      providerTrackId: 'spotify-track-id',
+      externalUrl: 'https://open.spotify.com/track/123',
+      title: 'Track',
+      artistName: 'Artist',
+      albumName: 'Album',
+      durationMs: 123000,
     })
   })
 })
