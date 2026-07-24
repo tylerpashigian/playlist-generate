@@ -58,7 +58,7 @@ vi.mock('@/hooks/use-generated-playlist', () => ({
 
 vi.mock('@/hooks/use-saved-playlists', () => ({
   useSavedPlaylists: () => ({
-    selectedPlaylist: { id: 'saved-playlist-id' },
+    selectedPlaylist: null,
     needsReplacementConfirmation: false,
     existingPlaylistForReplacement: null,
     isSaving: false,
@@ -69,17 +69,26 @@ vi.mock('@/hooks/use-saved-playlists', () => ({
   }),
 }))
 
-vi.mock('@/hooks/use-spotify', () => ({
-  useSpotify: () => ({
-    matches: [],
-    exportResult: null,
-    isMatching: false,
-    isExporting: false,
-    errorMessage: null,
-    matchTracks: vi.fn(),
-    exportPlaylist: vi.fn(),
-    reset: mocks.resetSpotify,
+vi.mock('@/hooks/use-spotify-playlist-review', () => ({
+  useSpotifyPlaylistReview: () => ({
+    spotify: {
+      matches: [],
+      exportResult: null,
+      isMatching: false,
+      isExporting: false,
+      errorMessage: null,
+      matchTracks: vi.fn(),
+      exportPlaylist: vi.fn(),
+    },
+    review: {
+      openManager: vi.fn(),
+    },
+    resetSpotify: mocks.resetSpotify,
   }),
+}))
+
+vi.mock('./streaming-playlist-review-dialog', () => ({
+  StreamingPlaylistReviewDialog: () => null,
 }))
 
 vi.mock('./playlist-review-export-section', () => ({

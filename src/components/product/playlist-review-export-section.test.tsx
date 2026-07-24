@@ -159,7 +159,7 @@ describe('PlaylistReviewExportSection', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Match tracks' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Auto-match tracks' }))
     expect(
       screen.getByRole<HTMLButtonElement>('button', { name: 'Export' })
         .disabled,

@@ -130,7 +130,7 @@ export interface ExportActionGroup {
   errorMessage: string | null
   onMatchTracks: () => Promise<void>
   onExport: () => Promise<void>
-  onReviewTracks?: () => void
+  onManageMatches?: () => void
 }
 
 export function ExportActionsPanel({
@@ -179,7 +179,7 @@ function ExportActionProviderGroup({
     errorMessage,
     onMatchTracks,
     onExport,
-    onReviewTracks,
+    onManageMatches,
   } = group
   const metrics = getExportReadinessMetrics(matches, selectedPlaylist?.tracks)
   const providerName = label ?? formatProviderName(provider)
@@ -190,7 +190,8 @@ function ExportActionProviderGroup({
         {providerName}
       </Text>
       <Text size="sm" className="mt-1 text-muted-foreground">
-        Match tracks and export a playlist to {providerName}.
+        Automatically match tracks, review decisions, and export to{' '}
+        {providerName}.
       </Text>
 
       {errorMessage ? (
@@ -210,7 +211,7 @@ function ExportActionProviderGroup({
         />
       ) : null}
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-3">
+      <div className="mt-5 flex flex-col gap-2">
         <Button
           type="button"
           disabled={!selectedPlaylist || isMatching || isExporting}
@@ -219,8 +220,18 @@ function ExportActionProviderGroup({
             void onMatchTracks()
           }}
         >
-          {isMatching ? 'Matching' : 'Match tracks'}
+          {isMatching ? 'Matching' : 'Auto-match tracks'}
         </Button>
+        {onManageMatches ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!selectedPlaylist || isMatching || isExporting}
+            onClick={onManageMatches}
+          >
+            Manage matches
+          </Button>
+        ) : null}
         <Button
           type="button"
           disabled={
@@ -235,16 +246,6 @@ function ExportActionProviderGroup({
         >
           {isExporting ? 'Exporting' : 'Export'}
         </Button>
-        {onReviewTracks ? (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!selectedPlaylist || metrics.reviewCount === 0}
-            onClick={onReviewTracks}
-          >
-            Review tracks
-          </Button>
-        ) : null}
       </div>
 
       {exportResult ? (

@@ -23,68 +23,98 @@ const playlist: SavedPlaylist = {
   generatedAt: new Date('2026-07-01T00:00:00.000Z'),
   createdAt: new Date('2026-07-01T00:00:00.000Z'),
   updatedAt: new Date('2026-07-01T00:00:00.000Z'),
-  trackCount: 2,
-  tracks: [createTrack('track-1', 1), createTrack('track-2', 2)],
+  trackCount: 3,
+  tracks: [
+    createTrack('track-1', 1, 'First unresolved'),
+    createTrack('track-2', 2, 'Already matched'),
+    createTrack('track-3', 3, 'Skipped track'),
+  ],
 }
 
 describe('useStreamingTrackReview', () => {
-  it('auto-selects the only provider for a generic track review', () => {
+  it('opens on the first unresolved track and defaults to the review filter', () => {
     const provider = createProvider()
+    provider.matches = [
+      createResolvedMatch('track-2'),
+      createResolvedMatch('track-3', 'SKIPPED'),
+    ]
     const { result } = renderHook(() =>
       useStreamingTrackReview({ playlist, providers: [provider] }),
     )
 
-    act(() => result.current.openTrack(playlist.tracks[0]))
+    act(() => result.current.openManager('SPOTIFY'))
 
+    expect(result.current.isOpen).toBe(true)
     expect(result.current.track?.id).toBe('track-1')
-    expect(result.current.selectedProvider).toBe('SPOTIFY')
-    expect(result.current.isProviderLocked).toBe(false)
-    expect(provider.clearCandidates).toHaveBeenCalledOnce()
+    expect(result.current.filter).toBe('review')
+    expect(result.current.trackRows.map((row) => row.track.id)).toEqual([
+      'track-1',
+    ])
+    expect(result.current.mobileView).toBe('match')
   })
 
-  it('locks provider review opened from an export group', () => {
+  it('falls back to all tracks when every track has a final decision', () => {
     const provider = createProvider()
+    provider.matches = [
+      createResolvedMatch('track-1'),
+      createResolvedMatch('track-2'),
+      createResolvedMatch('track-3', 'SKIPPED'),
+    ]
     const { result } = renderHook(() =>
       useStreamingTrackReview({ playlist, providers: [provider] }),
     )
 
-    act(() => result.current.openFirstUnresolved('SPOTIFY'))
+    act(() => result.current.openManager('SPOTIFY'))
 
+    expect(result.current.filter).toBe('all')
+    expect(result.current.trackRows).toHaveLength(3)
     expect(result.current.track?.id).toBe('track-1')
-    expect(result.current.selectedProvider).toBe('SPOTIFY')
-    expect(result.current.isProviderLocked).toBe(true)
   })
 
-  it('clears provider candidates when the generic provider selection changes', () => {
+  it('filters and searches canonical and provider track metadata', () => {
     const provider = createProvider()
+    provider.matches = [
+      createResolvedMatch('track-1'),
+      {
+        ...createResolvedMatch('track-2'),
+        trackName: 'Different recording',
+        albumName: 'Special album',
+      },
+      createResolvedMatch('track-3', 'SKIPPED'),
+    ]
     const { result } = renderHook(() =>
       useStreamingTrackReview({ playlist, providers: [provider] }),
     )
 
-    act(() => result.current.openTrack(playlist.tracks[0]))
-    act(() => result.current.selectProvider(null))
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.setFilter('matched'))
+    act(() => result.current.setTrackQuery('special'))
 
-    expect(result.current.selectedProvider).toBeNull()
+    expect(result.current.trackRows.map((row) => row.track.id)).toEqual([
+      'track-2',
+    ])
+    expect(result.current.track?.id).toBe('track-2')
+  })
+
+  it('selects any visible track and switches the mobile workspace to Match', () => {
+    const provider = createProvider()
+    provider.matches = playlist.tracks.map((track) =>
+      createResolvedMatch(track.id ?? ''),
+    )
+    const { result } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.setMobileView('tracks'))
+    act(() => result.current.selectTrack('track-3'))
+
+    expect(result.current.track?.id).toBe('track-3')
+    expect(result.current.mobileView).toBe('match')
     expect(provider.clearCandidates).toHaveBeenCalledTimes(2)
   })
 
-  it('dispatches provider callbacks and advances within provider state', async () => {
-    const provider = createProvider()
-    const { result } = renderHook(() =>
-      useStreamingTrackReview({ playlist, providers: [provider] }),
-    )
-
-    act(() => result.current.openFirstUnresolved('SPOTIFY'))
-    await act(() => result.current.search('track'))
-    act(() => result.current.nextUnresolved())
-
-    expect(provider.search).toHaveBeenCalledWith(playlist.tracks[0], 'track')
-    expect(result.current.track?.id).toBe('track-2')
-    expect(result.current.selectedProvider).toBe('SPOTIFY')
-    expect(result.current.isProviderLocked).toBe(true)
-  })
-
-  it('keeps review open after selection and advances explicitly', async () => {
+  it('keeps the manager open after manual selection and skip decisions', async () => {
     const provider = createProvider()
     const candidate = {
       provider: 'SPOTIFY' as const,
@@ -95,45 +125,58 @@ describe('useStreamingTrackReview', () => {
       albumName: 'Album',
       durationMs: 180000,
     }
-    provider.select = vi.fn().mockImplementation(async (track) => {
-      provider.matches = [createResolvedMatch(track.id ?? '')]
-    })
     const { result } = renderHook(() =>
       useStreamingTrackReview({ playlist, providers: [provider] }),
     )
 
-    act(() => result.current.openFirstUnresolved('SPOTIFY'))
+    act(() => result.current.openManager('SPOTIFY'))
     await act(() => result.current.selectCandidate(candidate))
-
-    expect(provider.select).toHaveBeenCalledWith(playlist.tracks[0], candidate)
-    expect(result.current.track?.id).toBe('track-1')
-
-    act(() => result.current.nextUnresolved())
-
-    expect(result.current.track?.id).toBe('track-2')
-  })
-
-  it('keeps review open after skip and closes when review is complete', async () => {
-    const oneTrackPlaylist = { ...playlist, tracks: [playlist.tracks[0]] }
-    const provider = createProvider()
-    provider.skip = vi.fn().mockImplementation(async (track) => {
-      provider.matches = [createResolvedMatch(track.id ?? '', 'SKIPPED')]
-    })
-    const { result } = renderHook(() =>
-      useStreamingTrackReview({
-        playlist: oneTrackPlaylist,
-        providers: [provider],
-      }),
-    )
-
-    act(() => result.current.openFirstUnresolved('SPOTIFY'))
     await act(() => result.current.skip())
 
+    expect(provider.select).toHaveBeenCalledWith(playlist.tracks[0], candidate)
+    expect(provider.skip).toHaveBeenCalledWith(playlist.tracks[0])
+    expect(result.current.isOpen).toBe(true)
     expect(result.current.track?.id).toBe('track-1')
+  })
 
-    act(() => result.current.nextUnresolved())
+  it('retains review content while the dialog closes', () => {
+    const provider = createProvider()
+    const { result } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
 
-    expect(result.current.track).toBeNull()
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.closeReview())
+
+    expect(result.current.isOpen).toBe(false)
+    expect(result.current.track?.id).toBe('track-1')
+    expect(result.current.selectedProvider).toBe('SPOTIFY')
+  })
+
+  it('clears candidates when the selected provider is reapplied', () => {
+    const provider = createProvider()
+    const { result } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.selectProvider('SPOTIFY'))
+
+    expect(result.current.selectedProvider).toBe('SPOTIFY')
+    expect(provider.clearCandidates).toHaveBeenCalledTimes(2)
+  })
+
+  it('advances within the active provider filter', () => {
+    const provider = createProvider()
+    const { result } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.nextTrack())
+
+    expect(result.current.track?.id).toBe('track-2')
+    expect(result.current.nextLabel).toBe('Next unresolved')
   })
 })
 
@@ -152,12 +195,12 @@ function createProvider(): StreamingTrackReviewProvider {
   }
 }
 
-function createTrack(id: string, position: number) {
+function createTrack(id: string, position: number, title: string) {
   return {
     id,
     position,
-    title: `Track ${position}`,
-    normalizedTitle: `track ${position}`,
+    title,
+    normalizedTitle: title.toLowerCase(),
     isIncluded: true,
     isCover: false,
     originalArtistName: null,

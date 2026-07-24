@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   ExportActionsPanel,
@@ -193,8 +193,39 @@ describe('ExportActionsPanel', () => {
     )
 
     expect(
-      screen.getByRole<HTMLButtonElement>('button', { name: 'Match tracks' })
-        .disabled,
+      screen.getByRole<HTMLButtonElement>('button', {
+        name: 'Auto-match tracks',
+      }).disabled,
     ).toBe(true)
+  })
+
+  it('opens the consolidated provider match manager', () => {
+    const onManageMatches = vi.fn()
+
+    render(
+      <ExportActionsPanel
+        groups={[
+          {
+            provider: 'SPOTIFY',
+            selectedPlaylist: savedPlaylist,
+            matches: [],
+            exportResult: null,
+            isMatching: false,
+            isExporting: false,
+            errorMessage: null,
+            onMatchTracks: vi.fn(),
+            onExport: vi.fn(),
+            onManageMatches,
+          },
+        ]}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage matches' }))
+
+    expect(onManageMatches).toHaveBeenCalledOnce()
+    expect(
+      screen.queryByRole('button', { name: 'Review tracks' }),
+    ).toBeNull()
   })
 })
