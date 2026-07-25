@@ -3,7 +3,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PlaylistReviewExportSection } from './playlist-review-export-section'
-import type { GeneratedPlaylist, SavedPlaylist } from '@/models/playlists/models'
+import type {
+  GeneratedPlaylist,
+  SavedPlaylist,
+} from '@/models/playlists/models'
 
 const generatedPlaylist: GeneratedPlaylist = {
   artist: {
@@ -91,6 +94,11 @@ describe('PlaylistReviewExportSection', () => {
     expect(screen.getByText('1 track · 6 setlists')).toBeTruthy()
     expect(screen.getByText('Innerbloom')).toBeTruthy()
     expect(screen.getByText('Streaming exports')).toBeTruthy()
+    expect(
+      screen.getByRole('button', {
+        name: '100% confidence. Show evidence for Innerbloom',
+      }),
+    ).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }))
     expect(onAction).toHaveBeenCalledOnce()

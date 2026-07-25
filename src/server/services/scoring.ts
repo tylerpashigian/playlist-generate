@@ -1,4 +1,5 @@
 import { generatedPlaylistDtoSchema } from '@/server/contracts/playlists'
+import { getRecencyWeights } from '@/lib/recency-weighting'
 import type { ArtistDto } from '@/server/contracts/artists'
 import type {
   GeneratedPlaylistDto,
@@ -33,14 +34,15 @@ export function scoreSetlistsForArtist(
   const sortedSetlists = [...setlists].sort(
     (left, right) => right.eventDate.getTime() - left.eventDate.getTime(),
   )
-  const totalSetlistWeight = sortedSetlists.reduce(
-    (total, _setlist, index) => total + sortedSetlists.length - index,
+  const recencyWeights = getRecencyWeights(sortedSetlists.length)
+  const totalSetlistWeight = recencyWeights.reduce(
+    (total, weight) => total + weight,
     0,
   )
   const songs = new Map<string, SongAccumulator>()
 
   sortedSetlists.forEach((setlist, index) => {
-    const weight = sortedSetlists.length - index
+    const weight = recencyWeights[index]
     const songsSeenInSetlist = new Set<string>()
 
     for (const song of setlist.songs) {

@@ -466,7 +466,7 @@ function getVerificationCallbackURL(redirect: string) {
 
 function AuthCard({ children }: { children: React.ReactNode }) {
   return (
-    <section className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+    <section className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
       {children}
     </section>
   )
@@ -492,8 +492,10 @@ function Field({
   autoComplete?: string
 }) {
   return (
-    <label className="grid gap-2 text-sm font-medium text-foreground">
-      {label}
+    <label className="grid gap-2 text-foreground">
+      <Text as="span" size="sm" weight="medium">
+        {label}
+      </Text>
       <Input
         id={id}
         type={type}
@@ -503,7 +505,7 @@ function Field({
         aria-describedby={error ? `${id}-error` : undefined}
         onBlur={onBlur}
         onChange={(event) => onChange(event.target.value)}
-        className="bg-background font-normal"
+        className="bg-background"
         required
       />
       {error ? (

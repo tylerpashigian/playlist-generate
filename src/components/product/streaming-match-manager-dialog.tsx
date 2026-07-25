@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { Cancel01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
 import {
   Combobox,
@@ -22,12 +24,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -44,6 +40,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import type {
   StreamingTrackReviewFilter,
   StreamingTrackReviewRow,
+  StreamingTrackReviewSaveStatus,
   StreamingTrackReviewStatus,
 } from '@/hooks/use-streaming-track-review'
 import { cn } from '@/lib/utils'
@@ -79,6 +76,15 @@ interface StreamingMatchManagerDialogProps {
   candidates: Array<StreamingTrackCandidate>
   isSearching: boolean
   isSaving: boolean
+  saveStatus: StreamingTrackReviewSaveStatus
+  saveMessage: string | null
+  searchErrorMessage: string | null
+  saveErrorMessage: string | null
+  unresolvedCount: number
+  matchedCount: number
+  skippedCount: number
+  resolvedCount: number
+  isReviewComplete: boolean
   nextLabel: string
   onOpenChange: (open: boolean) => void
   onProviderChange: (provider: StreamingProvider | null) => void
@@ -89,7 +95,9 @@ interface StreamingMatchManagerDialogProps {
   onClearCandidates: () => void
   onSearch: (query: string) => Promise<void>
   onSelect: (candidate: StreamingTrackCandidate) => Promise<void>
+  onConfirm: () => Promise<void>
   onSkip: () => Promise<void>
+  onRetrySave: () => Promise<void>
   onNext: () => void
 }
 
@@ -119,6 +127,15 @@ function DesktopMatchManagerDialog({
   candidates,
   isSearching,
   isSaving,
+  saveStatus,
+  saveMessage,
+  searchErrorMessage,
+  saveErrorMessage,
+  unresolvedCount,
+  matchedCount,
+  skippedCount,
+  resolvedCount,
+  isReviewComplete,
   nextLabel,
   onOpenChange,
   onProviderChange,
@@ -128,7 +145,9 @@ function DesktopMatchManagerDialog({
   onClearCandidates,
   onSearch,
   onSelect,
+  onConfirm,
   onSkip,
+  onRetrySave,
   onNext,
 }: StreamingMatchManagerDialogProps) {
   const providerName =
@@ -145,8 +164,7 @@ function DesktopMatchManagerDialog({
         <DialogHeader className="relative shrink-0 border-b border-border px-5 py-4 pr-14 sm:px-6 sm:py-5 sm:pr-16">
           <DialogTitle>Manage track matches</DialogTitle>
           <DialogDescription>
-            Choose any playlist track, then review its match for the selected
-            streaming service.
+            Resolve uncertain recordings before exporting your playlist.
           </DialogDescription>
         </DialogHeader>
 
@@ -161,6 +179,9 @@ function DesktopMatchManagerDialog({
               selectedTrackId={track?.id ?? null}
               filter={filter}
               query={trackQuery}
+              unresolvedCount={unresolvedCount}
+              resolvedCount={resolvedCount}
+              isReviewComplete={isReviewComplete}
               onFilterChange={onFilterChange}
               onQueryChange={onTrackQueryChange}
               onTrackChange={onTrackChange}
@@ -180,12 +201,24 @@ function DesktopMatchManagerDialog({
               candidates={candidates}
               isSearching={isSearching}
               isSaving={isSaving}
+              saveStatus={saveStatus}
+              saveMessage={saveMessage}
+              searchErrorMessage={searchErrorMessage}
+              saveErrorMessage={saveErrorMessage}
+              unresolvedCount={unresolvedCount}
+              matchedCount={matchedCount}
+              skippedCount={skippedCount}
+              resolvedCount={resolvedCount}
+              trackCount={trackCount}
+              isReviewComplete={isReviewComplete}
               nextLabel={nextLabel}
               onProviderChange={onProviderChange}
               onClearCandidates={onClearCandidates}
               onSearch={onSearch}
               onSelect={onSelect}
+              onConfirm={onConfirm}
               onSkip={onSkip}
+              onRetrySave={onRetrySave}
               onNext={onNext}
               onCancel={() => onOpenChange(false)}
             />
@@ -211,6 +244,15 @@ function MobileMatchManagerDrawer({
   candidates,
   isSearching,
   isSaving,
+  saveStatus,
+  saveMessage,
+  searchErrorMessage,
+  saveErrorMessage,
+  unresolvedCount,
+  matchedCount,
+  skippedCount,
+  resolvedCount,
+  isReviewComplete,
   nextLabel,
   onOpenChange,
   onProviderChange,
@@ -221,7 +263,9 @@ function MobileMatchManagerDrawer({
   onClearCandidates,
   onSearch,
   onSelect,
+  onConfirm,
   onSkip,
+  onRetrySave,
   onNext,
 }: StreamingMatchManagerDialogProps) {
   const providerName =
@@ -236,14 +280,29 @@ function MobileMatchManagerDrawer({
       swipeDirection="down"
     >
       <DrawerContent className="[--drawer-height:calc(100dvh-1rem)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-1rem)]">
-        <DrawerHeader className="border-b border-border pb-4 text-left">
-          <DrawerTitle className="type-heading-4">
-            Manage track matches
-          </DrawerTitle>
-          <DrawerDescription>
-            Choose any playlist track, then review its match for the selected
-            streaming service.
-          </DrawerDescription>
+        <DrawerHeader className="relative border-b border-border pb-4 pr-16 text-left">
+          <div>
+            <DrawerTitle className="type-heading-4">
+              Manage track matches
+            </DrawerTitle>
+            <DrawerDescription>
+              Resolve uncertain recordings before exporting your playlist.
+            </DrawerDescription>
+          </div>
+          <Button
+            type="button"
+            size="icon-lg"
+            variant="ghost"
+            aria-label="Close match manager"
+            className="absolute right-3 top-1 size-11"
+            onClick={() => onOpenChange(false)}
+          >
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Cancel01Icon}
+              strokeWidth={2}
+            />
+          </Button>
         </DrawerHeader>
 
         <Tabs
@@ -255,7 +314,9 @@ function MobileMatchManagerDrawer({
           data-testid="mobile-match-manager"
         >
           <TabsList className="mx-5 mt-4 w-[calc(100%-2.5rem)] shrink-0">
-            <TabsTrigger value="tracks">Tracks · {trackCount}</TabsTrigger>
+            <TabsTrigger value="tracks">
+              Tracks · {unresolvedCount} remaining
+            </TabsTrigger>
             <TabsTrigger value="match">Match</TabsTrigger>
           </TabsList>
 
@@ -270,6 +331,9 @@ function MobileMatchManagerDrawer({
               selectedTrackId={track?.id ?? null}
               filter={filter}
               query={trackQuery}
+              unresolvedCount={unresolvedCount}
+              resolvedCount={resolvedCount}
+              isReviewComplete={isReviewComplete}
               onFilterChange={onFilterChange}
               onQueryChange={onTrackQueryChange}
               onTrackChange={onTrackChange}
@@ -294,12 +358,24 @@ function MobileMatchManagerDrawer({
               candidates={candidates}
               isSearching={isSearching}
               isSaving={isSaving}
+              saveStatus={saveStatus}
+              saveMessage={saveMessage}
+              searchErrorMessage={searchErrorMessage}
+              saveErrorMessage={saveErrorMessage}
+              unresolvedCount={unresolvedCount}
+              matchedCount={matchedCount}
+              skippedCount={skippedCount}
+              resolvedCount={resolvedCount}
+              trackCount={trackCount}
+              isReviewComplete={isReviewComplete}
               nextLabel={nextLabel}
               onProviderChange={onProviderChange}
               onClearCandidates={onClearCandidates}
               onSearch={onSearch}
               onSelect={onSelect}
+              onConfirm={onConfirm}
               onSkip={onSkip}
+              onRetrySave={onRetrySave}
               onNext={onNext}
               onCancel={() => onOpenChange(false)}
             />
@@ -316,6 +392,9 @@ function TrackBrowser({
   selectedTrackId,
   filter,
   query,
+  unresolvedCount,
+  resolvedCount,
+  isReviewComplete,
   onFilterChange,
   onQueryChange,
   onTrackChange,
@@ -325,6 +404,9 @@ function TrackBrowser({
   selectedTrackId: string | null
   filter: StreamingTrackReviewFilter
   query: string
+  unresolvedCount: number
+  resolvedCount: number
+  isReviewComplete: boolean
   onFilterChange: (filter: StreamingTrackReviewFilter) => void
   onQueryChange: (query: string) => void
   onTrackChange: (trackId: string) => void
@@ -336,9 +418,16 @@ function TrackBrowser({
           <Text size="sm" weight="semibold">
             Playlist tracks
           </Text>
-          <Text size="xs" className="text-muted-foreground">
-            {trackCount} included
-          </Text>
+          <div className="text-right">
+            <Text size="xs" weight="semibold" className="text-foreground">
+              {unresolvedCount > 0
+                ? `${unresolvedCount} remaining`
+                : 'All resolved'}
+            </Text>
+            <Text size="xs" className="text-muted-foreground">
+              {resolvedCount} of {trackCount} resolved
+            </Text>
+          </div>
         </div>
         <Input
           type="search"
@@ -377,14 +466,69 @@ function TrackBrowser({
             ))}
           </ol>
         ) : (
-          <div className="p-6 text-center">
-            <Text size="sm" className="text-muted-foreground">
-              No tracks match this view.
-            </Text>
-          </div>
+          <TrackBrowserEmptyState
+            filter={filter}
+            query={query}
+            isReviewComplete={isReviewComplete}
+            onFilterChange={onFilterChange}
+            onQueryChange={onQueryChange}
+          />
         )}
       </div>
     </section>
+  )
+}
+
+function TrackBrowserEmptyState({
+  filter,
+  query,
+  isReviewComplete,
+  onFilterChange,
+  onQueryChange,
+}: {
+  filter: StreamingTrackReviewFilter
+  query: string
+  isReviewComplete: boolean
+  onFilterChange: (filter: StreamingTrackReviewFilter) => void
+  onQueryChange: (query: string) => void
+}) {
+  return (
+    <div className="grid justify-items-center gap-3 p-6 text-center">
+      <div>
+        <Text size="sm" weight="semibold" className="text-foreground">
+          {isReviewComplete
+            ? 'Every included track is resolved.'
+            : 'No tracks match this view.'}
+        </Text>
+        <Text size="xs" className="mt-1 text-muted-foreground">
+          {isReviewComplete
+            ? 'Review another status or return to export.'
+            : 'Clear the search or change the status filter.'}
+        </Text>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {query ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onQueryChange('')}
+          >
+            Clear search
+          </Button>
+        ) : null}
+        {filter !== 'all' ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onFilterChange('all')}
+          >
+            Show all tracks
+          </Button>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
@@ -417,7 +561,7 @@ function TrackBrowserRow({
         <Text as="span" size="xs" className="text-muted-foreground">
           {String(row.track.position).padStart(2, '0')}
         </Text>
-        <span className="grid min-w-0 gap-0.5">
+        <span className="grid min-w-0 gap-1">
           <Text as="span" size="sm" weight="semibold" className="truncate">
             {row.track.title}
           </Text>
@@ -427,7 +571,7 @@ function TrackBrowserRow({
         </span>
         <span
           className={cn(
-            'flex items-center justify-end gap-1.5 text-right text-xs',
+            'flex items-center justify-end gap-2 text-right',
             getStatusTextClass(row.status),
           )}
         >
@@ -438,7 +582,9 @@ function TrackBrowserRow({
               getStatusDotClass(row.status),
             )}
           />
-          {getStatusLabel(row.status)}
+          <Text as="span" size="xs">
+            {getStatusLabel(row.status)}
+          </Text>
         </span>
       </button>
     </li>
@@ -457,12 +603,24 @@ function MatchEditor({
   candidates,
   isSearching,
   isSaving,
+  saveStatus,
+  saveMessage,
+  searchErrorMessage,
+  saveErrorMessage,
+  unresolvedCount,
+  matchedCount,
+  skippedCount,
+  resolvedCount,
+  trackCount,
+  isReviewComplete,
   nextLabel,
   onProviderChange,
   onClearCandidates,
   onSearch,
   onSelect,
+  onConfirm,
   onSkip,
+  onRetrySave,
   onNext,
   onCancel,
 }: {
@@ -477,12 +635,24 @@ function MatchEditor({
   candidates: Array<StreamingTrackCandidate>
   isSearching: boolean
   isSaving: boolean
+  saveStatus: StreamingTrackReviewSaveStatus
+  saveMessage: string | null
+  searchErrorMessage: string | null
+  saveErrorMessage: string | null
+  unresolvedCount: number
+  matchedCount: number
+  skippedCount: number
+  resolvedCount: number
+  trackCount: number
+  isReviewComplete: boolean
   nextLabel: string
   onProviderChange: (provider: StreamingProvider | null) => void
   onClearCandidates: () => void
   onSearch: (query: string) => Promise<void>
   onSelect: (candidate: StreamingTrackCandidate) => Promise<void>
+  onConfirm: () => Promise<void>
   onSkip: () => Promise<void>
+  onRetrySave: () => Promise<void>
   onNext: () => void
   onCancel: () => void
 }) {
@@ -499,12 +669,24 @@ function MatchEditor({
       return
     }
 
-    void searchRef.current(debouncedQuery.trim())
+    void searchRef.current(debouncedQuery.trim()).catch(() => undefined)
   }, [debouncedQuery, selectedProvider, track])
+
+  if (isReviewComplete) {
+    return (
+      <ReviewCompleteState
+        providerName={providerName}
+        matchedCount={matchedCount}
+        skippedCount={skippedCount}
+        trackCount={trackCount}
+        onDone={onCancel}
+      />
+    )
+  }
 
   if (!track) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8 text-center">
+      <div className="flex flex-1 items-center justify-center p-4 text-center sm:p-6">
         <Text size="sm" className="text-muted-foreground">
           Select a track to manage its streaming match.
         </Text>
@@ -516,56 +698,49 @@ function MatchEditor({
     track.isCover && track.originalArtistName
       ? `Performed as a cover of ${track.originalArtistName}.`
       : 'Select the intended recording from the provider catalog.'
+  const hasProposedMatch =
+    currentMatch?.status === 'LOW_CONFIDENCE' &&
+    Boolean(currentMatch.providerTrackId)
 
   return (
-    <section className="flex min-h-0 w-full flex-col">
-      <div className="grid shrink-0 gap-4 border-b border-border p-5 sm:p-6">
-        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
-          <div className="grid gap-1.5">
-            <Label htmlFor={selectId}>Streaming service</Label>
-            <Select<StreamingProvider>
-              value={selectedProvider}
-              onValueChange={onProviderChange}
-              disabled={isSaving}
-            >
-              <SelectTrigger id={selectId} className="w-full">
-                <SelectValue placeholder="Select a streaming service">
-                  {providerName}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {providers.map((provider) => (
-                  <SelectItem key={provider.provider} value={provider.provider}>
-                    {provider.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <section className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="grid gap-4 p-4 sm:p-6">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[minmax(0,1fr)_12rem] sm:gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor={selectId}>Streaming service</Label>
+              <Select<StreamingProvider>
+                value={selectedProvider}
+                onValueChange={onProviderChange}
+                disabled={isSaving}
+              >
+                <SelectTrigger id={selectId} className="w-full">
+                  <SelectValue placeholder="Select a streaming service">
+                    {providerName}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {providers.map((provider) => (
+                    <SelectItem
+                      key={provider.provider}
+                      value={provider.provider}
+                    >
+                      {provider.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {status ? <CurrentStatus status={status} /> : null}
           </div>
-          {status ? <CurrentStatus status={status} /> : null}
-        </div>
 
-        <div>
-          <Text size="lg" weight="semibold">
-            {track.title}
-          </Text>
-          <Text size="xs" className="mt-1 text-muted-foreground">
-            {context}
-          </Text>
-          {currentMatch?.trackName ? (
-            <Text size="xs" className="mt-1 text-muted-foreground">
-              Current match: {currentMatch.trackName}
-              {currentMatch.artistName ? ` · ${currentMatch.artistName}` : ''}
-            </Text>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
-        <div className="flex min-h-full flex-col">
-          <div className="grid gap-1.5">
+          <div className="sticky top-0 z-10 grid gap-2 bg-background py-2">
             <Label htmlFor={inputId}>
-              {providerName ? `Search ${providerName}` : 'Search tracks'}
+              {currentMatch?.trackName
+                ? `Change the ${providerName ?? 'streaming'} match`
+                : providerName
+                  ? `Search ${providerName}`
+                  : 'Search tracks'}
             </Label>
             <Combobox<StreamingTrackCandidate>
               items={candidates}
@@ -582,7 +757,7 @@ function MatchEditor({
               value={null}
               onValueChange={(candidate) => {
                 if (candidate) {
-                  void onSelect(candidate)
+                  void onSelect(candidate).catch(() => undefined)
                 }
               }}
               itemToStringLabel={(candidate) => candidate.title}
@@ -628,71 +803,312 @@ function MatchEditor({
             </Combobox>
           </div>
 
-          {!query.trim() && !isSearching ? (
-            <MatchSearchEmptyState
-              providerName={providerName}
-              hasCurrentMatch={Boolean(currentMatch)}
+          {searchErrorMessage ? (
+            <InlineOperationError
+              message={searchErrorMessage}
+              actionLabel="Retry search"
+              onRetry={() => {
+                const trimmedQuery = query.trim()
+                if (trimmedQuery.length >= 2) {
+                  void onSearch(trimmedQuery).catch(() => undefined)
+                }
+              }}
             />
           ) : null}
+
+          <div>
+            <Text size="xs" weight="semibold" className="text-muted-foreground">
+              {unresolvedCount} unresolved · {resolvedCount} of {trackCount}{' '}
+              resolved
+            </Text>
+            <Text size="lg" weight="semibold" className="mt-1">
+              {track.title}
+            </Text>
+            <Text size="xs" className="mt-1 text-muted-foreground">
+              {context}
+            </Text>
+          </div>
+
+          <CurrentMatchSummary
+            providerName={providerName}
+            currentMatch={currentMatch}
+          />
+          {saveStatus !== 'idle' && saveStatus !== 'error' && saveMessage ? (
+            <OperationFeedback status={saveStatus} message={saveMessage} />
+          ) : null}
+
+          <TrackMatchEvidence track={track} currentMatch={currentMatch} />
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border p-5 sm:flex-row sm:justify-end sm:p-6">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+      <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border p-5 sm:flex sm:justify-end sm:p-6">
+        {saveErrorMessage ? (
+          <div className="col-span-2 mb-2 sm:mb-0 sm:mr-auto">
+            <InlineOperationError
+              message={saveErrorMessage}
+              actionLabel="Retry save"
+              onRetry={() => void onRetrySave().catch(() => undefined)}
+              compact
+            />
+          </div>
+        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          className="min-h-11 sm:min-h-0"
+          onClick={onCancel}
+        >
+          Done
         </Button>
         <Button
           type="button"
           variant="outline"
+          className="min-h-11 sm:min-h-0"
           disabled={!selectedProvider || isSaving}
-          onClick={() => void onSkip()}
+          onClick={() => void onSkip().catch(() => undefined)}
         >
-          {providerName ? `Do not export to ${providerName}` : 'Skip export'}
+          {providerName ? `Skip on ${providerName}` : 'Skip export'}
         </Button>
         <Button
           type="button"
+          variant="outline"
+          className="col-span-2 min-h-11 sm:min-h-0"
           disabled={!selectedProvider || isSaving}
           onClick={onNext}
         >
           {nextLabel}
         </Button>
+        {hasProposedMatch ? (
+          <Button
+            type="button"
+            className="col-span-2 min-h-11 sm:min-h-0"
+            disabled={!selectedProvider || isSaving}
+            onClick={() => void onConfirm().catch(() => undefined)}
+          >
+            Confirm match
+          </Button>
+        ) : null}
       </div>
     </section>
   )
 }
 
-function MatchSearchEmptyState({
+function TrackMatchEvidence({
+  track,
+  currentMatch,
+}: {
+  track: PlaylistTrack
+  currentMatch: TrackMatch | null
+}) {
+  const lastPlayedLabel = track.lastPlayedAt
+    ? evidenceDateFormatter.format(track.lastPlayedAt)
+    : 'Not available'
+  const automaticMatchConfidence =
+    currentMatch?.matchConfidenceScore == null
+      ? 'Not available'
+      : `${Math.round(currentMatch.matchConfidenceScore)}%`
+
+  return (
+    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-border py-3 sm:grid-cols-4 sm:gap-y-3 sm:py-4">
+      <EvidenceFact
+        label="Recent appearances"
+        value={`${track.appearanceCount} of ${track.totalSetlistsConsidered}`}
+      />
+      <EvidenceFact
+        label="Setlist confidence"
+        value={`${Math.round(track.confidenceScore)}%`}
+      />
+      <EvidenceFact label="Most recent" value={lastPlayedLabel} />
+      <EvidenceFact
+        label="Automatic match confidence"
+        value={automaticMatchConfidence}
+      />
+    </dl>
+  )
+}
+
+function EvidenceFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt>
+        <Text as="span" size="xs" className="text-muted-foreground">
+          {label}
+        </Text>
+      </dt>
+      <dd className="mt-1 truncate">
+        <Text as="span" size="sm" weight="semibold" className="text-foreground">
+          {value}
+        </Text>
+      </dd>
+    </div>
+  )
+}
+
+function CurrentMatchSummary({
   providerName,
-  hasCurrentMatch,
+  currentMatch,
 }: {
   providerName: string | null
-  hasCurrentMatch: boolean
+  currentMatch: TrackMatch | null
+}) {
+  const serviceName = providerName ?? 'streaming service'
+  const hasProposedMatch = currentMatch?.status === 'LOW_CONFIDENCE'
+
+  return (
+    <div className="min-w-0">
+      <Text size="xs" weight="semibold" className="text-muted-foreground">
+        {hasProposedMatch ? 'Proposed' : 'Current'} {serviceName} match
+      </Text>
+      {currentMatch?.trackName ? (
+        <>
+          <Text
+            size="sm"
+            weight="semibold"
+            className="mt-1 truncate text-foreground"
+          >
+            {currentMatch.trackName}
+          </Text>
+          <Text size="sm" className="mt-1 text-muted-foreground">
+            {formatMatchMetadata(currentMatch)}
+          </Text>
+          {currentMatch.externalUrl ? (
+            <a
+              href={currentMatch.externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-flex text-foreground underline underline-offset-3"
+            >
+              <Text as="span" size="xs" weight="semibold">
+                Open in {serviceName}
+              </Text>
+            </a>
+          ) : null}
+        </>
+      ) : (
+        <Text size="sm" className="mt-1 text-muted-foreground">
+          No provider recording is saved yet.
+        </Text>
+      )}
+    </div>
+  )
+}
+
+function OperationFeedback({
+  status,
+  message,
+}: {
+  status: StreamingTrackReviewSaveStatus
+  message: string
+}) {
+  return (
+    <Text
+      as="div"
+      role={status === 'error' ? 'alert' : 'status'}
+      aria-live={status === 'error' ? 'assertive' : 'polite'}
+      className={cn(
+        'border px-3 py-2',
+        status === 'error'
+          ? 'border-destructive/30 bg-destructive/5 text-destructive'
+          : 'border-border bg-muted/50 text-foreground',
+      )}
+    >
+      {message}
+    </Text>
+  )
+}
+
+function InlineOperationError({
+  message,
+  actionLabel,
+  onRetry,
+  compact = false,
+}: {
+  message: string
+  actionLabel: string
+  onRetry: () => void
+  compact?: boolean
+}) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'mt-3 flex flex-col gap-2 border border-destructive/30 bg-destructive/5 p-3 text-destructive sm:flex-row sm:items-center sm:justify-between',
+        compact ? 'mt-0' : '',
+      )}
+    >
+      <Text size="xs" className="text-current">
+        {message}
+      </Text>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="min-h-11 border-destructive/30 bg-background text-foreground sm:min-h-0"
+        onClick={onRetry}
+      >
+        {actionLabel}
+      </Button>
+    </div>
+  )
+}
+
+function ReviewCompleteState({
+  providerName,
+  matchedCount,
+  skippedCount,
+  trackCount,
+  onDone,
+}: {
+  providerName: string | null
+  matchedCount: number
+  skippedCount: number
+  trackCount: number
+  onDone: () => void
 }) {
   const serviceName = providerName ?? 'streaming service'
 
   return (
-    <Empty className="hidden min-h-64 border-0 px-6 py-10 lg:flex">
-      <EmptyHeader>
-        <EmptyTitle>
-          {hasCurrentMatch
-            ? `Replace the current ${serviceName} match`
-            : 'Find the intended recording'}
-        </EmptyTitle>
-        <EmptyDescription>
-          Search by track title, artist, or album to{' '}
-          {hasCurrentMatch
-            ? 'choose a different recording.'
-            : `resolve this ${serviceName} match.`}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-1 items-center justify-center overflow-y-auto p-4 sm:p-6">
+        <div className="w-full max-w-xl">
+          <Text size="xs" weight="semibold" className="text-muted-foreground">
+            Review complete
+          </Text>
+          <Text size="lg" weight="semibold" className="mt-2 text-foreground">
+            All included tracks are resolved for {serviceName}.
+          </Text>
+          <Text size="sm" className="mt-2 text-muted-foreground">
+            Your provider decisions are saved. Return to the export panel when
+            you are ready to create the playlist.
+          </Text>
+          <dl className="mt-6 grid grid-cols-3 divide-x divide-border border-y border-border py-4">
+            <EvidenceFact label="Resolved" value={String(trackCount)} />
+            <div className="pl-4">
+              <EvidenceFact label="Matched" value={String(matchedCount)} />
+            </div>
+            <div className="pl-4">
+              <EvidenceFact label="Skipped" value={String(skippedCount)} />
+            </div>
+          </dl>
+        </div>
+      </div>
+      <div className="shrink-0 border-t border-border p-4 sm:flex sm:justify-end sm:p-6">
+        <Button
+          type="button"
+          className="min-h-11 w-full sm:min-h-0 sm:w-auto"
+          onClick={onDone}
+        >
+          Done — return to export
+        </Button>
+      </div>
+    </div>
   )
 }
 
 function CurrentStatus({ status }: { status: StreamingTrackReviewStatus }) {
   return (
-    <div className="grid content-start gap-1.5">
-      <Text size="sm" weight="semibold">
+    <div className="grid content-start gap-2 self-end sm:self-auto">
+      <Text size="sm" weight="semibold" className="sr-only sm:not-sr-only">
         Current status
       </Text>
       <div
@@ -719,7 +1135,7 @@ function StreamingTrackCandidateResult({
   candidate: StreamingTrackCandidate
 }) {
   return (
-    <span className="grid min-w-0 flex-1 gap-0.5">
+    <span className="grid min-w-0 flex-1 gap-1">
       <Text as="span" size="sm" weight="semibold" className="truncate">
         {candidate.title}
       </Text>
@@ -757,14 +1173,7 @@ function getStatusLabel(status: StreamingTrackReviewStatus) {
 }
 
 function getStatusTextClass(status: StreamingTrackReviewStatus) {
-  switch (status) {
-    case 'matched':
-      return 'text-success'
-    case 'skipped':
-      return 'text-muted-foreground'
-    default:
-      return 'text-review'
-  }
+  return status === 'skipped' ? 'text-muted-foreground' : 'text-foreground'
 }
 
 function getStatusDotClass(status: StreamingTrackReviewStatus) {
@@ -782,6 +1191,23 @@ function formatDuration(durationMs: number) {
   const seconds = Math.round(durationMs / 1000)
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
+
+function formatMatchMetadata(match: TrackMatch) {
+  return [
+    match.artistName,
+    match.albumName,
+    match.durationMs == null ? null : formatDuration(match.durationMs),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+const evidenceDateFormatter = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
 
 const trackFilters: Array<{
   value: StreamingTrackReviewFilter

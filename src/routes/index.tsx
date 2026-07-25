@@ -1,59 +1,13 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import Footer from '@/components/Footer'
-import { ExportReadinessMetrics } from '@/components/product/export-actions-panel'
-import { PlaylistPreview } from '@/components/product/playlist-preview'
+import { LandingSetlistDemo } from '@/components/product/landing-setlist-demo'
 import { WithNavbar } from '@/components/product/product-navbar'
 import { Button } from '@/components/ui/button'
 import { Heading1, Heading2, Heading4, Text } from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react'
 
-import type { PlaylistPreviewTrack } from '@/components/product/playlist-preview'
-import { Badge } from '@/components/ui/badge'
-
 export const Route = createFileRoute('/')({ component: LandingRoute })
-
-const previewTracks: Array<PlaylistPreviewTrack> = [
-  {
-    key: '1-innerbloom',
-    position: 1,
-    title: 'Innerbloom',
-    detail: 'Exact recording',
-    evidence: '10/10 setlists',
-    confidenceScore: 100,
-  },
-  {
-    key: '2-surrender',
-    position: 2,
-    title: 'Surrender',
-    detail: 'Recent encore rotation',
-    evidence: '8/10 setlists',
-    confidenceScore: 85,
-  },
-  {
-    key: '3-levitating',
-    position: 3,
-    title: 'Levitating',
-    detail: 'Mid-set rotation',
-    evidence: '6/10 setlists',
-    confidenceScore: 67,
-  },
-  {
-    key: '4-until-the-sun-needs-to-rise',
-    position: 4,
-    title: 'Until the Sun Needs to Rise',
-    detail: 'Needs review',
-    evidence: '4/10 setlists',
-    confidenceScore: 49,
-  },
-]
-
-const previewAnnotations = [
-  '10 recent setlists',
-  'Confidence ranked',
-  'Review covers',
-  'Export ready',
-] as const
 
 const workflowSteps = [
   {
@@ -90,7 +44,7 @@ function LandingRoute() {
 
   return (
     <WithNavbar>
-      <main className="flex min-h-dvh w-full flex-col items-center gap-14 bg-background pb-14 pt-28 md:gap-20 md:pb-20 md:pt-36">
+      <main className="flex min-h-dvh w-full flex-col items-center gap-12 bg-background pb-12 pt-20 sm:pt-24 md:gap-16 md:pb-16 md:pt-32">
         <section className="flex max-w-295 flex-col items-center gap-10 px-5 text-center sm:px-8">
           <div className="flex w-full max-w-225 flex-col items-center gap-5">
             <Text
@@ -130,44 +84,7 @@ function LandingRoute() {
           </div>
 
           <div className="mx-auto flex w-full max-w-260 flex-col gap-4">
-            <div className="flex flex-wrap justify-center gap-2 text-left">
-              {previewAnnotations.map((annotation) => (
-                <Badge key={annotation} variant="outline" size="lg">
-                  {annotation}
-                </Badge>
-              ))}
-            </div>
-
-            <div className="grid w-full rounded-2xl border border-border bg-card p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,0.06)] lg:grid-cols-[minmax(0,1fr)_320px] lg:divide-x">
-              <PlaylistPreview
-                title="Rufus Du Sol recent setlist"
-                subtitle="4 tracks from 10 recent setlists"
-                tracks={previewTracks}
-                compact
-              />
-
-              <section className="border-t border-border pt-5 text-card-foreground lg:border-t-0 lg:pl-5 lg:pt-0">
-                <Text
-                  size="xs"
-                  weight="semibold"
-                  className="uppercase text-muted-foreground"
-                >
-                  Export
-                </Text>
-                <Heading4 className="mt-1 text-foreground">
-                  Streaming export
-                </Heading4>
-                <Text size="sm" className="mt-1 text-muted-foreground">
-                  Review streaming matches before exporting to connected
-                  services.
-                </Text>
-                <ExportReadinessMetrics
-                  className="mt-5"
-                  matchedCount={3}
-                  reviewCount={1}
-                />
-              </section>
-            </div>
+            <LandingSetlistDemo />
           </div>
         </section>
 
@@ -193,7 +110,7 @@ function LandingRoute() {
                   }}
                   initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  className="flex-1 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.06)]"
+                  className="flex-1 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.06)]"
                 >
                   <Text
                     as="span"
@@ -232,7 +149,7 @@ function LandingRoute() {
             {accuracyPoints.map((point) => (
               <article
                 key={point.title}
-                className="rounded-2xl border border-border bg-card p-5 text-card-foreground"
+                className="rounded-2xl border border-border bg-card p-4 text-card-foreground"
               >
                 <Heading4 className="text-foreground">{point.title}</Heading4>
                 <Text size="sm" className="mt-2 text-muted-foreground">
@@ -244,7 +161,7 @@ function LandingRoute() {
         </section>
 
         <section className="w-full px-5 sm:px-8">
-          <div className="mx-auto flex max-w-230 flex-col items-center gap-5 rounded-2xl border border-border bg-card p-8 text-center shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
+          <div className="mx-auto flex max-w-230 flex-col items-center gap-5 rounded-2xl border border-border bg-card p-4 text-center shadow-[0_24px_80px_rgba(0,0,0,0.06)] sm:p-6">
             <Heading2 className="text-foreground">
               Build your first setlist playlist.
             </Heading2>

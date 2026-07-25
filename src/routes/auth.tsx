@@ -28,7 +28,7 @@ function AuthRoute() {
   return (
     <WithNavbar>
       <main className="min-h-dvh bg-background px-5">
-        <NavbarOffset className="mx-auto grid max-w-130 gap-8 pb-12 pt-10">
+        <NavbarOffset className="mx-auto grid max-w-130 gap-6 pb-12 pt-8 sm:gap-8 sm:pt-10">
           <AuthForm
             redirect={search.redirect ?? '/app'}
             verificationError={search.error}

@@ -33,7 +33,7 @@ import {
 } from '../ui/combobox'
 import { Heading4, Text } from '../ui/typography'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02Icon } from '@hugeicons/core-free-icons'
+import { Delete02Icon, Undo02Icon } from '@hugeicons/core-free-icons'
 
 export function PlaylistWorkflow() {
   const auth = useAuthSession()
@@ -66,10 +66,7 @@ export function PlaylistWorkflow() {
     }
   }
 
-  function handleTrackInclusionChange(
-    position: number,
-    isIncluded: boolean,
-  ) {
+  function handleTrackInclusionChange(position: number, isIncluded: boolean) {
     generatedPlaylist.setTrackIncluded(position, isIncluded)
     savedPlaylists.selectPlaylist(null)
     resetSpotify()
@@ -150,21 +147,32 @@ export function PlaylistWorkflow() {
           errorMessage: generatedPlaylist.errorMessage,
           renderTrackAction: savedPlaylists.selectedPlaylist
             ? undefined
-            : (track) => (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    handleTrackInclusionChange(
-                      track.position,
-                      track.isIncluded === false,
-                    )
-                  }
-                >
-                  {track.isIncluded === false ? 'Restore' : 'Remove'}
-                </Button>
-              ),
+            : (track) => {
+                const isExcluded = track.isIncluded === false
+                const actionLabel = isExcluded ? 'Restore' : 'Remove'
+
+                return (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-label={actionLabel}
+                    className="h-11 w-11 p-0 sm:h-8 sm:w-auto sm:px-3"
+                    onClick={() =>
+                      handleTrackInclusionChange(track.position, isExcluded)
+                    }
+                  >
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={isExcluded ? Undo02Icon : Delete02Icon}
+                      className="size-4 sm:hidden"
+                    />
+                    <span className="sr-only sm:not-sr-only">
+                      {actionLabel}
+                    </span>
+                  </Button>
+                )
+              },
         }}
         exports={{
           groups: [
@@ -333,7 +341,7 @@ function ArtistSearchPanel({
                   value={artist}
                   disabled={isGenerating}
                 >
-                  <span className="grid min-w-0 gap-0.5">
+                  <span className="grid min-w-0 gap-1">
                     <Text
                       as="span"
                       size="sm"

@@ -59,8 +59,8 @@ export function PlaylistReviewExportSection({
   } = review
 
   return (
-    <section className="grid grid-cols-1 gap-8 pt-8 lg:grid-cols-5">
-      <div className="col-span-1 grid gap-8 lg:col-span-3 lg:gap-0 lg:divide-y">
+    <section className="grid grid-cols-1 gap-6 pt-6 sm:gap-8 sm:pt-8 lg:grid-cols-5">
+      <div className="col-span-1 grid gap-6 sm:gap-8 lg:col-span-3 lg:gap-0 lg:divide-y">
         {topContent}
 
         <section className={topContent ? 'lg:pt-8' : ''}>
@@ -77,6 +77,7 @@ export function PlaylistReviewExportSection({
               subtitle={playlist ? subtitle : emptyMessage}
               tracks={playlist ? playlistToPreviewTracks({ playlist }) : []}
               actions={actions}
+              showConfidenceEvidence={Boolean(playlist)}
               renderTrackAction={renderTrackAction}
             />
           )}
@@ -95,7 +96,7 @@ export function PlaylistReviewExportSection({
         </section>
       </div>
 
-      <div className="col-span-1 min-w-0 border-t border-border pt-8 lg:col-span-2 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+      <div className="col-span-1 min-w-0 border-t border-border pt-6 sm:pt-8 lg:col-span-2 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
         {exports.fallback ?? <ExportActionsPanel groups={exports.groups} />}
       </div>
     </section>
