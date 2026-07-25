@@ -201,6 +201,26 @@ describe('useAuthSession', () => {
     })
   })
 
+  it('starts Google social sign in with the redirect', async () => {
+    authMocks.signInSocial.mockResolvedValue({
+      data: { redirect: true },
+      error: null,
+    })
+    const { result } = renderHook(() => useAuthSession(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      await result.current.signInWithGoogle('/app')
+    })
+
+    expect(authMocks.signInSocial).toHaveBeenCalledWith({
+      provider: 'google',
+      callbackURL: '/app',
+      errorCallbackURL: '/auth?redirect=%2Fapp',
+    })
+  })
+
   it('returns verification pending after email sign up', async () => {
     authMocks.signUpEmail.mockResolvedValue({
       data: {

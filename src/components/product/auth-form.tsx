@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Heading4, Text } from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { SpotifyIcon } from '@hugeicons/core-free-icons'
+import { GoogleIcon, SpotifyIcon } from '@hugeicons/core-free-icons'
 
 import type {
   ValidationLogicFn,
@@ -227,7 +227,7 @@ export function AuthForm({
           {isSignUp ? 'Create account' : 'Sign in'}
         </Heading4>
         <Text size="sm" className="text-muted-foreground">
-          Use email or Spotify to access your app account.
+          Use email, Google, or Spotify to access your app account.
         </Text>
       </div>
 
@@ -239,7 +239,7 @@ export function AuthForm({
 
       {verificationError ? (
         <StatusMessage tone="error">
-          {getVerificationErrorMessage(verificationError)}
+          {getAuthErrorMessage(verificationError)}
         </StatusMessage>
       ) : null}
 
@@ -260,6 +260,19 @@ export function AuthForm({
         type="button"
         variant="outline"
         className="mt-6 w-full"
+        disabled={auth.isAuthenticating}
+        onClick={() => {
+          void auth.signInWithGoogle(redirect)
+        }}
+      >
+        <>{auth.isAuthenticating ? 'Please wait' : 'Continue with Google'}</>
+        <HugeiconsIcon icon={GoogleIcon} />
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-3 w-full"
         disabled={auth.isAuthenticating}
         onClick={() => {
           void auth.signInWithSpotify(redirect)
@@ -448,7 +461,7 @@ function StatusMessage({
   )
 }
 
-function getVerificationErrorMessage(error: string) {
+function getAuthErrorMessage(error: string) {
   if (error === 'TOKEN_EXPIRED') {
     return 'That verification link expired. Request a new verification email and try again.'
   }
@@ -457,7 +470,15 @@ function getVerificationErrorMessage(error: string) {
     return 'That verification link is invalid. Request a new verification email and try again.'
   }
 
-  return 'Email verification failed. Request a new verification email and try again.'
+  if (error.toLowerCase() === 'account_not_linked') {
+    return 'That Google account is not linked yet. Sign in with your existing method, then verify your email from Profile before trying Google again.'
+  }
+
+  if (error.toLowerCase() === 'access_denied') {
+    return 'Google sign in was cancelled. Try again when you are ready.'
+  }
+
+  return 'Authentication failed. Try again or use a different sign-in method.'
 }
 
 function getVerificationCallbackURL(redirect: string) {

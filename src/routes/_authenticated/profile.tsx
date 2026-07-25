@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { ConnectionPanel } from '@/components/product/connection-panel'
 import { DeletePlaylistDialog } from '@/components/product/delete-playlist-dialog'
 import { NavbarOffset, WithNavbar } from '@/components/product/product-navbar'
@@ -17,6 +18,7 @@ export const Route = createFileRoute('/_authenticated/profile')({
 function ProfileRoute() {
   const navigate = useNavigate()
   const auth = useAuthSession()
+  const [verificationSent, setVerificationSent] = useState(false)
   const savedPlaylists = useSavedPlaylists()
   const streamingConnections = useStreamingConnections({
     enabled: auth.isAuthenticated,
@@ -38,6 +40,8 @@ function ProfileRoute() {
       </WithNavbar>
     )
   }
+
+  const user = auth.user
 
   return (
     <WithNavbar>
@@ -102,11 +106,55 @@ function ProfileRoute() {
                   Profile
                 </Text>
                 <Heading4 className="mt-1 text-foreground">
-                  {auth.user.name}
+                  {user.name}
                 </Heading4>
                 <Text size="sm" className="mt-1 text-muted-foreground">
-                  {auth.user.email}
+                  {user.email}
                 </Text>
+                {!user.emailVerified ? (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <Text
+                      size="sm"
+                      weight="semibold"
+                      className="text-foreground"
+                    >
+                      Verify your email
+                    </Text>
+                    <Text size="sm" className="mt-1 text-muted-foreground">
+                      Verify your email before adding another sign-in method.
+                    </Text>
+                    {verificationSent ? (
+                      <Text size="sm" className="mt-3 text-green-700">
+                        Verification email sent. Check your inbox.
+                      </Text>
+                    ) : null}
+                    {auth.authError ? (
+                      <Text size="sm" className="mt-3 text-destructive">
+                        {auth.authError}
+                      </Text>
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-4 w-full"
+                      disabled={auth.isSendingVerificationEmail}
+                      onClick={async () => {
+                        const sent = await auth.resendVerificationEmail(
+                          user.email,
+                          '/profile',
+                        )
+
+                        if (sent) {
+                          setVerificationSent(true)
+                        }
+                      }}
+                    >
+                      {auth.isSendingVerificationEmail
+                        ? 'Sending'
+                        : 'Send verification email'}
+                    </Button>
+                  </div>
+                ) : null}
               </section>
 
               <ConnectionPanel

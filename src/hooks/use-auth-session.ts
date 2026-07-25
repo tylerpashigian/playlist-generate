@@ -164,6 +164,36 @@ export function useAuthSession() {
     }
   }
 
+  async function signInWithGoogle(callbackURL: string) {
+    setAuthError(null)
+    setIsAuthenticating(true)
+
+    try {
+      const result = await authClient.signIn.social({
+        provider: 'google',
+        callbackURL,
+        errorCallbackURL: getGoogleErrorCallbackURL(callbackURL),
+      })
+
+      if (result.error) {
+        setAuthError(result.error.message ?? 'Google sign in failed')
+        return false
+      }
+
+      if (!result.data.redirect) {
+        await queryClient.invalidateQueries({ queryKey: authSessionQueryKey })
+        await queryClient.fetchQuery(authSessionQueryOptions())
+      }
+
+      return true
+    } catch (error) {
+      setAuthError(getErrorMessage(error) ?? 'Google sign in failed')
+      return false
+    } finally {
+      setIsAuthenticating(false)
+    }
+  }
+
   async function signOut() {
     setAuthError(null)
     await authClient.signOut()
@@ -187,6 +217,7 @@ export function useAuthSession() {
     signIn,
     signUp,
     resendVerificationEmail,
+    signInWithGoogle,
     signInWithSpotify,
     signOut,
   }
@@ -194,4 +225,8 @@ export function useAuthSession() {
 
 function getVerificationCallbackURL() {
   return '/auth?verified=true'
+}
+
+function getGoogleErrorCallbackURL(redirect: string) {
+  return `/auth?redirect=${encodeURIComponent(redirect)}`
 }
