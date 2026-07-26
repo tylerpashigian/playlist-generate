@@ -51,7 +51,7 @@ export function ConnectionPanel({
           as="span"
           size="xs"
           weight="medium"
-          className="rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground"
+          className="rounded-full border border-border bg-background px-3 py-1 text-muted-foreground"
         >
           {connected ? 'Connected' : 'Disconnected'}
         </Text>

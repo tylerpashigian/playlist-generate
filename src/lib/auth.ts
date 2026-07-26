@@ -10,6 +10,8 @@ export const auth = betterAuth({
     accountLinking: {
       requireLocalEmailVerified: true,
       updateUserInfoOnLink: false,
+      // Spotify does not provide an email-verification claim. It remains
+      // trusted only for an authenticated user's explicit linkSocial flow.
       trustedProviders: ['spotify'],
     },
   },
@@ -36,6 +38,10 @@ export const auth = betterAuth({
   }),
   secret: env.BETTER_AUTH_SECRET,
   socialProviders: {
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    },
     spotify: {
       clientId: env.SPOTIFY_CLIENT_ID,
       clientSecret: env.SPOTIFY_CLIENT_SECRET,

@@ -1,0 +1,426 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-24T13:00:36Z",
+  "title": "Design System: Encore",
+  "extensions": {
+    "colorMeta": {
+      "graphite": {
+        "role": "primary",
+        "displayName": "Graphite",
+        "canonical": "oklch(0.141 0.005 285.823)",
+        "tonalRamp": [
+          "oklch(0.15 0.005 285.823)",
+          "oklch(0.25 0.005 285.823)",
+          "oklch(0.35 0.005 285.823)",
+          "oklch(0.45 0.005 285.823)",
+          "oklch(0.55 0.005 285.823)",
+          "oklch(0.65 0.005 285.823)",
+          "oklch(0.78 0.005 285.823)",
+          "oklch(0.92 0.005 285.823)"
+        ]
+      },
+      "graphite-soft": {
+        "role": "primary",
+        "displayName": "Soft Graphite",
+        "canonical": "oklch(0.21 0.006 285.885)",
+        "tonalRamp": [
+          "oklch(0.15 0.006 285.885)",
+          "oklch(0.25 0.006 285.885)",
+          "oklch(0.35 0.006 285.885)",
+          "oklch(0.45 0.006 285.885)",
+          "oklch(0.55 0.006 285.885)",
+          "oklch(0.65 0.006 285.885)",
+          "oklch(0.78 0.006 285.885)",
+          "oklch(0.92 0.006 285.885)"
+        ]
+      },
+      "porcelain": {
+        "role": "neutral",
+        "displayName": "Porcelain",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.55 0 0)",
+          "oklch(0.65 0 0)",
+          "oklch(0.78 0 0)",
+          "oklch(0.92 0 0)"
+        ]
+      },
+      "porcelain-soft": {
+        "role": "neutral",
+        "displayName": "Soft Porcelain",
+        "canonical": "oklch(0.985 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.55 0 0)",
+          "oklch(0.65 0 0)",
+          "oklch(0.78 0 0)",
+          "oklch(0.92 0 0)"
+        ]
+      },
+      "fog": {
+        "role": "neutral",
+        "displayName": "Fog",
+        "canonical": "oklch(0.967 0.001 286.375)",
+        "tonalRamp": [
+          "oklch(0.15 0.001 286.375)",
+          "oklch(0.25 0.001 286.375)",
+          "oklch(0.35 0.001 286.375)",
+          "oklch(0.45 0.001 286.375)",
+          "oklch(0.55 0.001 286.375)",
+          "oklch(0.65 0.001 286.375)",
+          "oklch(0.78 0.001 286.375)",
+          "oklch(0.92 0.001 286.375)"
+        ]
+      },
+      "fog-ink": {
+        "role": "neutral",
+        "displayName": "Fog Ink",
+        "canonical": "oklch(0.552 0.016 285.938)",
+        "tonalRamp": [
+          "oklch(0.15 0.016 285.938)",
+          "oklch(0.25 0.016 285.938)",
+          "oklch(0.35 0.016 285.938)",
+          "oklch(0.45 0.016 285.938)",
+          "oklch(0.55 0.016 285.938)",
+          "oklch(0.65 0.016 285.938)",
+          "oklch(0.78 0.016 285.938)",
+          "oklch(0.92 0.016 285.938)"
+        ]
+      },
+      "fog-border": {
+        "role": "neutral",
+        "displayName": "Fog Border",
+        "canonical": "oklch(0.92 0.004 286.32)",
+        "tonalRamp": [
+          "oklch(0.15 0.004 286.32)",
+          "oklch(0.25 0.004 286.32)",
+          "oklch(0.35 0.004 286.32)",
+          "oklch(0.45 0.004 286.32)",
+          "oklch(0.55 0.004 286.32)",
+          "oklch(0.65 0.004 286.32)",
+          "oklch(0.78 0.004 286.32)",
+          "oklch(0.92 0.004 286.32)"
+        ]
+      },
+      "focus-halo": {
+        "role": "neutral",
+        "displayName": "Focus Halo",
+        "canonical": "oklch(0.871 0.006 286.286)",
+        "tonalRamp": [
+          "oklch(0.15 0.006 286.286)",
+          "oklch(0.25 0.006 286.286)",
+          "oklch(0.35 0.006 286.286)",
+          "oklch(0.45 0.006 286.286)",
+          "oklch(0.55 0.006 286.286)",
+          "oklch(0.65 0.006 286.286)",
+          "oklch(0.78 0.006 286.286)",
+          "oklch(0.92 0.006 286.286)"
+        ]
+      },
+      "field-green": {
+        "role": "tertiary",
+        "displayName": "Field Green",
+        "canonical": "oklch(0.65 0.15 145)",
+        "tonalRamp": [
+          "oklch(0.15 0.15 145)",
+          "oklch(0.25 0.15 145)",
+          "oklch(0.35 0.15 145)",
+          "oklch(0.45 0.15 145)",
+          "oklch(0.55 0.15 145)",
+          "oklch(0.65 0.15 145)",
+          "oklch(0.78 0.15 145)",
+          "oklch(0.92 0.15 145)"
+        ]
+      },
+      "review-amber": {
+        "role": "secondary",
+        "displayName": "Review Amber",
+        "canonical": "oklch(0.62 0.17 72)",
+        "tonalRamp": [
+          "oklch(0.15 0.17 72)",
+          "oklch(0.25 0.17 72)",
+          "oklch(0.35 0.17 72)",
+          "oklch(0.45 0.17 72)",
+          "oklch(0.55 0.17 72)",
+          "oklch(0.65 0.17 72)",
+          "oklch(0.78 0.17 72)",
+          "oklch(0.92 0.17 72)"
+        ]
+      },
+      "warning-gold": {
+        "role": "secondary",
+        "displayName": "Warning Gold",
+        "canonical": "oklch(0.82 0.17 95)",
+        "tonalRamp": [
+          "oklch(0.15 0.17 95)",
+          "oklch(0.25 0.17 95)",
+          "oklch(0.35 0.17 95)",
+          "oklch(0.45 0.17 95)",
+          "oklch(0.55 0.17 95)",
+          "oklch(0.65 0.17 95)",
+          "oklch(0.78 0.17 95)",
+          "oklch(0.92 0.17 95)"
+        ]
+      },
+      "error-red": {
+        "role": "secondary",
+        "displayName": "Error Red",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": [
+          "oklch(0.15 0.245 27.325)",
+          "oklch(0.25 0.245 27.325)",
+          "oklch(0.35 0.245 27.325)",
+          "oklch(0.45 0.245 27.325)",
+          "oklch(0.55 0.245 27.325)",
+          "oklch(0.65 0.245 27.325)",
+          "oklch(0.78 0.245 27.325)",
+          "oklch(0.92 0.245 27.325)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing-page statements and rare top-level moments on large screens."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page introductions, mobile hero statements, and major section headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Account and saved-work headings."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Card, dialog, and workflow section titles."
+      },
+      "body-large": {
+        "displayName": "Body Large",
+        "purpose": "High-priority supporting copy."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default reading and explanatory copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, controls, navigation, field labels, and compact metadata."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Eyebrows and status labels, often semibold and uppercase."
+      }
+    },
+    "shadows": [
+      {
+        "name": "micro-control",
+        "value": "0 1px 2px rgb(0 0 0 / 0.05)",
+        "purpose": "Nearly invisible lift for outlined controls and fields."
+      },
+      {
+        "name": "ambient-feature",
+        "value": "0 24px 80px rgb(0 0 0 / 0.06)",
+        "purpose": "Broad ambient lift for landmark landing demonstrations and calls to action."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default hover, focus, and press feedback."
+      },
+      {
+        "name": "shell-shift",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Navigation surface and geometry changes after scrolling."
+      },
+      {
+        "name": "reveal",
+        "value": "400ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Purposeful landing-section entrances with reduced-motion fallback."
+      },
+      {
+        "name": "rise-in",
+        "value": "700ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Slow emphasis for a single featured composition."
+      },
+      {
+        "name": "overlay",
+        "value": "100ms ease",
+        "purpose": "Dialog, menu, and combobox fade-and-scale transitions."
+      },
+      {
+        "name": "drawer",
+        "value": "450ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Gesture-friendly bottom-sheet and side-panel movement."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The default action: quiet at rest, softer on hover, and tactile on press.",
+      "html": "<button class=\"ds-btn-primary\">Start a playlist</button>",
+      "css": ".ds-btn-primary { appearance: none; display: inline-flex; height: 36px; align-items: center; justify-content: center; gap: 6px; border: 1px solid transparent; border-radius: 8px; padding: 0 10px; background: var(--primary); color: var(--primary-foreground); font: 500 14px/20px \"Inter Variable\", system-ui, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: color-mix(in oklab, var(--primary) 80%, transparent); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The neutral secondary action with a structural border and micro lift.",
+      "html": "<button class=\"ds-btn-outline\">Manage matches</button>",
+      "css": ".ds-btn-outline { appearance: none; display: inline-flex; height: 36px; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); font: 500 14px/20px \"Inter Variable\", system-ui, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-outline:hover { background: var(--muted); } .ds-btn-outline:active { transform: translateY(1px); } .ds-btn-outline:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A labeled search field with compact geometry and an explicit focus halo.",
+      "html": "<label class=\"ds-field\"><span>Artist</span><input type=\"search\" placeholder=\"Search for an artist\"></label>",
+      "css": ".ds-field { display: grid; gap: 8px; color: var(--foreground); font: 500 14px/20px \"Inter Variable\", system-ui, sans-serif; } .ds-field input { appearance: none; width: 100%; height: 36px; border: 1px solid var(--input); border-radius: 8px; padding: 4px 10px; background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); font: 400 14px/20px \"Inter Variable\", system-ui, sans-serif; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-field input::placeholder { color: var(--muted-foreground); } .ds-field input:hover { border-color: color-mix(in oklab, var(--foreground) 20%, var(--input)); } .ds-field input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Evidence Badge",
+      "kind": "chip",
+      "refersTo": "badge-outline",
+      "description": "A neutral pill for compact evidence annotations and readiness labels.",
+      "html": "<span class=\"ds-badge\">10 recent setlists</span>",
+      "css": ".ds-badge { display: inline-flex; min-height: 28px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 9999px; padding: 5px 12px; background: var(--background); color: var(--foreground); font: 500 12px/16px \"Inter Variable\", system-ui, sans-serif; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-badge:hover { background: var(--muted); color: var(--muted-foreground); } .ds-badge:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Standard Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A flat bordered surface for focused workflow content.",
+      "html": "<section class=\"ds-card\"><span class=\"ds-card-label\">EXPORT</span><h3>Streaming exports</h3><p>Review service-specific matches before exporting.</p></section>",
+      "css": ".ds-card { border: 1px solid var(--border); border-radius: 16px; padding: 20px; background: var(--card); color: var(--card-foreground); font-family: \"Inter Variable\", system-ui, sans-serif; } .ds-card-label { display: block; margin-bottom: 4px; color: var(--muted-foreground); font-size: 12px; font-weight: 600; line-height: 16px; letter-spacing: 0.04em; } .ds-card h3 { margin: 0; color: var(--foreground); font-size: 22px; font-weight: 650; line-height: 28px; letter-spacing: -0.015em; } .ds-card p { margin: 4px 0 0; color: var(--muted-foreground); font-size: 14px; line-height: 20px; }"
+    },
+    {
+      "name": "Empty Work Area",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "A dashed, spacious placeholder for the next meaningful workflow action.",
+      "html": "<section class=\"ds-empty\"><h3>Find an artist</h3><p>Search for an artist to generate a setlist-informed playlist.</p></section>",
+      "css": ".ds-empty { display: flex; min-height: 280px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border); border-radius: 10px; padding: 48px; background: var(--card); color: var(--card-foreground); text-align: center; font-family: \"Inter Variable\", system-ui, sans-serif; } .ds-empty h3 { margin: 0; color: var(--foreground); font-size: 18px; font-weight: 500; line-height: 24px; } .ds-empty p { max-width: 360px; margin: 0; color: var(--muted-foreground); font-size: 14px; line-height: 20px; }"
+    },
+    {
+      "name": "Product Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "The 72px fixed shell with a compact brand mark and quiet navigation.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\"><span>E</span>Encore</a><div class=\"ds-nav-links\"><a class=\"ds-current\" href=\"#\">Home</a><a href=\"#\">App</a><a href=\"#\">Profile</a></div><button>Login</button></nav>",
+      "css": ".ds-nav { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; background: var(--background); color: var(--foreground); font: 500 14px/20px \"Inter Variable\", system-ui, sans-serif; } .ds-nav a { color: var(--muted-foreground); text-decoration: none; transition: color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav a:hover, .ds-nav a:focus-visible, .ds-nav a.ds-current { color: var(--foreground); } .ds-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--foreground) !important; font-weight: 600; } .ds-brand span { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 8px; background: var(--foreground); color: var(--background); font-size: 12px; } .ds-nav-links { display: flex; gap: 32px; } .ds-nav button { height: 32px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); font: inherit; } .ds-nav button:hover { background: var(--muted); } .ds-nav a:focus-visible, .ds-nav button:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Playlist Evidence Row",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "The signature comparison row for rank, song identity, source evidence, and confidence.",
+      "html": "<div class=\"ds-track\"><span class=\"ds-rank\">01</span><div><strong>Innerbloom</strong><small>10/10 setlists · Original performance</small></div><span class=\"ds-score\">100%</span></div>",
+      "css": ".ds-track { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; align-items: center; gap: 12px; border-bottom: 1px solid var(--secondary); padding: 12px; background: var(--background); color: var(--foreground); font-family: \"Inter Variable\", system-ui, sans-serif; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-track:hover { background: color-mix(in oklab, var(--muted) 55%, var(--background)); } .ds-track > div { min-width: 0; } .ds-rank { color: var(--muted-foreground); font-size: 12px; font-weight: 600; line-height: 16px; } .ds-track strong { display: block; overflow: hidden; color: var(--foreground); font-size: 14px; font-weight: 600; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; } .ds-track small { display: block; overflow: hidden; margin-top: 4px; color: var(--muted-foreground); font-size: 12px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; } .ds-score { padding: 4px 10px; background: var(--card); color: var(--success); font-size: 14px; font-weight: 600; line-height: 20px; }"
+    },
+    {
+      "name": "Metric Tile",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A compact evidence tile for matched, review, skipped, and excluded counts.",
+      "html": "<div class=\"ds-metric\"><strong>3</strong><span>Matched</span></div>",
+      "css": ".ds-metric { border: 1px solid var(--border); border-radius: 14px; padding: 16px; background: var(--background); color: var(--foreground); font-family: \"Inter Variable\", system-ui, sans-serif; } .ds-metric strong { display: block; font-size: 18px; font-weight: 600; line-height: 28px; } .ds-metric span { display: block; margin-top: 4px; color: var(--muted-foreground); font-size: 14px; line-height: 20px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Setlist Field Guide",
+    "overview": "Encore is a practical, evidence-rich companion for preparing for a concert. Its visual system behaves like a well-edited field guide: clear enough to scan at a glance, structured enough to inspire trust, and detailed enough to reward closer inspection. Graphite typography, porcelain surfaces, and fog dividers keep the interface precise and restrained without becoming anonymous.\n\nThe shell stays quiet so the product can become expressive at the right moment. Interactive demonstrations, live confidence feedback, and purposeful motion carry the delight. Surfaces rest flat and ordered; hover, press, focus, drawer, and reveal states answer the user with crisp, satisfying feedback.",
+    "keyCharacteristics": [
+      "Evidence-first hierarchy with bold, tightly tracked headings.",
+      "Graphite, Porcelain, and Fog neutrals as the persistent visual foundation.",
+      "Fine borders and generous whitespace instead of constant elevation.",
+      "Semantic color reserved for success, review, warning, and error.",
+      "Interactive product moments as the primary source of delight."
+    ],
+    "rules": [
+      {
+        "name": "The Quiet Shell Rule",
+        "body": "Neutral roles own the interface; functional color appears only when it communicates state or evidence.",
+        "section": "colors"
+      },
+      {
+        "name": "The Feature Pop Rule",
+        "body": "A special visual surface may become expressive for an interactive product moment, but that expression must remain concentrated rather than spreading across every card.",
+        "section": "colors"
+      },
+      {
+        "name": "The Confident Compression Rule",
+        "body": "Large headings are heavy and tightly tracked; supporting copy stays regular-weight with comfortable line height.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Voice Rule",
+        "body": "Use Inter Variable throughout. Create hierarchy through the established roles instead of introducing a decorative display face.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Clear Split Rule",
+        "body": "Use a single structural divider to explain a major workspace relationship; do not nest card grids when whitespace and one rule can establish the hierarchy.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-by-Default Rule",
+        "body": "A card does not receive a shadow merely because it is a card. Elevation is reserved for temporary layers or a deliberately featured moment.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Radius Ladder Rule",
+        "body": "Keep controls tighter than cards and cards tighter than pills. Do not apply the largest radius indiscriminately.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Satisfying Response Rule",
+        "body": "Every interactive component must answer hover, keyboard focus, active press, selection, or open state without requiring decorative animation at rest.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep Graphite, Porcelain, and Fog dominant on every operational screen.",
+      "Do concentrate visual delight in interactive product demonstrations, evidence feedback, and purposeful state transitions.",
+      "Do use borders, whitespace, and alignment before reaching for elevation.",
+      "Do keep confidence, appearance counts, and review status easy to compare.",
+      "Do preserve reduced-motion behavior for nonessential entrance animation."
+    ],
+    "donts": [
+      "Don't use streaming-provider branding as Encore's ambient visual identity.",
+      "Don't place an ambient shadow under every card or section.",
+      "Don't scatter semantic colors as decoration when no state is being communicated.",
+      "Don't substitute nested cards for a clear grid, divider, or whitespace relationship.",
+      "Don't make a clean surface inert; interactive states should still feel deliberate and responsive."
+    ]
+  }
+}

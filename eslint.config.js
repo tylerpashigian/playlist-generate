@@ -23,6 +23,7 @@ export default [
       '.output/**',
       'src/generated/**',
       'src/routeTree.gen.ts',
+      '.agents/**',
     ],
   },
 ]

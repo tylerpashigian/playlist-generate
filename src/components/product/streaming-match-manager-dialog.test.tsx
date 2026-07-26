@@ -9,6 +9,10 @@ import {
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { StreamingMatchManagerDialog } from './streaming-match-manager-dialog'
+import type {
+  StreamingTrackCandidate,
+  TrackMatch,
+} from '@/models/streaming/models'
 
 const breakpoint = vi.hoisted<{ surface: 'dialog' | 'drawer' }>(() => ({
   surface: 'dialog',
@@ -91,7 +95,10 @@ describe('StreamingMatchManagerDialog', () => {
     expect(
       desktop.getByRole('combobox', { name: 'Streaming service' }),
     ).toBeTruthy()
-    expect(desktop.getByText('Find the intended recording')).toBeTruthy()
+    expect(
+      desktop.getByPlaceholderText('Track title, artist, or album'),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy()
     expect(desktop.getAllByText('Needs review').length).toBeGreaterThan(0)
     expect(desktop.getAllByText('Matched').length).toBeGreaterThan(0)
   })
@@ -103,7 +110,9 @@ describe('StreamingMatchManagerDialog', () => {
 
     const mobile = within(screen.getByTestId('mobile-match-manager'))
 
-    expect(mobile.getByRole('tab', { name: 'Tracks · 2' })).toBeTruthy()
+    expect(
+      mobile.getByRole('tab', { name: 'Tracks · 1 remaining' }),
+    ).toBeTruthy()
     expect(mobile.getByRole('tab', { name: 'Match' })).toBeTruthy()
 
     fireEvent.click(mobile.getByRole('button', { name: /Generated title/ }))
@@ -123,13 +132,42 @@ describe('StreamingMatchManagerDialog', () => {
     ).toBe(false)
   })
 
+  it('offers confirmation for a proposed low-confidence match', () => {
+    const onConfirm = vi.fn().mockResolvedValue(undefined)
+    renderDialog({
+      currentMatch: {
+        playlistTrackId: track.id,
+        provider: 'SPOTIFY',
+        status: 'LOW_CONFIDENCE',
+        providerTrackId: candidate.providerTrackId,
+        providerTrackUri: 'spotify:track:123',
+        externalUrl: candidate.externalUrl,
+        trackName: candidate.title,
+        artistName: candidate.artistName,
+        albumName: candidate.albumName,
+        durationMs: candidate.durationMs,
+        matchConfidenceScore: 62,
+      },
+      onConfirm,
+    })
+
+    expect(screen.getByText('Proposed Spotify match')).toBeTruthy()
+    expect(
+      screen.getByPlaceholderText('Track title, artist, or album'),
+    ).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm match' }))
+
+    expect(onConfirm).toHaveBeenCalledOnce()
+  })
+
   it('renders contextual provider copy and detailed custom results', () => {
     renderDialog()
 
     const manager = within(screen.getByTestId('desktop-match-manager'))
 
     expect(
-      manager.getByRole('button', { name: 'Do not export to Spotify' }),
+      manager.getByRole('button', { name: 'Skip on Spotify' }),
     ).toBeTruthy()
 
     const searchInput = manager.getByPlaceholderText(
@@ -174,9 +212,9 @@ describe('StreamingMatchManagerDialog', () => {
     renderDialog({ onClearCandidates })
 
     fireEvent.change(
-      within(
-        screen.getByTestId('desktop-match-manager'),
-      ).getByPlaceholderText('Track title, artist, or album'),
+      within(screen.getByTestId('desktop-match-manager')).getByPlaceholderText(
+        'Track title, artist, or album',
+      ),
       {
         target: { value: 'a' },
       },
@@ -184,20 +222,131 @@ describe('StreamingMatchManagerDialog', () => {
 
     expect(onClearCandidates).toHaveBeenCalledOnce()
   })
+
+  it('shows compact setlist evidence without implying concert-by-concert data', () => {
+    renderDialog({
+      currentMatch: trackRows[1].match,
+      selectedTrackStatus: 'matched',
+    })
+
+    const manager = within(screen.getByTestId('desktop-match-manager'))
+
+    expect(manager.getByText('Recent appearances')).toBeTruthy()
+    expect(manager.getByText('5 of 10')).toBeTruthy()
+    expect(manager.getByText('Setlist confidence')).toBeTruthy()
+    expect(manager.getByText('75%')).toBeTruthy()
+    expect(manager.getByText('Most recent')).toBeTruthy()
+    expect(manager.getByText('Jul 1, 2026')).toBeTruthy()
+    expect(manager.getByText('Automatic match confidence')).toBeTruthy()
+    expect(manager.getByText('95%')).toBeTruthy()
+    expect(
+      manager.getByPlaceholderText('Track title, artist, or album'),
+    ).toBeTruthy()
+  })
+
+  it('uses the swipe handle rather than a close action on mobile', () => {
+    breakpoint.surface = 'drawer'
+    renderDialog({ mobileView: 'tracks' })
+
+    expect(
+      screen.queryByRole('button', { name: 'Close match manager' }),
+    ).toBeNull()
+    expect(document.querySelector('[data-slot="drawer-swipe-handle"]')).toBeTruthy()
+    expect(screen.getByText('1 remaining')).toBeTruthy()
+  })
+
+  it('places provider search before secondary evidence on mobile', () => {
+    breakpoint.surface = 'drawer'
+    renderDialog({ mobileView: 'match' })
+
+    const mobile = within(screen.getByTestId('mobile-match-manager'))
+    const searchInput = mobile.getByPlaceholderText(
+      'Track title, artist, or album',
+    )
+    const evidenceLabel = mobile.getByText('Recent appearances')
+
+    expect(
+      searchInput.compareDocumentPosition(evidenceLabel) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('keeps resolved tracks editable after review completion', () => {
+    renderDialog({
+      isReviewComplete: true,
+      unresolvedCount: 0,
+      resolvedCount: 2,
+      matchedCount: 1,
+      skippedCount: 1,
+      currentMatch: trackRows[1].match,
+      selectedTrackStatus: 'matched',
+    })
+
+    expect(
+      screen.getByLabelText('Change the Spotify match'),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy()
+    expect(screen.queryByText('Review complete')).toBeNull()
+  })
+
+  it('keeps contextual save recovery beside the action area', () => {
+    const onRetrySave = vi.fn().mockResolvedValue(undefined)
+    renderDialog({
+      saveStatus: 'error',
+      saveMessage: 'Spotify could not save this decision.',
+      saveErrorMessage: 'Spotify could not save this decision.',
+      onRetrySave,
+    })
+
+    expect(
+      screen.getByText('Spotify could not save this decision.'),
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry save' }))
+
+    expect(onRetrySave).toHaveBeenCalledOnce()
+  })
 })
 
 function renderDialog({
   onSelect = vi.fn().mockResolvedValue(undefined),
+  onConfirm = vi.fn().mockResolvedValue(undefined),
   onClearCandidates = vi.fn(),
   onTrackChange = vi.fn(),
+  onOpenChange = vi.fn(),
+  onRetrySave = vi.fn().mockResolvedValue(undefined),
   selectedProvider = 'SPOTIFY',
+  selectedTrackStatus = 'needs-review',
   mobileView = 'match',
+  currentMatch = null,
+  saveStatus = 'idle',
+  saveMessage = null,
+  searchErrorMessage = null,
+  saveErrorMessage = null,
+  unresolvedCount = 1,
+  matchedCount = 1,
+  skippedCount = 0,
+  resolvedCount = 1,
+  isReviewComplete = false,
 }: {
-  onSelect?: ReturnType<typeof vi.fn>
-  onClearCandidates?: ReturnType<typeof vi.fn>
-  onTrackChange?: ReturnType<typeof vi.fn>
+  onSelect?: (selectedCandidate: StreamingTrackCandidate) => Promise<void>
+  onConfirm?: () => Promise<void>
+  onClearCandidates?: () => void
+  onTrackChange?: (trackId: string) => void
+  onOpenChange?: (open: boolean) => void
+  onRetrySave?: () => Promise<void>
   selectedProvider?: 'SPOTIFY' | null
+  selectedTrackStatus?: 'needs-review' | 'matched' | 'skipped'
   mobileView?: 'tracks' | 'match'
+  currentMatch?: TrackMatch | null
+  saveStatus?: 'idle' | 'saving' | 'saved' | 'error'
+  saveMessage?: string | null
+  searchErrorMessage?: string | null
+  saveErrorMessage?: string | null
+  unresolvedCount?: number
+  matchedCount?: number
+  skippedCount?: number
+  resolvedCount?: number
+  isReviewComplete?: boolean
 } = {}) {
   return render(
     <StreamingMatchManagerDialog
@@ -205,18 +354,27 @@ function renderDialog({
       track={track}
       trackRows={trackRows}
       trackCount={trackRows.length}
-      selectedTrackStatus="needs-review"
+      selectedTrackStatus={selectedTrackStatus}
       providers={[{ provider: 'SPOTIFY', label: 'Spotify' }]}
       selectedProvider={selectedProvider}
       filter="all"
       trackQuery=""
       mobileView={mobileView}
-      currentMatch={null}
+      currentMatch={currentMatch}
       candidates={[candidate]}
       isSearching={false}
       isSaving={false}
-      nextLabel="Next unresolved"
-      onOpenChange={vi.fn()}
+      saveStatus={saveStatus}
+      saveMessage={saveMessage}
+      searchErrorMessage={searchErrorMessage}
+      saveErrorMessage={saveErrorMessage}
+      unresolvedCount={unresolvedCount}
+      matchedCount={matchedCount}
+      skippedCount={skippedCount}
+      resolvedCount={resolvedCount}
+      isReviewComplete={isReviewComplete}
+      nextLabel="Review later"
+      onOpenChange={onOpenChange}
       onProviderChange={vi.fn()}
       onTrackChange={onTrackChange}
       onFilterChange={vi.fn()}
@@ -225,7 +383,9 @@ function renderDialog({
       onClearCandidates={onClearCandidates}
       onSearch={vi.fn().mockResolvedValue(undefined)}
       onSelect={onSelect}
+      onConfirm={onConfirm}
       onSkip={vi.fn().mockResolvedValue(undefined)}
+      onRetrySave={onRetrySave}
       onNext={vi.fn()}
     />,
   )

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getErrorMessage } from '@/lib/errors'
 import type { PlaylistTrack, SavedPlaylist } from '@/models/playlists/models'
 import type {
   StreamingProvider,
@@ -7,15 +8,9 @@ import type {
 } from '@/models/streaming/models'
 
 export type StreamingTrackReviewFilter =
-  | 'all'
-  | 'review'
-  | 'matched'
-  | 'skipped'
+  'all' | 'review' | 'matched' | 'skipped'
 
-export type StreamingTrackReviewStatus =
-  | 'needs-review'
-  | 'matched'
-  | 'skipped'
+export type StreamingTrackReviewStatus = 'needs-review' | 'matched' | 'skipped'
 
 export interface StreamingTrackReviewRow {
   track: PlaylistTrack
@@ -39,6 +34,9 @@ export interface StreamingTrackReviewProvider {
   clearCandidates: () => void
 }
 
+export type StreamingTrackReviewSaveStatus =
+  'idle' | 'saving' | 'saved' | 'error'
+
 interface ReviewState {
   trackId: string | null
   provider: StreamingProvider
@@ -46,6 +44,17 @@ interface ReviewState {
   trackQuery: string
   mobileView: 'tracks' | 'match'
 }
+
+interface SaveFeedback {
+  status: StreamingTrackReviewSaveStatus
+  message: string | null
+}
+
+type FailedSaveAction =
+  { kind: 'select'; candidate: StreamingTrackCandidate } | { kind: 'skip' }
+
+const AUTO_ADVANCE_DELAY_MS = 500
+const SAVED_FEEDBACK_DURATION_MS = 2400
 
 export function useStreamingTrackReview({
   playlist,
@@ -56,6 +65,18 @@ export function useStreamingTrackReview({
 }) {
   const [review, setReview] = useState<ReviewState | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [searchErrorMessage, setSearchErrorMessage] = useState<string | null>(
+    null,
+  )
+  const [saveFeedback, setSaveFeedback] = useState<SaveFeedback>({
+    status: 'idle',
+    message: null,
+  })
+  const failedSaveActionRef = useRef<FailedSaveAction | null>(null)
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savedFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
   const providersById = new Map(
     providers.map((provider) => [provider.provider, provider]),
   )
@@ -68,6 +89,18 @@ export function useStreamingTrackReview({
     : []
   const selectedTrackRow =
     allTrackRows.find((row) => row.track.id === review?.trackId) ?? null
+  const queueCounts = getQueueCounts(allTrackRows)
+  const isReviewComplete = Boolean(
+    review && allTrackRows.length > 0 && queueCounts.unresolvedCount === 0,
+  )
+
+  useEffect(
+    () => () => {
+      clearTimer(autoAdvanceTimerRef)
+      clearTimer(savedFeedbackTimerRef)
+    },
+    [],
+  )
 
   function openManager(provider: StreamingProvider) {
     const providerReview = getProvider(provider)
@@ -83,6 +116,7 @@ export function useStreamingTrackReview({
     }
 
     clearAllCandidates()
+    resetOperationState()
     setReview({
       trackId: firstTrack.track.id ?? null,
       provider,
@@ -110,6 +144,7 @@ export function useStreamingTrackReview({
     )
 
     clearAllCandidates()
+    resetOperationState()
     setReview({
       ...review,
       provider,
@@ -125,6 +160,7 @@ export function useStreamingTrackReview({
     }
 
     clearAllCandidates()
+    resetOperationState()
     setReview({ ...review, trackId, mobileView: 'match' })
   }
 
@@ -133,15 +169,12 @@ export function useStreamingTrackReview({
       return
     }
 
-    const visibleRows = filterTrackRows(
-      allTrackRows,
-      filter,
-      review.trackQuery,
-    )
+    const visibleRows = filterTrackRows(allTrackRows, filter, review.trackQuery)
     const selectedTrackRemainsVisible = visibleRows.some(
       (row) => row.track.id === review.trackId,
     )
 
+    resetOperationState()
     setReview({
       ...review,
       filter,
@@ -156,15 +189,12 @@ export function useStreamingTrackReview({
       return
     }
 
-    const visibleRows = filterTrackRows(
-      allTrackRows,
-      review.filter,
-      trackQuery,
-    )
+    const visibleRows = filterTrackRows(allTrackRows, review.filter, trackQuery)
     const selectedTrackRemainsVisible = visibleRows.some(
       (row) => row.track.id === review.trackId,
     )
 
+    setSearchErrorMessage(null)
     setReview({
       ...review,
       trackQuery,
@@ -189,23 +219,59 @@ export function useStreamingTrackReview({
       return
     }
 
-    await selectedProvider.search(selectedTrackRow.track, query)
+    setSearchErrorMessage(null)
+
+    try {
+      await selectedProvider.search(selectedTrackRow.track, query)
+    } catch (error) {
+      setSearchErrorMessage(
+        getErrorMessage(error) ??
+          `${selectedProvider.label} search could not be completed. Try again.`,
+      )
+      throw error
+    }
   }
 
   async function selectCandidate(candidate: StreamingTrackCandidate) {
-    if (!selectedTrackRow || !selectedProvider) {
+    await saveDecision({ kind: 'select', candidate })
+  }
+
+  async function confirmCurrentMatch() {
+    const match = selectedTrackRow?.match
+
+    if (
+      !selectedTrackRow ||
+      !selectedProvider ||
+      match?.status !== 'LOW_CONFIDENCE' ||
+      !match.providerTrackId
+    ) {
       return
     }
 
-    await selectedProvider.select(selectedTrackRow.track, candidate)
+    await saveDecision({
+      kind: 'select',
+      candidate: {
+        provider: selectedProvider.provider,
+        providerTrackId: match.providerTrackId,
+        externalUrl: match.externalUrl,
+        title: match.trackName ?? selectedTrackRow.track.title,
+        artistName: match.artistName ?? '',
+        albumName: match.albumName ?? '',
+        durationMs: match.durationMs ?? 0,
+      },
+    })
   }
 
   async function skip() {
-    if (!selectedTrackRow || !selectedProvider) {
+    await saveDecision({ kind: 'skip' })
+  }
+
+  async function retrySave() {
+    if (!failedSaveActionRef.current) {
       return
     }
 
-    await selectedProvider.skip(selectedTrackRow.track)
+    await saveDecision(failedSaveActionRef.current)
   }
 
   function nextTrack() {
@@ -226,6 +292,7 @@ export function useStreamingTrackReview({
     }
 
     clearAllCandidates()
+    resetOperationState()
     setReview({ ...review, trackId: nextRow.track.id ?? null })
   }
 
@@ -239,7 +306,7 @@ export function useStreamingTrackReview({
     filter: review?.filter ?? 'all',
     trackQuery: review?.trackQuery ?? '',
     mobileView: review?.mobileView ?? 'match',
-    nextLabel: review?.filter === 'review' ? 'Next unresolved' : 'Next track',
+    nextLabel: review?.filter === 'review' ? 'Review later' : 'Next track',
     providerOptions: providers.map(({ provider, label }) => ({
       provider,
       label,
@@ -247,7 +314,19 @@ export function useStreamingTrackReview({
     candidates: selectedProvider?.candidates ?? [],
     currentMatch: selectedTrackRow?.match ?? null,
     isSearching: selectedProvider?.isSearching ?? false,
-    isSaving: selectedProvider?.isSaving ?? false,
+    isSaving: Boolean(
+      selectedProvider?.isSaving || saveFeedback.status === 'saving',
+    ),
+    saveStatus: saveFeedback.status,
+    saveMessage: saveFeedback.message,
+    searchErrorMessage,
+    saveErrorMessage:
+      saveFeedback.status === 'error' ? saveFeedback.message : null,
+    unresolvedCount: queueCounts.unresolvedCount,
+    matchedCount: queueCounts.matchedCount,
+    skippedCount: queueCounts.skippedCount,
+    resolvedCount: queueCounts.resolvedCount,
+    isReviewComplete,
     openManager,
     selectProvider,
     selectTrack,
@@ -258,8 +337,92 @@ export function useStreamingTrackReview({
     clearCandidates: clearAllCandidates,
     search,
     selectCandidate,
+    confirmCurrentMatch,
     skip,
+    retrySave,
     nextTrack,
+  }
+
+  async function saveDecision(action: FailedSaveAction) {
+    if (!selectedTrackRow || !selectedProvider) {
+      return
+    }
+
+    const track = selectedTrackRow.track
+    const trackId = track.id
+    const shouldAdvance = review?.filter === 'review'
+
+    clearTimer(autoAdvanceTimerRef)
+    clearTimer(savedFeedbackTimerRef)
+    failedSaveActionRef.current = null
+    setSaveFeedback({
+      status: 'saving',
+      message:
+        action.kind === 'skip'
+          ? `Saving ${track.title} as skipped`
+          : `Saving the ${selectedProvider.label} match for ${track.title}`,
+    })
+
+    try {
+      if (action.kind === 'skip') {
+        await selectedProvider.skip(track)
+      } else {
+        await selectedProvider.select(track, action.candidate)
+      }
+
+      clearAllCandidates()
+      setSaveFeedback({
+        status: 'saved',
+        message: shouldAdvance
+          ? `${track.title} saved. Continuing to the next unresolved track.`
+          : `${track.title} saved.`,
+      })
+
+      if (shouldAdvance && trackId) {
+        autoAdvanceTimerRef.current = setTimeout(() => {
+          advanceToNextUnresolved(trackId)
+        }, AUTO_ADVANCE_DELAY_MS)
+      }
+
+      savedFeedbackTimerRef.current = setTimeout(() => {
+        setSaveFeedback({ status: 'idle', message: null })
+      }, SAVED_FEEDBACK_DURATION_MS)
+    } catch (error) {
+      failedSaveActionRef.current = action
+      setSaveFeedback({
+        status: 'error',
+        message:
+          getErrorMessage(error) ??
+          `${selectedProvider.label} could not save this decision. Try again.`,
+      })
+      throw error
+    }
+  }
+
+  function advanceToNextUnresolved(currentTrackId: string) {
+    const currentIndex = allTrackRows.findIndex(
+      (row) => row.track.id === currentTrackId,
+    )
+    const orderedRows =
+      currentIndex >= 0
+        ? [
+            ...allTrackRows.slice(currentIndex + 1),
+            ...allTrackRows.slice(0, currentIndex),
+          ]
+        : allTrackRows
+    const nextUnresolved = orderedRows.find(
+      (row) => row.track.id !== currentTrackId && row.status === 'needs-review',
+    )
+
+    setReview((currentReview) =>
+      currentReview
+        ? {
+            ...currentReview,
+            trackId: nextUnresolved?.track.id ?? null,
+            mobileView: 'match',
+          }
+        : currentReview,
+    )
   }
 
   function getProvider(provider: StreamingProvider) {
@@ -269,6 +432,45 @@ export function useStreamingTrackReview({
   function clearAllCandidates() {
     providers.forEach((provider) => provider.clearCandidates())
   }
+
+  function resetOperationState() {
+    clearTimer(autoAdvanceTimerRef)
+    clearTimer(savedFeedbackTimerRef)
+    failedSaveActionRef.current = null
+    setSearchErrorMessage(null)
+    setSaveFeedback({ status: 'idle', message: null })
+  }
+}
+
+function clearTimer(ref: { current: ReturnType<typeof setTimeout> | null }) {
+  if (ref.current) {
+    clearTimeout(ref.current)
+    ref.current = null
+  }
+}
+
+function getQueueCounts(rows: Array<StreamingTrackReviewRow>) {
+  return rows.reduce(
+    (counts, row) => {
+      if (row.status === 'needs-review') {
+        counts.unresolvedCount += 1
+      } else if (row.status === 'skipped') {
+        counts.skippedCount += 1
+        counts.resolvedCount += 1
+      } else {
+        counts.matchedCount += 1
+        counts.resolvedCount += 1
+      }
+
+      return counts
+    },
+    {
+      unresolvedCount: 0,
+      matchedCount: 0,
+      skippedCount: 0,
+      resolvedCount: 0,
+    },
+  )
 }
 
 function getTrackRows(

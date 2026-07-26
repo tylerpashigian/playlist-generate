@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useStreamingTrackReview } from './use-streaming-track-review'
 import type { SavedPlaylist } from '@/models/playlists/models'
 import type { StreamingTrackReviewProvider } from './use-streaming-track-review'
@@ -30,6 +30,10 @@ const playlist: SavedPlaylist = {
     createTrack('track-3', 3, 'Skipped track'),
   ],
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('useStreamingTrackReview', () => {
   it('opens on the first unresolved track and defaults to the review filter', () => {
@@ -69,6 +73,7 @@ describe('useStreamingTrackReview', () => {
     expect(result.current.filter).toBe('all')
     expect(result.current.trackRows).toHaveLength(3)
     expect(result.current.track?.id).toBe('track-1')
+    expect(result.current.isReviewComplete).toBe(true)
   })
 
   it('filters and searches canonical and provider track metadata', () => {
@@ -114,7 +119,8 @@ describe('useStreamingTrackReview', () => {
     expect(provider.clearCandidates).toHaveBeenCalledTimes(2)
   })
 
-  it('keeps the manager open after manual selection and skip decisions', async () => {
+  it('auto-advances to the next track that still needs review after a save', async () => {
+    vi.useFakeTimers()
     const provider = createProvider()
     const candidate = {
       provider: 'SPOTIFY' as const,
@@ -125,18 +131,180 @@ describe('useStreamingTrackReview', () => {
       albumName: 'Album',
       durationMs: 180000,
     }
-    const { result } = renderHook(() =>
+    provider.select = vi.fn().mockImplementation(async (selectedTrack) => {
+      provider.matches = [
+        ...provider.matches,
+        createResolvedMatch(selectedTrack.id ?? ''),
+      ]
+    })
+    const { result, rerender } = renderHook(() =>
       useStreamingTrackReview({ playlist, providers: [provider] }),
     )
 
     act(() => result.current.openManager('SPOTIFY'))
     await act(() => result.current.selectCandidate(candidate))
-    await act(() => result.current.skip())
+    act(() => rerender())
+    await act(() => vi.advanceTimersByTimeAsync(500))
 
     expect(provider.select).toHaveBeenCalledWith(playlist.tracks[0], candidate)
-    expect(provider.skip).toHaveBeenCalledWith(playlist.tracks[0])
     expect(result.current.isOpen).toBe(true)
+    expect(result.current.track?.id).toBe('track-2')
+    expect(result.current.unresolvedCount).toBe(2)
+    expect(result.current.nextLabel).toBe('Review later')
+  })
+
+  it('confirms a proposed low-confidence match as a resolved selection', async () => {
+    const provider = createProvider()
+    provider.matches = [createLowConfidenceMatch('track-1')]
+    provider.select = vi.fn().mockImplementation(async (selectedTrack) => {
+      provider.matches = [
+        createResolvedMatch(selectedTrack.id ?? ''),
+        ...provider.matches.filter(
+          (match) => match.playlistTrackId !== selectedTrack.id,
+        ),
+      ]
+    })
+    const { result, rerender } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    await act(() => result.current.confirmCurrentMatch())
+    act(() => rerender())
+
+    expect(provider.select).toHaveBeenCalledWith(
+      playlist.tracks[0],
+      expect.objectContaining({
+        provider: 'SPOTIFY',
+        providerTrackId: 'proposed-spotify-track-id',
+      }),
+    )
+    expect(result.current.unresolvedCount).toBe(2)
+    expect(result.current.matchedCount).toBe(1)
+  })
+
+  it('shows completion after the final unresolved track is skipped', async () => {
+    vi.useFakeTimers()
+    const provider = createProvider()
+    provider.matches = [
+      createResolvedMatch('track-2'),
+      createResolvedMatch('track-3', 'SKIPPED'),
+    ]
+    provider.skip = vi.fn().mockImplementation(async (selectedTrack) => {
+      provider.matches = [
+        ...provider.matches,
+        createResolvedMatch(selectedTrack.id ?? '', 'SKIPPED'),
+      ]
+    })
+    const { result, rerender } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    await act(() => result.current.skip())
+    act(() => rerender())
+
+    expect(result.current.isReviewComplete).toBe(true)
+    expect(result.current.unresolvedCount).toBe(0)
+    expect(result.current.matchedCount).toBe(1)
+    expect(result.current.skippedCount).toBe(2)
+
+    await act(() => vi.advanceTimersByTimeAsync(500))
+
+    expect(result.current.track).toBeNull()
+  })
+
+  it('shows completion after resolving the final track outside the review filter', async () => {
+    const provider = createProvider()
+    provider.matches = [
+      createResolvedMatch('track-2'),
+      createResolvedMatch('track-3', 'SKIPPED'),
+    ]
+    provider.skip = vi.fn().mockImplementation(async (selectedTrack) => {
+      provider.matches = [
+        ...provider.matches,
+        createResolvedMatch(selectedTrack.id ?? '', 'SKIPPED'),
+      ]
+    })
+    const { result, rerender } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.setFilter('all'))
+    await act(() => result.current.skip())
+    act(() => rerender())
+
+    expect(result.current.filter).toBe('all')
+    expect(result.current.isReviewComplete).toBe(true)
+    expect(result.current.unresolvedCount).toBe(0)
+  })
+
+  it('keeps the current track available when a save fails and retries it', async () => {
+    const provider = createProvider()
+    const candidate = {
+      provider: 'SPOTIFY' as const,
+      providerTrackId: 'spotify-track-id',
+      externalUrl: null,
+      title: 'Selected track',
+      artistName: 'Artist',
+      albumName: 'Album',
+      durationMs: 180000,
+    }
+    provider.select = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Spotify save failed.'))
+      .mockResolvedValue(undefined)
+    const { result } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+    act(() => result.current.setFilter('all'))
+
+    let saveError: unknown
+    await act(async () => {
+      try {
+        await result.current.selectCandidate(candidate)
+      } catch (error) {
+        saveError = error
+      }
+    })
+
+    expect(saveError).toEqual(new Error('Spotify save failed.'))
     expect(result.current.track?.id).toBe('track-1')
+    expect(result.current.saveStatus).toBe('error')
+    expect(result.current.saveErrorMessage).toBe('Spotify save failed.')
+
+    await act(() => result.current.retrySave())
+
+    expect(provider.select).toHaveBeenCalledTimes(2)
+    expect(result.current.saveStatus).toBe('saved')
+  })
+
+  it('surfaces provider search errors without clearing the current track', async () => {
+    const provider = createProvider()
+    provider.search = vi
+      .fn()
+      .mockRejectedValue(new Error('Search unavailable.'))
+    const { result } = renderHook(() =>
+      useStreamingTrackReview({ playlist, providers: [provider] }),
+    )
+
+    act(() => result.current.openManager('SPOTIFY'))
+
+    let searchError: unknown
+    await act(async () => {
+      try {
+        await result.current.search('First unresolved')
+      } catch (error) {
+        searchError = error
+      }
+    })
+
+    expect(searchError).toEqual(new Error('Search unavailable.'))
+    expect(result.current.track?.id).toBe('track-1')
+    expect(result.current.searchErrorMessage).toBe('Search unavailable.')
   })
 
   it('retains review content while the dialog closes', () => {
@@ -176,7 +344,7 @@ describe('useStreamingTrackReview', () => {
     act(() => result.current.nextTrack())
 
     expect(result.current.track?.id).toBe('track-2')
-    expect(result.current.nextLabel).toBe('Next unresolved')
+    expect(result.current.nextLabel).toBe('Review later')
   })
 })
 
@@ -230,5 +398,15 @@ function createResolvedMatch(
     albumName: status === 'SKIPPED' ? null : 'Album',
     durationMs: status === 'SKIPPED' ? null : 180000,
     matchConfidenceScore: null,
+  }
+}
+
+function createLowConfidenceMatch(playlistTrackId: string) {
+  return {
+    ...createResolvedMatch(playlistTrackId),
+    status: 'LOW_CONFIDENCE' as const,
+    providerTrackId: 'proposed-spotify-track-id',
+    trackName: 'Proposed recording',
+    matchConfidenceScore: 62,
   }
 }

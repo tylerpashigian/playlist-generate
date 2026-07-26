@@ -59,6 +59,7 @@ export const spotifyRouter = {
       try {
         return await matchSpotifyTracks(ctx.userId, playlist)
       } catch (error) {
+        console.log(error)
         throw toTRPCError(error)
       }
     }),

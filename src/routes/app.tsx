@@ -12,8 +12,8 @@ function AppRoute() {
     <WithNavbar>
       <main className="min-h-dvh bg-primary-foreground">
         <NavbarOffset>
-          <div className="mx-auto max-w-280 px-5 pb-16 pt-14 sm:px-8">
-            <section className="flex flex-col items-start justify-start gap-8 border-b border-border pb-8 md:flex-row md:items-end md:justify-between">
+          <div className="mx-auto max-w-280 px-5 pb-16 pt-8 sm:px-8 sm:pt-14">
+            <section className="flex flex-col items-start justify-start gap-6 border-b border-border pb-6 md:flex-row md:items-end md:justify-between md:gap-8 md:pb-8">
               <div>
                 <Text
                   size="xs"

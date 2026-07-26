@@ -23,8 +23,11 @@ function PlaylistDetailRoute() {
   const [isRefreshDialogOpen, setIsRefreshDialogOpen] = useState(false)
   const redirectedMissingPlaylistIdRef = useRef<string | null>(null)
   const playlist = savedPlaylists.selectedPlaylist
-  const { spotify, review: trackReview, reloadMatches } =
-    useSpotifyPlaylistReview(playlist)
+  const {
+    spotify,
+    review: trackReview,
+    reloadMatches,
+  } = useSpotifyPlaylistReview(playlist)
 
   useEffect(() => {
     savedPlaylists.selectPlaylist(playlistId)
@@ -41,11 +44,7 @@ function PlaylistDetailRoute() {
     redirectedMissingPlaylistIdRef.current = playlistId
     toast.info('Playlist no longer exists')
     void navigate({ to: '/profile', replace: true }).catch(() => undefined)
-  }, [
-    navigate,
-    playlistId,
-    savedPlaylists.isSelectedPlaylistNotFound,
-  ])
+  }, [navigate, playlistId, savedPlaylists.isSelectedPlaylistNotFound])
 
   async function handleMatch() {
     if (!savedPlaylists.selectedPlaylist) {
@@ -108,8 +107,8 @@ function PlaylistDetailRoute() {
       />
       <StreamingPlaylistReviewDialog review={trackReview} />
       <main className="min-h-dvh bg-primary-foreground">
-        <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-14 sm:px-8">
-          <section className="flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-8 sm:px-8 sm:pt-14">
+          <section className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between sm:pb-8">
             <div>
               <Text
                 size="xs"
@@ -149,7 +148,7 @@ function PlaylistDetailRoute() {
             ) : null}
           </section>
 
-          <div className="pt-8">
+          <div className="">
             {savedPlaylists.isLoadingSelectedPlaylist ? (
               <StatusPanel message="Loading playlist" />
             ) : playlist ? (
@@ -173,8 +172,7 @@ function PlaylistDetailRoute() {
                       errorMessage: spotify.errorMessage,
                       onMatchTracks: handleMatch,
                       onExport: handleExport,
-                      onManageMatches: () =>
-                        trackReview.openManager('SPOTIFY'),
+                      onManageMatches: () => trackReview.openManager('SPOTIFY'),
                     },
                   ],
                 }}

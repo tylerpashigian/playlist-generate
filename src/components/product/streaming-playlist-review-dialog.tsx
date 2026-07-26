@@ -24,6 +24,15 @@ export function StreamingPlaylistReviewDialog({
       candidates={review.candidates}
       isSearching={review.isSearching}
       isSaving={review.isSaving}
+      saveStatus={review.saveStatus}
+      saveMessage={review.saveMessage}
+      searchErrorMessage={review.searchErrorMessage}
+      saveErrorMessage={review.saveErrorMessage}
+      unresolvedCount={review.unresolvedCount}
+      matchedCount={review.matchedCount}
+      skippedCount={review.skippedCount}
+      resolvedCount={review.resolvedCount}
+      isReviewComplete={review.isReviewComplete}
       nextLabel={review.nextLabel}
       onOpenChange={(open) => {
         if (!open) {
@@ -38,7 +47,9 @@ export function StreamingPlaylistReviewDialog({
       onClearCandidates={review.clearCandidates}
       onSearch={review.search}
       onSelect={review.selectCandidate}
+      onConfirm={review.confirmCurrentMatch}
       onSkip={review.skip}
+      onRetrySave={review.retrySave}
       onNext={review.nextTrack}
     />
   )
