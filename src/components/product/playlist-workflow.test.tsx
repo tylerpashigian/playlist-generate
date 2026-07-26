@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 const mocks = vi.hoisted(() => ({
   setTrackIncluded: vi.fn(),
   selectPlaylist: vi.fn(),
-  resetSpotify: vi.fn(),
+  resetStreaming: vi.fn(),
 }))
 
 vi.mock('@/hooks/use-auth-session', () => ({
@@ -69,9 +69,18 @@ vi.mock('@/hooks/use-saved-playlists', () => ({
   }),
 }))
 
-vi.mock('@/hooks/use-spotify-playlist-review', () => ({
-  useSpotifyPlaylistReview: () => ({
+vi.mock('@/hooks/use-streaming-playlist-review', () => ({
+  useStreamingPlaylistReview: () => ({
     spotify: {
+      matches: [],
+      exportResult: null,
+      isMatching: false,
+      isExporting: false,
+      errorMessage: null,
+      matchTracks: vi.fn(),
+      exportPlaylist: vi.fn(),
+    },
+    appleMusic: {
       matches: [],
       exportResult: null,
       isMatching: false,
@@ -83,7 +92,7 @@ vi.mock('@/hooks/use-spotify-playlist-review', () => ({
     review: {
       openManager: vi.fn(),
     },
-    resetSpotify: mocks.resetSpotify,
+    resetStreaming: mocks.resetStreaming,
   }),
 }))
 
@@ -101,8 +110,7 @@ vi.mock('./playlist-review-export-section', () => ({
         isIncluded?: boolean
       }) => ReactNode
     }
-  }) =>
-    review.renderTrackAction?.({ position: 1, isIncluded: true }) ?? null,
+  }) => review.renderTrackAction?.({ position: 1, isIncluded: true }) ?? null,
 }))
 
 afterEach(() => {
@@ -118,6 +126,6 @@ describe('PlaylistWorkflow', () => {
 
     expect(mocks.setTrackIncluded).toHaveBeenCalledWith(1, false)
     expect(mocks.selectPlaylist).toHaveBeenCalledWith(null)
-    expect(mocks.resetSpotify).toHaveBeenCalledOnce()
+    expect(mocks.resetStreaming).toHaveBeenCalledOnce()
   })
 })

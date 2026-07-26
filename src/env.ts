@@ -26,6 +26,10 @@ export const env = createEnv({
   server: {
     BETTER_AUTH_SECRET: z.string().min(1),
     BETTER_AUTH_URL: z.url(),
+    APPLE_MUSIC_TEAM_ID: z.string().length(10),
+    APPLE_MUSIC_KEY_ID: z.string().length(10),
+    APPLE_MUSIC_PRIVATE_KEY_BASE64: z.base64(),
+    APPLE_MUSIC_TOKEN_ENCRYPTION_KEY: z.base64(),
     DATABASE_URL: z.string().min(1),
     EMAIL_FROM: z.string().min(1).default('Encore <auth@playencore.app>'),
     GOOGLE_CLIENT_ID: z.string().min(1),

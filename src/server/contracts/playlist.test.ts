@@ -9,9 +9,9 @@ import {
   searchSpotifyTracksInputSchema,
   selectSpotifyTrackInputSchema,
   spotifyTrackCandidateDtoSchema,
-  trackMatchDtoSchema,
 } from './spotify'
 import type { GeneratedPlaylistDto } from './playlists'
+import { trackMatchDtoSchema } from './streaming'
 
 describe('playlist contracts', () => {
   it('exports inferred DTO types tied to Zod schemas', () => {
@@ -78,7 +78,9 @@ describe('playlist contracts', () => {
     expect(playlistIdInputSchema.parse({ playlistId: 'playlist-id' })).toEqual({
       playlistId: 'playlist-id',
     })
-    expect(deletePlaylistResultDtoSchema.parse({ playlistId: 'playlist-id' })).toEqual({
+    expect(
+      deletePlaylistResultDtoSchema.parse({ playlistId: 'playlist-id' }),
+    ).toEqual({
       playlistId: 'playlist-id',
     })
   })

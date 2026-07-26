@@ -7,6 +7,10 @@ import {
 } from '@/server/contracts/streaming'
 import { OnlyLoginMethodError, SpotifyNotConnectedError } from '@/server/errors'
 import { resolveSpotifyConnectionMetadata } from '@/server/providers/spotify/connection'
+import {
+  disconnectAppleMusic,
+  getAppleMusicConnection,
+} from './apple-music-connection'
 import type {
   StreamingConnectionDto,
   StreamingProviderDto,
@@ -27,7 +31,7 @@ type ProviderConfig = {
   }>
 }
 
-type StreamingProviderConfig = Record<StreamingProviderDto, ProviderConfig>
+type StreamingProviderConfig = Record<'SPOTIFY', ProviderConfig>
 
 type StreamingProviderAccessToken = {
   accessToken: string
@@ -44,6 +48,9 @@ const STREAMING_PROVIDER_CONFIG = {
 } satisfies StreamingProviderConfig
 
 function getProviderConfig(provider: StreamingProviderDto) {
+  if (provider === 'APPLE_MUSIC') {
+    throw new Error('Apple Music does not use a Better Auth provider.')
+  }
   return STREAMING_PROVIDER_CONFIG[provider]
 }
 
@@ -99,7 +106,24 @@ async function hasAlternateLoginAccount(
 async function syncStreamingConnectionMetadata(
   userId: string,
   provider: StreamingProviderDto,
+  appleMusicConnectionKey: string | null = null,
 ): Promise<StreamingConnectionDto> {
+  if (provider === 'APPLE_MUSIC') {
+    const credential = await getAppleMusicConnection(
+      userId,
+      appleMusicConnectionKey,
+    )
+    return streamingConnectionDtoSchema.parse({
+      provider,
+      connected: Boolean(credential),
+      displayName: credential ? 'Apple Music' : null,
+      providerAccountId: null,
+      canDisconnect: Boolean(credential),
+      disconnectDisabledReason: null,
+      updatedAt: credential?.updatedAt ?? null,
+    })
+  }
+
   const account = await findBetterAuthAccount(userId, provider)
 
   if (!account) {
@@ -187,10 +211,17 @@ async function resolveStreamingConnectionMetadata(
   }
 }
 
-export async function listStreamingConnections(userId: string) {
+export async function listStreamingConnections(
+  userId: string,
+  appleMusicConnectionKey: string | null = null,
+) {
   return Promise.all(
     streamingProviderSchema.options.map((provider) =>
-      syncStreamingConnectionMetadata(userId, provider),
+      syncStreamingConnectionMetadata(
+        userId,
+        provider,
+        appleMusicConnectionKey,
+      ),
     ),
   )
 }
@@ -198,15 +229,34 @@ export async function listStreamingConnections(userId: string) {
 export async function getStreamingConnection(
   userId: string,
   provider: StreamingProviderDto,
+  appleMusicConnectionKey: string | null = null,
 ) {
-  return syncStreamingConnectionMetadata(userId, provider)
+  return syncStreamingConnectionMetadata(
+    userId,
+    provider,
+    appleMusicConnectionKey,
+  )
 }
 
 export async function disconnectStreamingProvider(
   userId: string,
   provider: StreamingProviderDto,
   headers: Headers,
+  appleMusicConnectionKey: string | null = null,
 ) {
+  if (provider === 'APPLE_MUSIC') {
+    await disconnectAppleMusic(userId, appleMusicConnectionKey)
+    return streamingConnectionDtoSchema.parse({
+      provider,
+      connected: false,
+      displayName: null,
+      providerAccountId: null,
+      canDisconnect: false,
+      disconnectDisabledReason: null,
+      updatedAt: null,
+    })
+  }
+
   const account = await findBetterAuthAccount(userId, provider)
 
   if (account) {
@@ -246,7 +296,7 @@ export async function disconnectStreamingProvider(
 
 export async function getStreamingProviderAccessToken(
   userId: string,
-  provider: StreamingProviderDto,
+  provider: 'SPOTIFY',
 ): Promise<StreamingProviderAccessToken> {
   const account = await findBetterAuthAccount(userId, provider)
 
@@ -270,5 +320,6 @@ export async function getStreamingProviderAccessToken(
 }
 
 export function getStreamingProviderScopes(provider: StreamingProviderDto) {
+  if (provider === 'APPLE_MUSIC') return []
   return getProviderConfig(provider).requiredScopes
 }

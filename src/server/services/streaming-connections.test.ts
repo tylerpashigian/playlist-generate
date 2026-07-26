@@ -19,6 +19,8 @@ const authMocks = vi.hoisted(() => ({
 
 const providerMocks = vi.hoisted(() => ({
   resolveSpotifyConnectionMetadata: vi.fn(),
+  disconnectAppleMusic: vi.fn(),
+  getAppleMusicConnection: vi.fn(),
 }))
 
 vi.mock('@/db', () => ({
@@ -48,6 +50,11 @@ vi.mock('@/server/providers/spotify/connection', () => ({
     providerMocks.resolveSpotifyConnectionMetadata,
 }))
 
+vi.mock('./apple-music-connection', () => ({
+  disconnectAppleMusic: providerMocks.disconnectAppleMusic,
+  getAppleMusicConnection: providerMocks.getAppleMusicConnection,
+}))
+
 const updatedAt = new Date('2026-06-01T12:00:00.000Z')
 const spotifyAccount = {
   accountId: 'spotify-user-id',
@@ -71,6 +78,7 @@ describe('streaming connections service', () => {
       updatedAt,
     })
     prismaMocks.streamingConnectionDeleteMany.mockResolvedValue({ count: 1 })
+    providerMocks.getAppleMusicConnection.mockResolvedValue(null)
   })
 
   it('marks Spotify connected but not disconnectable when it is the only login method', async () => {
@@ -86,6 +94,15 @@ describe('streaming connections service', () => {
         canDisconnect: false,
         disconnectDisabledReason: 'Spotify is your only login method.',
         updatedAt,
+      },
+      {
+        provider: 'APPLE_MUSIC',
+        connected: false,
+        displayName: null,
+        providerAccountId: null,
+        canDisconnect: false,
+        disconnectDisabledReason: null,
+        updatedAt: null,
       },
     ])
   })
@@ -107,6 +124,7 @@ describe('streaming connections service', () => {
         canDisconnect: true,
         disconnectDisabledReason: null,
       },
+      { provider: 'APPLE_MUSIC', connected: false },
     ])
   })
 
@@ -126,6 +144,7 @@ describe('streaming connections service', () => {
         connected: true,
         canDisconnect: true,
       },
+      { provider: 'APPLE_MUSIC', connected: false },
     ])
   })
 

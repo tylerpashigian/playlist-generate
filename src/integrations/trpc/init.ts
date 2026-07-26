@@ -1,9 +1,16 @@
 import { TRPCError, initTRPC } from '@trpc/server'
 import { auth } from '@/lib/auth'
 import { getAuthAccessState } from '@/server/services/auth-access'
+import { getAppleMusicConnectionKey } from '@/server/services/apple-music-connection-cookie'
 import superjson from 'superjson'
 
-export async function createTRPCContext({ request }: { request: Request }) {
+export async function createTRPCContext({
+  request,
+  responseHeaders = new Headers(),
+}: {
+  request: Request
+  responseHeaders?: Headers
+}) {
   const session = await auth.api.getSession({
     headers: request.headers,
   })
@@ -11,6 +18,8 @@ export async function createTRPCContext({ request }: { request: Request }) {
   return {
     request,
     session,
+    appleMusicConnectionKey: getAppleMusicConnectionKey(request.headers),
+    responseHeaders,
   }
 }
 

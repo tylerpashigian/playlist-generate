@@ -1,13 +1,15 @@
 import {
-  exportPlaylistDtoSchema,
-  exportPlaylistInputSchema,
-  matchTracksInputSchema,
   searchSpotifyTracksInputSchema,
   selectSpotifyTrackInputSchema,
   spotifyPlaylistItemInputSchema,
   spotifyTrackCandidateDtoSchema,
-  trackMatchDtoSchema,
 } from '@/server/contracts/spotify'
+import {
+  exportPlaylistDtoSchema,
+  exportPlaylistInputSchema,
+  matchTracksInputSchema,
+  trackMatchDtoSchema,
+} from '@/server/contracts/streaming'
 import {
   exportSpotifyPlaylist,
   getSpotifyTrackMatches,

@@ -1,11 +1,7 @@
-export type StreamingProvider = 'SPOTIFY'
+export type StreamingProvider = 'SPOTIFY' | 'APPLE_MUSIC'
 
 export type TrackMatchStatus =
-  | 'MATCHED'
-  | 'MANUALLY_MATCHED'
-  | 'LOW_CONFIDENCE'
-  | 'UNRESOLVED'
-  | 'SKIPPED'
+  'MATCHED' | 'MANUALLY_MATCHED' | 'LOW_CONFIDENCE' | 'UNRESOLVED' | 'SKIPPED'
 
 export interface StreamingConnection {
   provider: StreamingProvider

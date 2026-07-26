@@ -1,8 +1,20 @@
 import { Button } from '@/components/ui/button'
 import { Heading4, Text } from '@/components/ui/typography'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { useState } from 'react'
 import type { StreamingConnection } from '@/models/streaming/models'
 
 export function ConnectionPanel({
+  providerName,
   connection,
   isLoading,
   isConnecting,
@@ -10,7 +22,10 @@ export function ConnectionPanel({
   errorMessage,
   onConnect,
   onDisconnect,
+  onDisconnectEverywhere,
+  isDisconnectingEverywhere = false,
 }: {
+  providerName: string
   connection: StreamingConnection | null
   isLoading: boolean
   isConnecting: boolean
@@ -18,7 +33,13 @@ export function ConnectionPanel({
   errorMessage: string | null
   onConnect: () => Promise<boolean>
   onDisconnect: () => Promise<StreamingConnection>
+  onDisconnectEverywhere?: () => Promise<unknown>
+  isDisconnectingEverywhere?: boolean
 }) {
+  const [
+    isDisconnectEverywhereDialogOpen,
+    setIsDisconnectEverywhereDialogOpen,
+  ] = useState(false)
   const connected = Boolean(connection?.connected)
   const disconnectDisabledReason = connected
     ? connection?.disconnectDisabledReason
@@ -36,7 +57,7 @@ export function ConnectionPanel({
           <Text size="sm" weight="semibold" className="text-muted-foreground">
             Streaming service
           </Text>
-          <Heading4 className="mt-1 text-foreground">Spotify</Heading4>
+          <Heading4 className="mt-1 text-foreground">{providerName}</Heading4>
           <Text size="sm" className="mt-1 text-muted-foreground">
             {isLoading
               ? 'Checking connection'
@@ -85,11 +106,58 @@ export function ConnectionPanel({
         {connected
           ? isDisconnecting
             ? 'Disconnecting'
-            : 'Disconnect Spotify'
+            : `Disconnect ${providerName}`
           : isConnecting
             ? 'Connecting'
-            : 'Connect Spotify'}
+            : `Connect ${providerName}`}
       </Button>
+      {onDisconnectEverywhere ? (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            className="mt-2 w-full"
+            disabled={isLoading || isDisconnecting || isDisconnectingEverywhere}
+            onClick={() => setIsDisconnectEverywhereDialogOpen(true)}
+          >
+            {isDisconnectingEverywhere
+              ? `Disconnecting ${providerName} everywhere`
+              : `Disconnect ${providerName} everywhere`}
+          </Button>
+          <AlertDialog
+            open={isDisconnectEverywhereDialogOpen}
+            onOpenChange={setIsDisconnectEverywhereDialogOpen}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Disconnect {providerName} on all devices?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes Encore’s access to Apple Music from every browser
+                  where you connected it. You will need to authorize Apple Music
+                  again before exporting.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDisconnectingEverywhere}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isDisconnectingEverywhere}
+                  onClick={() => {
+                    void onDisconnectEverywhere()
+                      .then(() => setIsDisconnectEverywhereDialogOpen(false))
+                      .catch(() => undefined)
+                  }}
+                >
+                  Disconnect everywhere
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      ) : null}
     </section>
   )
 }

@@ -202,6 +202,7 @@ export type UserWhereInput = {
   accounts?: Prisma.AccountListRelationFilter
   playlists?: Prisma.PlaylistListRelationFilter
   streamingConnections?: Prisma.StreamingConnectionListRelationFilter
+  appleMusicCredentials?: Prisma.AppleMusicCredentialListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -216,6 +217,7 @@ export type UserOrderByWithRelationInput = {
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   playlists?: Prisma.PlaylistOrderByRelationAggregateInput
   streamingConnections?: Prisma.StreamingConnectionOrderByRelationAggregateInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -233,6 +235,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   accounts?: Prisma.AccountListRelationFilter
   playlists?: Prisma.PlaylistListRelationFilter
   streamingConnections?: Prisma.StreamingConnectionListRelationFilter
+  appleMusicCredentials?: Prisma.AppleMusicCredentialListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -273,6 +276,7 @@ export type UserCreateInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -287,6 +291,7 @@ export type UserUncheckedCreateInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistUncheckedCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -301,6 +306,7 @@ export type UserUpdateInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -315,6 +321,7 @@ export type UserUncheckedUpdateInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUncheckedUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -432,6 +439,20 @@ export type UserUpdateOneRequiredWithoutStreamingConnectionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutStreamingConnectionsInput, Prisma.UserUpdateWithoutStreamingConnectionsInput>, Prisma.UserUncheckedUpdateWithoutStreamingConnectionsInput>
 }
 
+export type UserCreateNestedOneWithoutAppleMusicCredentialsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAppleMusicCredentialsInput, Prisma.UserUncheckedCreateWithoutAppleMusicCredentialsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAppleMusicCredentialsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAppleMusicCredentialsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAppleMusicCredentialsInput, Prisma.UserUncheckedCreateWithoutAppleMusicCredentialsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAppleMusicCredentialsInput
+  upsert?: Prisma.UserUpsertWithoutAppleMusicCredentialsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAppleMusicCredentialsInput, Prisma.UserUpdateWithoutAppleMusicCredentialsInput>, Prisma.UserUncheckedUpdateWithoutAppleMusicCredentialsInput>
+}
+
 export type UserCreateNestedOneWithoutPlaylistsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutPlaylistsInput, Prisma.UserUncheckedCreateWithoutPlaylistsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlaylistsInput
@@ -457,6 +478,7 @@ export type UserCreateWithoutSessionsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -470,6 +492,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistUncheckedCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -499,6 +522,7 @@ export type UserUpdateWithoutSessionsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -512,6 +536,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUncheckedUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -525,6 +550,7 @@ export type UserCreateWithoutAccountsInput = {
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -538,6 +564,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistUncheckedCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -567,6 +594,7 @@ export type UserUpdateWithoutAccountsInput = {
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -580,6 +608,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUncheckedUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutStreamingConnectionsInput = {
@@ -593,6 +622,7 @@ export type UserCreateWithoutStreamingConnectionsInput = {
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStreamingConnectionsInput = {
@@ -606,6 +636,7 @@ export type UserUncheckedCreateWithoutStreamingConnectionsInput = {
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   playlists?: Prisma.PlaylistUncheckedCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStreamingConnectionsInput = {
@@ -635,6 +666,7 @@ export type UserUpdateWithoutStreamingConnectionsInput = {
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStreamingConnectionsInput = {
@@ -648,6 +680,79 @@ export type UserUncheckedUpdateWithoutStreamingConnectionsInput = {
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   playlists?: Prisma.PlaylistUncheckedUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAppleMusicCredentialsInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  playlists?: Prisma.PlaylistCreateNestedManyWithoutUserInput
+  streamingConnections?: Prisma.StreamingConnectionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAppleMusicCredentialsInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  playlists?: Prisma.PlaylistUncheckedCreateNestedManyWithoutUserInput
+  streamingConnections?: Prisma.StreamingConnectionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAppleMusicCredentialsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAppleMusicCredentialsInput, Prisma.UserUncheckedCreateWithoutAppleMusicCredentialsInput>
+}
+
+export type UserUpsertWithoutAppleMusicCredentialsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAppleMusicCredentialsInput, Prisma.UserUncheckedUpdateWithoutAppleMusicCredentialsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAppleMusicCredentialsInput, Prisma.UserUncheckedCreateWithoutAppleMusicCredentialsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAppleMusicCredentialsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAppleMusicCredentialsInput, Prisma.UserUncheckedUpdateWithoutAppleMusicCredentialsInput>
+}
+
+export type UserUpdateWithoutAppleMusicCredentialsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  playlists?: Prisma.PlaylistUpdateManyWithoutUserNestedInput
+  streamingConnections?: Prisma.StreamingConnectionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAppleMusicCredentialsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  playlists?: Prisma.PlaylistUncheckedUpdateManyWithoutUserNestedInput
+  streamingConnections?: Prisma.StreamingConnectionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlaylistsInput = {
@@ -661,6 +766,7 @@ export type UserCreateWithoutPlaylistsInput = {
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlaylistsInput = {
@@ -674,6 +780,7 @@ export type UserUncheckedCreateWithoutPlaylistsInput = {
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedCreateNestedManyWithoutUserInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlaylistsInput = {
@@ -703,6 +810,7 @@ export type UserUpdateWithoutPlaylistsInput = {
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlaylistsInput = {
@@ -716,6 +824,7 @@ export type UserUncheckedUpdateWithoutPlaylistsInput = {
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   streamingConnections?: Prisma.StreamingConnectionUncheckedUpdateManyWithoutUserNestedInput
+  appleMusicCredentials?: Prisma.AppleMusicCredentialUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -728,6 +837,7 @@ export type UserCountOutputType = {
   accounts: number
   playlists: number
   streamingConnections: number
+  appleMusicCredentials: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -735,6 +845,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
   playlists?: boolean | UserCountOutputTypeCountPlaylistsArgs
   streamingConnections?: boolean | UserCountOutputTypeCountStreamingConnectionsArgs
+  appleMusicCredentials?: boolean | UserCountOutputTypeCountAppleMusicCredentialsArgs
 }
 
 /**
@@ -775,6 +886,13 @@ export type UserCountOutputTypeCountStreamingConnectionsArgs<ExtArgs extends run
   where?: Prisma.StreamingConnectionWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAppleMusicCredentialsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AppleMusicCredentialWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -788,6 +906,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   playlists?: boolean | Prisma.User$playlistsArgs<ExtArgs>
   streamingConnections?: boolean | Prisma.User$streamingConnectionsArgs<ExtArgs>
+  appleMusicCredentials?: boolean | Prisma.User$appleMusicCredentialsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -827,6 +946,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   playlists?: boolean | Prisma.User$playlistsArgs<ExtArgs>
   streamingConnections?: boolean | Prisma.User$streamingConnectionsArgs<ExtArgs>
+  appleMusicCredentials?: boolean | Prisma.User$appleMusicCredentialsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -839,6 +959,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     accounts: Prisma.$AccountPayload<ExtArgs>[]
     playlists: Prisma.$PlaylistPayload<ExtArgs>[]
     streamingConnections: Prisma.$StreamingConnectionPayload<ExtArgs>[]
+    appleMusicCredentials: Prisma.$AppleMusicCredentialPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1246,6 +1367,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   accounts<T extends Prisma.User$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   playlists<T extends Prisma.User$playlistsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$playlistsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlaylistPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   streamingConnections<T extends Prisma.User$streamingConnectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$streamingConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StreamingConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  appleMusicCredentials<T extends Prisma.User$appleMusicCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$appleMusicCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AppleMusicCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1768,6 +1890,30 @@ export type User$streamingConnectionsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.StreamingConnectionScalarFieldEnum | Prisma.StreamingConnectionScalarFieldEnum[]
+}
+
+/**
+ * User.appleMusicCredentials
+ */
+export type User$appleMusicCredentialsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AppleMusicCredential
+   */
+  select?: Prisma.AppleMusicCredentialSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AppleMusicCredential
+   */
+  omit?: Prisma.AppleMusicCredentialOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppleMusicCredentialInclude<ExtArgs> | null
+  where?: Prisma.AppleMusicCredentialWhereInput
+  orderBy?: Prisma.AppleMusicCredentialOrderByWithRelationInput | Prisma.AppleMusicCredentialOrderByWithRelationInput[]
+  cursor?: Prisma.AppleMusicCredentialWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AppleMusicCredentialScalarFieldEnum | Prisma.AppleMusicCredentialScalarFieldEnum[]
 }
 
 /**

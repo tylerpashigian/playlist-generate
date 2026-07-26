@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import {
   exportPlaylistToSpotify,
@@ -10,6 +10,10 @@ import {
 } from '@/services/spotify'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from '@/lib/toast'
+import {
+  savedPlaylistDetailQueryKey,
+  savedPlaylistsQueryKey,
+} from '@/lib/user-data-cache'
 import { useLatestRequestGuard } from './use-latest-request-guard'
 import type {
   PlaylistExportResult,
@@ -65,6 +69,7 @@ interface SpotifyExportRequest {
 }
 
 export function useSpotify() {
+  const queryClient = useQueryClient()
   const [matches, setMatches] = useState<Array<TrackMatch>>([])
   const [exportResult, setExportResult] = useState<PlaylistExportResult | null>(
     null,
@@ -93,6 +98,10 @@ export function useSpotify() {
       if (!exportRequestGuard.isCurrent(request.requestVersion)) return
 
       setExportResult(result)
+      void queryClient.invalidateQueries({
+        queryKey: savedPlaylistDetailQueryKey(request.input.playlistId),
+      })
+      void queryClient.invalidateQueries({ queryKey: savedPlaylistsQueryKey })
     },
   })
 

@@ -1,9 +1,9 @@
 import { prisma } from '@/db'
+import { spotifyTrackCandidateDtoSchema } from '@/server/contracts/spotify'
 import {
   exportPlaylistDtoSchema,
-  spotifyTrackCandidateDtoSchema,
   trackMatchDtoSchema,
-} from '@/server/contracts/spotify'
+} from '@/server/contracts/streaming'
 import {
   NoMatchedTracksError,
   PlaylistItemNotFoundError,
@@ -16,12 +16,13 @@ import {
   searchSpotifyTrack,
 } from '@/server/providers/spotify/client'
 import { getStreamingProviderAccessToken } from './streaming-connections'
+import { toTrackMatchDto } from './streaming-track-matches'
 import type { SavedPlaylistDto } from '@/server/contracts/playlists'
+import type { SpotifyTrackCandidateDto } from '@/server/contracts/spotify'
 import type {
   ExportPlaylistDto,
-  SpotifyTrackCandidateDto,
   TrackMatchDto,
-} from '@/server/contracts/spotify'
+} from '@/server/contracts/streaming'
 import type { SpotifyTrackResponse } from '@/server/providers/spotify/schemas'
 
 const SPOTIFY_PROVIDER = 'SPOTIFY'
@@ -132,36 +133,6 @@ function mapSpotifyTrackCandidate(
   })
 }
 
-function mapSavedTrackMatch(match: {
-  id: string
-  playlistItemId: string
-  provider: 'SPOTIFY'
-  status: 'MATCHED' | 'MANUALLY_MATCHED' | 'LOW_CONFIDENCE' | 'UNRESOLVED' | 'SKIPPED'
-  providerTrackId: string | null
-  providerTrackUri: string | null
-  providerTrackUrl: string | null
-  trackName: string | null
-  artistName: string | null
-  albumName: string | null
-  durationMs: number | null
-  matchConfidenceScore: number | null
-}): TrackMatchDto {
-  return trackMatchDtoSchema.parse({
-    id: match.id,
-    playlistItemId: match.playlistItemId,
-    provider: match.provider,
-    status: match.status,
-    providerTrackId: match.providerTrackId,
-    providerTrackUri: match.providerTrackUri,
-    providerTrackUrl: match.providerTrackUrl,
-    trackName: match.trackName,
-    artistName: match.artistName,
-    albumName: match.albumName,
-    durationMs: match.durationMs,
-    matchConfidenceScore: match.matchConfidenceScore,
-  })
-}
-
 export async function matchSpotifyTracks(
   userId: string,
   playlist: SavedPlaylistDto,
@@ -193,7 +164,7 @@ export async function matchSpotifyTracks(
       )
 
       if (decision) {
-        matches.push(mapSavedTrackMatch(decision))
+        matches.push(toTrackMatchDto(decision))
       }
 
       continue
@@ -295,7 +266,7 @@ export async function getSpotifyTrackMatches(
     orderBy: { playlistItem: { position: 'asc' } },
   })
 
-  return matches.map(mapSavedTrackMatch)
+  return matches.map(toTrackMatchDto)
 }
 
 export async function searchSpotifyTrackCandidates(
@@ -367,7 +338,7 @@ export async function selectSpotifyTrackMatch(
     },
   })
 
-  return mapSavedTrackMatch(savedMatch)
+  return toTrackMatchDto(savedMatch)
 }
 
 export async function skipSpotifyTrackMatch(
@@ -406,7 +377,7 @@ export async function skipSpotifyTrackMatch(
     },
   })
 
-  return mapSavedTrackMatch(savedMatch)
+  return toTrackMatchDto(savedMatch)
 }
 
 function chunk<T>(items: Array<T>, size: number) {

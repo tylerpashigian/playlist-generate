@@ -20,6 +20,7 @@ function renderConnectionPanel(
   overrides: Partial<React.ComponentProps<typeof ConnectionPanel>> = {},
 ) {
   const props: React.ComponentProps<typeof ConnectionPanel> = {
+    providerName: 'Spotify',
     connection,
     isLoading: false,
     isConnecting: false,

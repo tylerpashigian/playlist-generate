@@ -10,7 +10,8 @@
 */
 
 export const StreamingProvider = {
-  SPOTIFY: 'SPOTIFY'
+  SPOTIFY: 'SPOTIFY',
+  APPLE_MUSIC: 'APPLE_MUSIC'
 } as const
 
 export type StreamingProvider = (typeof StreamingProvider)[keyof typeof StreamingProvider]

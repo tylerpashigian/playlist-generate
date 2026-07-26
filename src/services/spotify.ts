@@ -1,8 +1,8 @@
+import { toStreamingTrackCandidate } from '@/models/spotify/conversions'
 import {
   toPlaylistExportResult,
-  toStreamingTrackCandidate,
   toTrackMatch,
-} from '@/models/spotify/conversions'
+} from '@/models/streaming/conversions'
 import { trpcClient } from '@/lib/trpc-client'
 import type {
   PlaylistExportResult,
@@ -10,15 +10,17 @@ import type {
   TrackMatch,
 } from '@/models/streaming/models'
 import type {
-  ExportPlaylistDto,
-  ExportPlaylistInput,
-  MatchTracksInput,
   SearchSpotifyTracksInput,
   SelectSpotifyTrackInput,
   SpotifyPlaylistItemInput,
   SpotifyTrackCandidateDto,
-  TrackMatchDto,
 } from '@/server/contracts/spotify'
+import type {
+  ExportPlaylistDto,
+  ExportPlaylistInput,
+  MatchTracksInput,
+  TrackMatchDto,
+} from '@/server/contracts/streaming'
 
 export async function matchPlaylistTracks(
   playlistId: string,
@@ -66,12 +68,10 @@ export async function skipSpotifyTrack(
   return toTrackMatch(match)
 }
 
-export async function exportPlaylistToSpotify(
-  input: {
-    playlistId: string
-    name?: string
-  },
-): Promise<PlaylistExportResult> {
+export async function exportPlaylistToSpotify(input: {
+  playlistId: string
+  name?: string
+}): Promise<PlaylistExportResult> {
   const exportInput: ExportPlaylistInput = input
   const result: ExportPlaylistDto =
     await trpcClient.spotify.exportPlaylist.mutate(exportInput)

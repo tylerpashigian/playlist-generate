@@ -9,7 +9,7 @@ import { StatusPanel } from '@/components/product/status-panel'
 import { Button } from '@/components/ui/button'
 import { Heading3, Text } from '@/components/ui/typography'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
-import { useSpotifyPlaylistReview } from '@/hooks/use-spotify-playlist-review'
+import { useStreamingPlaylistReview } from '@/hooks/use-streaming-playlist-review'
 import { toast } from '@/lib/toast'
 
 export const Route = createFileRoute('/_authenticated/playlists/$playlistId')({
@@ -25,9 +25,10 @@ function PlaylistDetailRoute() {
   const playlist = savedPlaylists.selectedPlaylist
   const {
     spotify,
+    appleMusic,
     review: trackReview,
     reloadMatches,
-  } = useSpotifyPlaylistReview(playlist)
+  } = useStreamingPlaylistReview(playlist)
 
   useEffect(() => {
     savedPlaylists.selectPlaylist(playlistId)
@@ -65,6 +66,19 @@ function PlaylistDetailRoute() {
     })
   }
 
+  async function handleAppleMusicMatch() {
+    if (!savedPlaylists.selectedPlaylist) return
+    await appleMusic.matchTracks(savedPlaylists.selectedPlaylist.id)
+  }
+
+  async function handleAppleMusicExport() {
+    if (!savedPlaylists.selectedPlaylist) return
+    await appleMusic.exportPlaylist({
+      playlistId: savedPlaylists.selectedPlaylist.id,
+      name: savedPlaylists.selectedPlaylist.name,
+    })
+  }
+
   async function handleDelete() {
     const deletedPlaylistId = await savedPlaylists.confirmDeletion()
 
@@ -87,7 +101,11 @@ function PlaylistDetailRoute() {
     spotify.isMatching ||
     spotify.isExporting ||
     spotify.isSelectingTrack ||
-    spotify.isSkippingTrack
+    spotify.isSkippingTrack ||
+    appleMusic.isMatching ||
+    appleMusic.isExporting ||
+    appleMusic.isSelectingTrack ||
+    appleMusic.isSkippingTrack
 
   return (
     <WithNavbar>
@@ -173,6 +191,20 @@ function PlaylistDetailRoute() {
                       onMatchTracks: handleMatch,
                       onExport: handleExport,
                       onManageMatches: () => trackReview.openManager('SPOTIFY'),
+                    },
+                    {
+                      provider: 'APPLE_MUSIC',
+                      label: 'Apple Music',
+                      selectedPlaylist: playlist,
+                      matches: appleMusic.matches,
+                      exportResult: appleMusic.exportResult,
+                      isMatching: appleMusic.isMatching,
+                      isExporting: appleMusic.isExporting,
+                      errorMessage: appleMusic.errorMessage,
+                      onMatchTracks: handleAppleMusicMatch,
+                      onExport: handleAppleMusicExport,
+                      onManageMatches: () =>
+                        trackReview.openManager('APPLE_MUSIC'),
                     },
                   ],
                 }}

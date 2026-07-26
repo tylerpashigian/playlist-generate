@@ -103,6 +103,9 @@ export function AccountDrawer() {
                       isSpotifyConnected={
                         streamingConnections.isSpotifyConnected
                       }
+                      isAppleMusicConnected={
+                        streamingConnections.isAppleMusicConnected
+                      }
                     />
                   </>
                 ) : null}
@@ -281,8 +284,10 @@ function MetricTile({ value, label }: { value: number; label: string }) {
 
 function ConnectedServices({
   isSpotifyConnected,
+  isAppleMusicConnected,
 }: {
   isSpotifyConnected: boolean
+  isAppleMusicConnected: boolean
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -301,6 +306,15 @@ function ConnectedServices({
             : 'Manage this connection from your profile'
         }
         status={isSpotifyConnected ? 'Connected' : 'Not connected'}
+      />
+      <ServiceRow
+        name="Apple Music"
+        description={
+          isAppleMusicConnected
+            ? 'Ready for export'
+            : 'Manage this connection from your profile'
+        }
+        status={isAppleMusicConnected ? 'Connected' : 'Not connected'}
       />
     </section>
   )

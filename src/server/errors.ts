@@ -16,6 +16,22 @@ export class SpotifyNotConnectedError extends Error {
   }
 }
 
+export class AppleMusicNotConnectedError extends Error {
+  constructor(message = 'Apple Music is not connected.') {
+    super(message)
+    this.name = 'AppleMusicNotConnectedError'
+  }
+}
+
+export class AppleMusicAuthorizationError extends Error {
+  constructor() {
+    super(
+      'Apple Music authorization has expired or is unavailable. Reconnect Apple Music and try again.',
+    )
+    this.name = 'AppleMusicAuthorizationError'
+  }
+}
+
 export class OnlyLoginMethodError extends Error {
   constructor(public readonly providerName: string) {
     super(`${providerName} is your only login method.`)
@@ -25,7 +41,7 @@ export class OnlyLoginMethodError extends Error {
 
 export class NoMatchedTracksError extends Error {
   constructor() {
-    super('No matched Spotify tracks are available to export.')
+    super('No matched tracks are available to export.')
     this.name = 'NoMatchedTracksError'
   }
 }
