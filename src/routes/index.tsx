@@ -3,8 +3,14 @@ import Footer from '@/components/Footer'
 import { LandingSetlistDemo } from '@/components/product/landing-setlist-demo'
 import { WithNavbar } from '@/components/product/product-navbar'
 import { Button } from '@/components/ui/button'
-import { Heading1, Heading2, Heading4, Text } from '@/components/ui/typography'
+import {
+  Heading1,
+  Heading2,
+  Heading4,
+  Text,
+} from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
+import { cn } from '@/lib/utils'
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react'
 
 export const Route = createFileRoute('/')({ component: LandingRoute })
@@ -91,11 +97,13 @@ function LandingRoute() {
         <LazyMotion features={domAnimation}>
           <section className="flex w-full max-w-230 flex-col gap-5 px-5 text-center sm:px-8">
             <div className="mx-auto max-w-150">
-              <Heading2 className="text-foreground">How Encore works</Heading2>
-              <Text size="md" className="mt-3 text-muted-foreground">
+              <LandingSectionHeading className="text-foreground">
+                How Encore works
+              </LandingSectionHeading>
+              <LandingSectionDescription className="mt-3 text-muted-foreground">
                 Build a playlist from the songs artists are actually playing,
                 then decide what is worth saving or exporting.
-              </Text>
+              </LandingSectionDescription>
             </div>
 
             <div className="flex flex-col gap-4 text-left md:flex-row">
@@ -140,9 +148,9 @@ function LandingRoute() {
             >
               Accuracy
             </Text>
-            <Heading2 className="mt-2 max-w-150 text-foreground">
+            <LandingSectionHeading className="mt-2 max-w-150 text-foreground">
               Built from recent setlists, not popularity charts.
-            </Heading2>
+            </LandingSectionHeading>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -162,13 +170,13 @@ function LandingRoute() {
 
         <section className="w-full px-5 sm:px-8">
           <div className="mx-auto flex max-w-230 flex-col items-center gap-5 rounded-2xl border border-border bg-card p-4 text-center shadow-[0_24px_80px_rgba(0,0,0,0.06)] sm:p-6">
-            <Heading2 className="text-foreground">
+            <LandingSectionHeading className="text-foreground">
               Build your first setlist playlist.
-            </Heading2>
-            <Text size="md" className="max-w-130 text-muted-foreground">
+            </LandingSectionHeading>
+            <LandingSectionDescription className="max-w-130 text-muted-foreground">
               Start with an artist search, preview likely tracks, and decide
               whether to save or export after the playlist feels right.
-            </Text>
+            </LandingSectionDescription>
             <Button asChild>
               <Link to="/app">Start a playlist</Link>
             </Button>
@@ -187,6 +195,36 @@ function LandingDisplayHeading({
     <>
       <Heading1 className={'hidden lg:block'}>{children}</Heading1>
       <Heading2 className={'block lg:hidden'}>{children}</Heading2>
+    </>
+  )
+}
+
+function LandingSectionHeading({
+  children,
+  className,
+}: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <>
+      <Heading2 className={cn('hidden lg:block', className)}>
+        {children}
+      </Heading2>
+      <Heading4 className={cn('lg:hidden', className)}>{children}</Heading4>
+    </>
+  )
+}
+
+function LandingSectionDescription({
+  children,
+  className,
+}: React.HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <>
+      <Text size="md" className={cn('hidden lg:block', className)}>
+        {children}
+      </Text>
+      <Text size="sm" className={cn('lg:hidden', className)}>
+        {children}
+      </Text>
     </>
   )
 }

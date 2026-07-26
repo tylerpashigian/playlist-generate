@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Cancel01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
 import {
   Combobox,
@@ -132,8 +130,6 @@ function DesktopMatchManagerDialog({
   searchErrorMessage,
   saveErrorMessage,
   unresolvedCount,
-  matchedCount,
-  skippedCount,
   resolvedCount,
   isReviewComplete,
   nextLabel,
@@ -206,11 +202,8 @@ function DesktopMatchManagerDialog({
               searchErrorMessage={searchErrorMessage}
               saveErrorMessage={saveErrorMessage}
               unresolvedCount={unresolvedCount}
-              matchedCount={matchedCount}
-              skippedCount={skippedCount}
               resolvedCount={resolvedCount}
               trackCount={trackCount}
-              isReviewComplete={isReviewComplete}
               nextLabel={nextLabel}
               onProviderChange={onProviderChange}
               onClearCandidates={onClearCandidates}
@@ -249,8 +242,6 @@ function MobileMatchManagerDrawer({
   searchErrorMessage,
   saveErrorMessage,
   unresolvedCount,
-  matchedCount,
-  skippedCount,
   resolvedCount,
   isReviewComplete,
   nextLabel,
@@ -280,7 +271,7 @@ function MobileMatchManagerDrawer({
       swipeDirection="down"
     >
       <DrawerContent className="[--drawer-height:calc(100dvh-1rem)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-1rem)]">
-        <DrawerHeader className="relative border-b border-border pb-4 pr-16 text-left">
+        <DrawerHeader className="border-b border-border pb-4 text-left">
           <div>
             <DrawerTitle className="type-heading-4">
               Manage track matches
@@ -289,20 +280,6 @@ function MobileMatchManagerDrawer({
               Resolve uncertain recordings before exporting your playlist.
             </DrawerDescription>
           </div>
-          <Button
-            type="button"
-            size="icon-lg"
-            variant="ghost"
-            aria-label="Close match manager"
-            className="absolute right-3 top-1 size-11"
-            onClick={() => onOpenChange(false)}
-          >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Cancel01Icon}
-              strokeWidth={2}
-            />
-          </Button>
         </DrawerHeader>
 
         <Tabs
@@ -363,11 +340,8 @@ function MobileMatchManagerDrawer({
               searchErrorMessage={searchErrorMessage}
               saveErrorMessage={saveErrorMessage}
               unresolvedCount={unresolvedCount}
-              matchedCount={matchedCount}
-              skippedCount={skippedCount}
               resolvedCount={resolvedCount}
               trackCount={trackCount}
-              isReviewComplete={isReviewComplete}
               nextLabel={nextLabel}
               onProviderChange={onProviderChange}
               onClearCandidates={onClearCandidates}
@@ -420,9 +394,9 @@ function TrackBrowser({
           </Text>
           <div className="text-right">
             <Text size="xs" weight="semibold" className="text-foreground">
-              {unresolvedCount > 0
-                ? `${unresolvedCount} remaining`
-                : 'All resolved'}
+              {isReviewComplete
+                ? 'Ready to export'
+                : `${unresolvedCount} remaining`}
             </Text>
             <Text size="xs" className="text-muted-foreground">
               {resolvedCount} of {trackCount} resolved
@@ -608,11 +582,8 @@ function MatchEditor({
   searchErrorMessage,
   saveErrorMessage,
   unresolvedCount,
-  matchedCount,
-  skippedCount,
   resolvedCount,
   trackCount,
-  isReviewComplete,
   nextLabel,
   onProviderChange,
   onClearCandidates,
@@ -640,11 +611,8 @@ function MatchEditor({
   searchErrorMessage: string | null
   saveErrorMessage: string | null
   unresolvedCount: number
-  matchedCount: number
-  skippedCount: number
   resolvedCount: number
   trackCount: number
-  isReviewComplete: boolean
   nextLabel: string
   onProviderChange: (provider: StreamingProvider | null) => void
   onClearCandidates: () => void
@@ -671,18 +639,6 @@ function MatchEditor({
 
     void searchRef.current(debouncedQuery.trim()).catch(() => undefined)
   }, [debouncedQuery, selectedProvider, track])
-
-  if (isReviewComplete) {
-    return (
-      <ReviewCompleteState
-        providerName={providerName}
-        matchedCount={matchedCount}
-        skippedCount={skippedCount}
-        trackCount={trackCount}
-        onDone={onCancel}
-      />
-    )
-  }
 
   if (!track) {
     return (
@@ -1048,59 +1004,6 @@ function InlineOperationError({
       >
         {actionLabel}
       </Button>
-    </div>
-  )
-}
-
-function ReviewCompleteState({
-  providerName,
-  matchedCount,
-  skippedCount,
-  trackCount,
-  onDone,
-}: {
-  providerName: string | null
-  matchedCount: number
-  skippedCount: number
-  trackCount: number
-  onDone: () => void
-}) {
-  const serviceName = providerName ?? 'streaming service'
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-1 items-center justify-center overflow-y-auto p-4 sm:p-6">
-        <div className="w-full max-w-xl">
-          <Text size="xs" weight="semibold" className="text-muted-foreground">
-            Review complete
-          </Text>
-          <Text size="lg" weight="semibold" className="mt-2 text-foreground">
-            All included tracks are resolved for {serviceName}.
-          </Text>
-          <Text size="sm" className="mt-2 text-muted-foreground">
-            Your provider decisions are saved. Return to the export panel when
-            you are ready to create the playlist.
-          </Text>
-          <dl className="mt-6 grid grid-cols-3 divide-x divide-border border-y border-border py-4">
-            <EvidenceFact label="Resolved" value={String(trackCount)} />
-            <div className="pl-4">
-              <EvidenceFact label="Matched" value={String(matchedCount)} />
-            </div>
-            <div className="pl-4">
-              <EvidenceFact label="Skipped" value={String(skippedCount)} />
-            </div>
-          </dl>
-        </div>
-      </div>
-      <div className="shrink-0 border-t border-border p-4 sm:flex sm:justify-end sm:p-6">
-        <Button
-          type="button"
-          className="min-h-11 w-full sm:min-h-0 sm:w-auto"
-          onClick={onDone}
-        >
-          Done — return to export
-        </Button>
-      </div>
     </div>
   )
 }

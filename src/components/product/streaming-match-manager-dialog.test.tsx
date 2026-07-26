@@ -9,7 +9,10 @@ import {
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { StreamingMatchManagerDialog } from './streaming-match-manager-dialog'
-import type { StreamingTrackCandidate } from '@/models/streaming/models'
+import type {
+  StreamingTrackCandidate,
+  TrackMatch,
+} from '@/models/streaming/models'
 
 const breakpoint = vi.hoisted<{ surface: 'dialog' | 'drawer' }>(() => ({
   surface: 'dialog',
@@ -95,6 +98,7 @@ describe('StreamingMatchManagerDialog', () => {
     expect(
       desktop.getByPlaceholderText('Track title, artist, or album'),
     ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy()
     expect(desktop.getAllByText('Needs review').length).toBeGreaterThan(0)
     expect(desktop.getAllByText('Matched').length).toBeGreaterThan(0)
   })
@@ -240,19 +244,15 @@ describe('StreamingMatchManagerDialog', () => {
     ).toBeTruthy()
   })
 
-  it('renders a labelled mobile close action with the unresolved count', () => {
+  it('uses the swipe handle rather than a close action on mobile', () => {
     breakpoint.surface = 'drawer'
-    const onOpenChange = vi.fn()
-    renderDialog({ mobileView: 'tracks', onOpenChange })
+    renderDialog({ mobileView: 'tracks' })
 
     expect(
-      screen.getByRole('button', { name: 'Close match manager' }),
-    ).toBeTruthy()
+      screen.queryByRole('button', { name: 'Close match manager' }),
+    ).toBeNull()
+    expect(document.querySelector('[data-slot="drawer-swipe-handle"]')).toBeTruthy()
     expect(screen.getByText('1 remaining')).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close match manager' }))
-
-    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('places provider search before secondary evidence on mobile', () => {
@@ -271,23 +271,22 @@ describe('StreamingMatchManagerDialog', () => {
     ).toBeTruthy()
   })
 
-  it('returns to export when every track has a provider decision', () => {
-    const onOpenChange = vi.fn()
+  it('keeps resolved tracks editable after review completion', () => {
     renderDialog({
       isReviewComplete: true,
       unresolvedCount: 0,
       resolvedCount: 2,
       matchedCount: 1,
       skippedCount: 1,
-      onOpenChange,
+      currentMatch: trackRows[1].match,
+      selectedTrackStatus: 'matched',
     })
 
-    expect(screen.getByText('Review complete')).toBeTruthy()
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Done — return to export' }),
-    )
-
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(
+      screen.getByLabelText('Change the Spotify match'),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy()
+    expect(screen.queryByText('Review complete')).toBeNull()
   })
 
   it('keeps contextual save recovery beside the action area', () => {
@@ -338,7 +337,7 @@ function renderDialog({
   selectedProvider?: 'SPOTIFY' | null
   selectedTrackStatus?: 'needs-review' | 'matched' | 'skipped'
   mobileView?: 'tracks' | 'match'
-  currentMatch?: (typeof trackRows)[number]['match']
+  currentMatch?: TrackMatch | null
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error'
   saveMessage?: string | null
   searchErrorMessage?: string | null
