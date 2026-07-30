@@ -4,6 +4,7 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useStreamingTrackReview } from './use-streaming-track-review'
 import type { SavedPlaylist } from '@/models/playlists/models'
+import type { StreamingProvider } from '@/models/streaming/models'
 import type { StreamingTrackReviewProvider } from './use-streaming-track-review'
 
 const playlist: SavedPlaylist = {
@@ -36,6 +37,31 @@ afterEach(() => {
 })
 
 describe('useStreamingTrackReview', () => {
+  it('initializes from the first connected provider after connections load', () => {
+    const spotify = createProvider('SPOTIFY', true)
+    const appleMusic = createProvider('APPLE_MUSIC', false)
+    const { result, rerender } = renderHook(
+      ({ isLoadingProviders }) =>
+        useStreamingTrackReview({
+          playlist,
+          providers: [spotify, appleMusic],
+          isLoadingProviders,
+        }),
+      { initialProps: { isLoadingProviders: true } },
+    )
+
+    expect(result.current.selectedProvider).toBeNull()
+
+    rerender({ isLoadingProviders: false })
+
+    expect(result.current.selectedProvider).toBe('SPOTIFY')
+
+    act(() => result.current.selectProvider('SPOTIFY'))
+
+    expect(result.current.selectedProvider).toBe('SPOTIFY')
+    expect(result.current.isOpen).toBe(false)
+  })
+
   it('opens on the first unresolved track and defaults to the review filter', () => {
     const provider = createProvider()
     provider.matches = [
@@ -348,10 +374,14 @@ describe('useStreamingTrackReview', () => {
   })
 })
 
-function createProvider(): StreamingTrackReviewProvider {
+function createProvider(
+  provider: StreamingProvider = 'SPOTIFY',
+  isConnected = true,
+): StreamingTrackReviewProvider {
   return {
-    provider: 'SPOTIFY',
-    label: 'Spotify',
+    provider,
+    label: provider === 'APPLE_MUSIC' ? 'Apple Music' : 'Spotify',
+    isConnected,
     matches: [],
     candidates: [],
     isSearching: false,

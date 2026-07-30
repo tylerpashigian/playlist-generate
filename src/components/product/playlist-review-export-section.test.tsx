@@ -73,6 +73,8 @@ describe('PlaylistReviewExportSection', () => {
           ),
         }}
         exports={{
+          selectedProvider: 'SPOTIFY',
+          onProviderChange: vi.fn(),
           groups: [
             {
               provider: 'SPOTIFY',
@@ -115,6 +117,8 @@ describe('PlaylistReviewExportSection', () => {
           emptyMessage: 'Select an artist first.',
         }}
         exports={{
+          selectedProvider: 'SPOTIFY',
+          onProviderChange: vi.fn(),
           groups: [
             {
               provider: 'SPOTIFY',
@@ -150,6 +154,8 @@ describe('PlaylistReviewExportSection', () => {
           subtitle: '1 track · 6 setlists',
         }}
         exports={{
+          selectedProvider: 'SPOTIFY',
+          onProviderChange: vi.fn(),
           groups: [
             {
               provider: 'SPOTIFY',

@@ -17,6 +17,7 @@ import type {
   GeneratedPlaylist,
   SavedPlaylist,
 } from '@/models/playlists/models'
+import type { StreamingProvider } from '@/models/streaming/models'
 
 export interface PlaylistReviewConfig {
   playlist: GeneratedPlaylist | SavedPlaylist | null
@@ -33,6 +34,8 @@ export interface PlaylistReviewConfig {
 
 export interface PlaylistExportConfig {
   groups: Array<ExportActionGroup>
+  selectedProvider: StreamingProvider | null
+  onProviderChange: (provider: StreamingProvider) => void
   fallback?: ReactNode
 }
 
@@ -99,7 +102,13 @@ export function PlaylistReviewExportSection({
       </div>
 
       <div className="col-span-1 min-w-0 border-t border-border pt-6 sm:pt-8 lg:col-span-2 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-        {exports.fallback ?? <ExportActionsPanel groups={exports.groups} />}
+        {exports.fallback ?? (
+          <ExportActionsPanel
+            groups={exports.groups}
+            selectedProvider={exports.selectedProvider}
+            onProviderChange={exports.onProviderChange}
+          />
+        )}
       </div>
     </section>
   )

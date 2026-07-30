@@ -21,6 +21,7 @@ export interface StreamingTrackReviewRow {
 export interface StreamingTrackReviewProvider {
   provider: StreamingProvider
   label: string
+  isConnected: boolean
   matches: Array<TrackMatch>
   candidates: Array<StreamingTrackCandidate>
   isSearching: boolean
@@ -39,7 +40,6 @@ export type StreamingTrackReviewSaveStatus =
 
 interface ReviewState {
   trackId: string | null
-  provider: StreamingProvider
   filter: StreamingTrackReviewFilter
   trackQuery: string
   mobileView: 'tracks' | 'match'
@@ -59,10 +59,14 @@ const SAVED_FEEDBACK_DURATION_MS = 2400
 export function useStreamingTrackReview({
   playlist,
   providers,
+  isLoadingProviders = false,
 }: {
   playlist: SavedPlaylist | null
   providers: Array<StreamingTrackReviewProvider>
+  isLoadingProviders?: boolean
 }) {
+  const [selectedProviderId, setSelectedProviderId] =
+    useState<StreamingProvider | null>(null)
   const [review, setReview] = useState<ReviewState | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [searchErrorMessage, setSearchErrorMessage] = useState<string | null>(
@@ -73,6 +77,7 @@ export function useStreamingTrackReview({
     message: null,
   })
   const failedSaveActionRef = useRef<FailedSaveAction | null>(null)
+  const hasInitializedProviderRef = useRef(false)
   const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -80,8 +85,8 @@ export function useStreamingTrackReview({
   const providersById = new Map(
     providers.map((provider) => [provider.provider, provider]),
   )
-  const selectedProvider = review
-    ? providersById.get(review.provider)
+  const selectedProvider = selectedProviderId
+    ? providersById.get(selectedProviderId)
     : undefined
   const allTrackRows = getTrackRows(playlist, selectedProvider)
   const visibleTrackRows = review
@@ -102,6 +107,17 @@ export function useStreamingTrackReview({
     [],
   )
 
+  useEffect(() => {
+    if (isLoadingProviders || hasInitializedProviderRef.current) {
+      return
+    }
+
+    setSelectedProviderId(
+      providers.find((provider) => provider.isConnected)?.provider ?? null,
+    )
+    hasInitializedProviderRef.current = true
+  }, [isLoadingProviders, providers])
+
   function openManager(provider: StreamingProvider) {
     const providerReview = getProvider(provider)
     const trackRows = getTrackRows(playlist, providerReview)
@@ -117,9 +133,9 @@ export function useStreamingTrackReview({
 
     clearAllCandidates()
     resetOperationState()
+    setSelectedProviderId(provider)
     setReview({
       trackId: firstTrack.track.id ?? null,
-      provider,
       filter,
       trackQuery: '',
       mobileView: 'match',
@@ -128,7 +144,15 @@ export function useStreamingTrackReview({
   }
 
   function selectProvider(provider: StreamingProvider | null) {
-    if (!review || !provider) {
+    if (!provider) {
+      return
+    }
+
+    setSelectedProviderId(provider)
+    clearAllCandidates()
+    resetOperationState()
+
+    if (!review) {
       return
     }
 
@@ -143,11 +167,8 @@ export function useStreamingTrackReview({
       (row) => row.track.id === review.trackId,
     )
 
-    clearAllCandidates()
-    resetOperationState()
     setReview({
       ...review,
-      provider,
       trackId: selectedTrackRemainsVisible
         ? review.trackId
         : (visibleRows[0]?.track.id ?? null),
@@ -302,7 +323,7 @@ export function useStreamingTrackReview({
     trackRows: visibleTrackRows,
     trackCount: allTrackRows.length,
     selectedTrackStatus: selectedTrackRow?.status ?? null,
-    selectedProvider: review?.provider ?? null,
+    selectedProvider: selectedProviderId,
     filter: review?.filter ?? 'all',
     trackQuery: review?.trackQuery ?? '',
     mobileView: review?.mobileView ?? 'match',

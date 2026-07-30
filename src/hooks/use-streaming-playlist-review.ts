@@ -19,9 +19,18 @@ export function useStreamingPlaylistReview(playlist: SavedPlaylist | null) {
   const review = useStreamingTrackReview({
     playlist,
     providers: [
-      createSpotifyReviewProvider({ spotify, playlistId }),
-      createAppleMusicReviewProvider({ appleMusic, playlistId }),
+      createSpotifyReviewProvider({
+        spotify,
+        playlistId,
+        isConnected: streamingConnections.isSpotifyConnected,
+      }),
+      createAppleMusicReviewProvider({
+        appleMusic,
+        playlistId,
+        isConnected: streamingConnections.isAppleMusicConnected,
+      }),
     ],
+    isLoadingProviders: streamingConnections.isLoading,
   })
 
   const reloadMatches = useCallback(async () => {
@@ -67,13 +76,16 @@ export function useStreamingPlaylistReview(playlist: SavedPlaylist | null) {
 function createAppleMusicReviewProvider({
   appleMusic,
   playlistId,
+  isConnected,
 }: {
   appleMusic: ReturnType<typeof useAppleMusic>
   playlistId: string | null
+  isConnected: boolean
 }): StreamingTrackReviewProvider {
   return {
     provider: 'APPLE_MUSIC',
     label: 'Apple Music',
+    isConnected,
     matches: appleMusic.matches,
     candidates: appleMusic.candidates,
     isSearching: appleMusic.isSearchingTracks,
@@ -105,13 +117,16 @@ function createAppleMusicReviewProvider({
 function createSpotifyReviewProvider({
   spotify,
   playlistId,
+  isConnected,
 }: {
   spotify: ReturnType<typeof useSpotify>
   playlistId: string | null
+  isConnected: boolean
 }): StreamingTrackReviewProvider {
   return {
     provider: 'SPOTIFY',
     label: 'Spotify',
+    isConnected,
     matches: spotify.matches,
     candidates: spotify.candidates,
     isSearching: spotify.isSearchingTracks,

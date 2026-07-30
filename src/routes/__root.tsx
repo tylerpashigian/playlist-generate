@@ -37,10 +37,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Playlist Builder',
+        title: 'Encore',
       },
     ],
     links: [
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
+      },
       {
         rel: 'stylesheet',
         href: appCss,

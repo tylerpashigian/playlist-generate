@@ -96,6 +96,8 @@ describe('ExportActionsPanel', () => {
   it('does not show export readiness metrics before tracks are matched', () => {
     render(
       <ExportActionsPanel
+        selectedProvider="SPOTIFY"
+        onProviderChange={vi.fn()}
         groups={[
           {
             provider: 'SPOTIFY',
@@ -121,6 +123,8 @@ describe('ExportActionsPanel', () => {
   it('shows provider-specific matched and review counts after tracks are matched', () => {
     render(
       <ExportActionsPanel
+        selectedProvider="SPOTIFY"
+        onProviderChange={vi.fn()}
         groups={[
           {
             provider: 'SPOTIFY',
@@ -153,6 +157,8 @@ describe('ExportActionsPanel', () => {
   it('does not allow matching and export to run together', () => {
     const { rerender } = render(
       <ExportActionsPanel
+        selectedProvider="SPOTIFY"
+        onProviderChange={vi.fn()}
         groups={[
           {
             provider: 'SPOTIFY',
@@ -176,6 +182,8 @@ describe('ExportActionsPanel', () => {
 
     rerender(
       <ExportActionsPanel
+        selectedProvider="SPOTIFY"
+        onProviderChange={vi.fn()}
         groups={[
           {
             provider: 'SPOTIFY',
@@ -204,6 +212,8 @@ describe('ExportActionsPanel', () => {
 
     render(
       <ExportActionsPanel
+        selectedProvider="SPOTIFY"
+        onProviderChange={vi.fn()}
         groups={[
           {
             provider: 'SPOTIFY',
@@ -224,8 +234,56 @@ describe('ExportActionsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Manage matches' }))
 
     expect(onManageMatches).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('button', { name: 'Review tracks' })).toBeNull()
+  })
+
+  it('shows only the selected provider actions and metrics', () => {
+    const onProviderChange = vi.fn()
+
+    render(
+      <ExportActionsPanel
+        selectedProvider="APPLE_MUSIC"
+        onProviderChange={onProviderChange}
+        groups={[
+          {
+            provider: 'SPOTIFY',
+            selectedPlaylist: savedPlaylist,
+            matches: [matchedTrack],
+            exportResult: null,
+            isMatching: false,
+            isExporting: false,
+            errorMessage: 'Spotify-only error',
+            onMatchTracks: vi.fn(),
+            onExport: vi.fn(),
+          },
+          {
+            provider: 'APPLE_MUSIC',
+            selectedPlaylist: null,
+            matches: [
+              { ...matchedTrack, provider: 'APPLE_MUSIC' },
+              {
+                ...matchedTrack,
+                provider: 'APPLE_MUSIC',
+                playlistTrackId: 'review-track',
+                status: 'LOW_CONFIDENCE',
+              },
+            ],
+            exportResult: null,
+            isMatching: false,
+            isExporting: false,
+            errorMessage: null,
+            onMatchTracks: vi.fn(),
+            onExport: vi.fn(),
+          },
+        ]}
+      />,
+    )
+
     expect(
-      screen.queryByRole('button', { name: 'Review tracks' }),
-    ).toBeNull()
+      screen.getByRole('combobox', { name: 'Streaming service' }).textContent,
+    ).toContain('Apple Music')
+    expect(screen.queryByText('Spotify-only error')).toBeNull()
+    expect(screen.getByText('Needs review')).toBeTruthy()
+    expect(screen.getAllByText('1')).toHaveLength(2)
   })
 })

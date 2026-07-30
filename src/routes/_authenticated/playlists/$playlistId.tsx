@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { DeletePlaylistDialog } from '@/components/product/delete-playlist-dialog'
+import { PlaylistDetailLoading } from '@/components/product/playlist-detail-loading'
 import { PlaylistReviewExportSection } from '@/components/product/playlist-review-export-section'
 import { NavbarOffset, WithNavbar } from '@/components/product/product-navbar'
 import { RefreshPlaylistDialog } from '@/components/product/refresh-playlist-dialog'
@@ -106,6 +107,9 @@ function PlaylistDetailRoute() {
     appleMusic.isExporting ||
     appleMusic.isSelectingTrack ||
     appleMusic.isSkippingTrack
+  const isLoadingPlaylist =
+    savedPlaylists.selectedPlaylistId !== playlistId ||
+    savedPlaylists.isLoadingSelectedPlaylist
 
   return (
     <WithNavbar>
@@ -126,98 +130,106 @@ function PlaylistDetailRoute() {
       <StreamingPlaylistReviewDialog review={trackReview} />
       <main className="min-h-dvh bg-primary-foreground">
         <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-8 sm:px-8 sm:pt-14">
-          <section className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between sm:pb-8">
-            <div>
-              <Text
-                size="xs"
-                weight="semibold"
-                className="uppercase text-muted-foreground"
-              >
-                Saved playlist
-              </Text>
-              <Heading3 className="mt-3 text-foreground">
-                {playlist?.name ?? 'Playlist detail'}
-              </Heading3>
-              <Text size="sm" className="mt-2 max-w-150 text-muted-foreground">
-                {playlist
-                  ? `${playlist.trackCount} tracks from ${playlist.artist.name}`
-                  : 'Review confidence scores and export status.'}
-              </Text>
-            </div>
-            {playlist ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={hasConflictingAction}
-                  onClick={() => setIsRefreshDialogOpen(true)}
-                >
-                  Refresh from recent setlists
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={hasConflictingAction}
-                  onClick={() => savedPlaylists.requestDeletion(playlist)}
-                >
-                  Delete playlist
-                </Button>
-              </div>
-            ) : null}
-          </section>
+          {isLoadingPlaylist ? (
+            <PlaylistDetailLoading />
+          ) : (
+            <>
+              <section className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between sm:pb-8">
+                <div>
+                  <Text
+                    size="xs"
+                    weight="semibold"
+                    className="uppercase text-muted-foreground"
+                  >
+                    Saved playlist
+                  </Text>
+                  <Heading3 className="mt-3 text-foreground">
+                    {playlist?.name ?? 'Playlist detail'}
+                  </Heading3>
+                  <Text
+                    size="sm"
+                    className="mt-2 max-w-150 text-muted-foreground"
+                  >
+                    {playlist
+                      ? `${playlist.trackCount} tracks from ${playlist.artist.name}`
+                      : 'Review confidence scores and export status.'}
+                  </Text>
+                </div>
+                {playlist ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={hasConflictingAction}
+                      onClick={() => setIsRefreshDialogOpen(true)}
+                    >
+                      Refresh from recent setlists
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={hasConflictingAction}
+                      onClick={() => savedPlaylists.requestDeletion(playlist)}
+                    >
+                      Delete playlist
+                    </Button>
+                  </div>
+                ) : null}
+              </section>
 
-          <div className="">
-            {savedPlaylists.isLoadingSelectedPlaylist ? (
-              <StatusPanel message="Loading playlist" />
-            ) : playlist ? (
-              <PlaylistReviewExportSection
-                review={{
-                  playlist,
-                  title: playlist.artist.name
-                    ? `${playlist.artist.name} recent setlist`
-                    : playlist.name,
-                  subtitle: 'Confidence score and recent-setlist evidence',
-                }}
-                exports={{
-                  groups: [
-                    {
-                      provider: 'SPOTIFY',
-                      selectedPlaylist: playlist,
-                      matches: spotify.matches,
-                      exportResult: spotify.exportResult,
-                      isMatching: spotify.isMatching,
-                      isExporting: spotify.isExporting,
-                      errorMessage: spotify.errorMessage,
-                      onMatchTracks: handleMatch,
-                      onExport: handleExport,
-                      onManageMatches: () => trackReview.openManager('SPOTIFY'),
-                    },
-                    {
-                      provider: 'APPLE_MUSIC',
-                      label: 'Apple Music',
-                      selectedPlaylist: playlist,
-                      matches: appleMusic.matches,
-                      exportResult: appleMusic.exportResult,
-                      isMatching: appleMusic.isMatching,
-                      isExporting: appleMusic.isExporting,
-                      errorMessage: appleMusic.errorMessage,
-                      onMatchTracks: handleAppleMusicMatch,
-                      onExport: handleAppleMusicExport,
-                      onManageMatches: () =>
-                        trackReview.openManager('APPLE_MUSIC'),
-                    },
-                  ],
-                }}
-              />
-            ) : (
-              <StatusPanel
-                message={
-                  savedPlaylists.errorMessage ??
-                  'Playlist not found or still loading.'
-                }
-              />
-            )}
-          </div>
+              {playlist ? (
+                <PlaylistReviewExportSection
+                  review={{
+                    playlist,
+                    title: playlist.artist.name
+                      ? `${playlist.artist.name} recent setlist`
+                      : playlist.name,
+                    subtitle: 'Confidence score and recent-setlist evidence',
+                  }}
+                  exports={{
+                    selectedProvider: trackReview.selectedProvider,
+                    onProviderChange: trackReview.selectProvider,
+                    groups: [
+                      {
+                        provider: 'SPOTIFY',
+                        selectedPlaylist: playlist,
+                        matches: spotify.matches,
+                        exportResult: spotify.exportResult,
+                        isMatching: spotify.isMatching,
+                        isExporting: spotify.isExporting,
+                        errorMessage: spotify.errorMessage,
+                        onMatchTracks: handleMatch,
+                        onExport: handleExport,
+                        onManageMatches: () =>
+                          trackReview.openManager('SPOTIFY'),
+                      },
+                      {
+                        provider: 'APPLE_MUSIC',
+                        label: 'Apple Music',
+                        selectedPlaylist: playlist,
+                        matches: appleMusic.matches,
+                        exportResult: appleMusic.exportResult,
+                        isMatching: appleMusic.isMatching,
+                        isExporting: appleMusic.isExporting,
+                        errorMessage: appleMusic.errorMessage,
+                        onMatchTracks: handleAppleMusicMatch,
+                        onExport: handleAppleMusicExport,
+                        onManageMatches: () =>
+                          trackReview.openManager('APPLE_MUSIC'),
+                      },
+                    ],
+                  }}
+                />
+              ) : (
+                <StatusPanel
+                  message={
+                    savedPlaylists.errorMessage ??
+                    'Playlist not found or still loading.'
+                  }
+                />
+              )}
+            </>
+          )}
         </NavbarOffset>
       </main>
     </WithNavbar>

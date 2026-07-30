@@ -1,4 +1,4 @@
-# Playlist Builder
+# Encore
 
 A TanStack Start app for generating playlists from recent Setlist.fm data,
 scoring songs by confidence, and exporting saved playlists to linked streaming

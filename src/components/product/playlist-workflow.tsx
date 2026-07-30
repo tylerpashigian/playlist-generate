@@ -189,6 +189,8 @@ export function PlaylistWorkflow() {
               },
         }}
         exports={{
+          selectedProvider: trackReview.selectedProvider,
+          onProviderChange: trackReview.selectProvider,
           groups: [
             {
               provider: 'SPOTIFY',
@@ -565,7 +567,7 @@ export function SavedPlaylistsPanel({
         </Link>
       </div>
       {errorMessage ? (
-        <Text size="sm" className="mt-3 text-red-600">
+        <Text size="sm" className="mt-3 text-destructive">
           {errorMessage}
         </Text>
       ) : null}

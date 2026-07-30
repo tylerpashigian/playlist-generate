@@ -91,6 +91,8 @@ vi.mock('@/hooks/use-streaming-playlist-review', () => ({
     },
     review: {
       openManager: vi.fn(),
+      selectedProvider: 'APPLE_MUSIC',
+      selectProvider: vi.fn(),
     },
     resetStreaming: mocks.resetStreaming,
   }),
