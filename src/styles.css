@@ -101,14 +101,22 @@
   --text-base--line-height: 24px;
   --text-lg: 18px;
   --text-lg--line-height: 28px;
-  --text-heading-1: 72px;
-  --text-heading-2: 40px;
-  --text-heading-3: 30px;
-  --text-heading-4: 22px;
-  --leading-heading-1: 76px;
-  --leading-heading-2: 46px;
-  --leading-heading-3: 36px;
-  --leading-heading-4: 28px;
+  --text-heading-1-mobile: 44px;
+  --text-heading-1-tablet: 60px;
+  --text-heading-1-desktop: 76px;
+  --text-heading-2-mobile: 32px;
+  --text-heading-2-tablet: 40px;
+  --text-heading-2-desktop: 48px;
+  --text-heading-3-mobile: 24px;
+  --text-heading-3-tablet: 28px;
+  --text-heading-3-desktop: 34px;
+  --text-heading-4-mobile: 20px;
+  --text-heading-4-tablet: 22px;
+  --text-heading-4-desktop: 24px;
+  --leading-heading-1: 0.98;
+  --leading-heading-2: 1.08;
+  --leading-heading-3: 1.15;
+  --leading-heading-4: 1.25;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -165,31 +173,67 @@
 }
 
 @utility type-heading-1 {
-  font-size: var(--text-heading-1);
+  font-size: var(--text-heading-1-mobile);
   line-height: var(--leading-heading-1);
   font-weight: var(--font-weight-heading-1);
   letter-spacing: var(--tracking-heading-1);
 }
 
 @utility type-heading-2 {
-  font-size: var(--text-heading-2);
+  font-size: var(--text-heading-2-mobile);
   line-height: var(--leading-heading-2);
   font-weight: var(--font-weight-heading-2);
   letter-spacing: var(--tracking-heading-2);
 }
 
 @utility type-heading-3 {
-  font-size: var(--text-heading-3);
+  font-size: var(--text-heading-3-mobile);
   line-height: var(--leading-heading-3);
   font-weight: var(--font-weight-heading-3);
   letter-spacing: var(--tracking-heading-3);
 }
 
 @utility type-heading-4 {
-  font-size: var(--text-heading-4);
+  font-size: var(--text-heading-4-mobile);
   line-height: var(--leading-heading-4);
   font-weight: var(--font-weight-heading-4);
   letter-spacing: var(--tracking-heading-4);
+}
+
+@media (min-width: 48rem) {
+  .type-heading-1 {
+    font-size: var(--text-heading-1-tablet);
+  }
+
+  .type-heading-2 {
+    font-size: var(--text-heading-2-tablet);
+  }
+
+  .type-heading-3 {
+    font-size: var(--text-heading-3-tablet);
+  }
+
+  .type-heading-4 {
+    font-size: var(--text-heading-4-tablet);
+  }
+}
+
+@media (min-width: 64rem) {
+  .type-heading-1 {
+    font-size: var(--text-heading-1-desktop);
+  }
+
+  .type-heading-2 {
+    font-size: var(--text-heading-2-desktop);
+  }
+
+  .type-heading-3 {
+    font-size: var(--text-heading-3-desktop);
+  }
+
+  .type-heading-4 {
+    font-size: var(--text-heading-4-desktop);
+  }
 }
 
 html,
