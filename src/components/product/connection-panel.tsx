@@ -24,6 +24,8 @@ export function ConnectionPanel({
   onDisconnect,
   onDisconnectEverywhere,
   isDisconnectingEverywhere = false,
+  description,
+  layout = 'card',
 }: {
   providerName: string
   connection: StreamingConnection | null
@@ -35,6 +37,8 @@ export function ConnectionPanel({
   onDisconnect: () => Promise<StreamingConnection>
   onDisconnectEverywhere?: () => Promise<unknown>
   isDisconnectingEverywhere?: boolean
+  description?: string
+  layout?: 'card' | 'row'
 }) {
   const [
     isDisconnectEverywhereDialogOpen,
@@ -51,9 +55,21 @@ export function ConnectionPanel({
     (connected && !connection?.canDisconnect)
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <section
+      className={
+        layout === 'row'
+          ? 'py-5 text-card-foreground'
+          : 'rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5'
+      }
+    >
+      <div
+        className={
+          layout === 'row'
+            ? 'flex flex-col gap-4'
+            : 'flex items-start justify-between gap-3'
+        }
+      >
+        <div className="min-w-0">
           <Text size="sm" weight="semibold" className="text-muted-foreground">
             Streaming service
           </Text>
@@ -67,63 +83,78 @@ export function ConnectionPanel({
                   'Connected'
                 : 'Not connected'}
           </Text>
+          {description ? (
+            <Text size="sm" className="mt-2 max-w-90 text-muted-foreground">
+              {description}
+            </Text>
+          ) : null}
+          {errorMessage ? (
+            <Text size="sm" className="mt-3 text-red-600">
+              {errorMessage}
+            </Text>
+          ) : null}
+
+          {disconnectDisabledReason ? (
+            <Text size="sm" className="mt-3 text-muted-foreground">
+              {disconnectDisabledReason}
+            </Text>
+          ) : null}
         </div>
-        <Text
-          as="span"
-          size="xs"
-          weight="medium"
-          className="rounded-full border border-border bg-background px-3 py-1 text-muted-foreground"
-        >
-          {connected ? 'Connected' : 'Disconnected'}
-        </Text>
-      </div>
-
-      {errorMessage ? (
-        <Text size="sm" className="mt-3 text-red-600">
-          {errorMessage}
-        </Text>
-      ) : null}
-
-      {disconnectDisabledReason ? (
-        <Text size="sm" className="mt-3 text-muted-foreground">
-          {disconnectDisabledReason}
-        </Text>
-      ) : null}
-
-      <Button
-        type="button"
-        disabled={disableAction}
-        variant={connected ? 'outline' : 'default'}
-        className="mt-4 w-full"
-        onClick={() => {
-          if (connected && connection?.canDisconnect) {
-            void onDisconnect()
-          } else {
-            void onConnect()
-          }
-        }}
-      >
-        {connected
-          ? isDisconnecting
-            ? 'Disconnecting'
-            : `Disconnect ${providerName}`
-          : isConnecting
-            ? 'Connecting'
-            : `Connect ${providerName}`}
-      </Button>
-      {onDisconnectEverywhere ? (
-        <>
+        {layout === 'card' ? (
+          <Text
+            as="span"
+            size="xs"
+            weight="medium"
+            className="rounded-full border border-border bg-background px-3 py-1 text-muted-foreground"
+          >
+            {connected ? 'Connected' : 'Disconnected'}
+          </Text>
+        ) : null}
+        <div className={layout === 'row' ? 'grid gap-2' : 'contents'}>
           <Button
             type="button"
-            variant="ghost"
-            className="mt-2 w-full"
-            disabled={isLoading || isDisconnecting || isDisconnectingEverywhere}
-            onClick={() => setIsDisconnectEverywhereDialogOpen(true)}
+            disabled={disableAction}
+            variant={connected ? 'outline' : 'default'}
+            className={layout === 'row' ? 'w-full' : 'mt-4 w-full'}
+            onClick={() => {
+              if (connected && connection?.canDisconnect) {
+                void onDisconnect()
+              } else {
+                void onConnect()
+              }
+            }}
           >
-            {isDisconnectingEverywhere
-              ? `Disconnecting ${providerName} everywhere`
-              : `Disconnect ${providerName} everywhere`}
+            {connected
+              ? isDisconnecting
+                ? 'Disconnecting'
+                : `Disconnect ${providerName}`
+              : isConnecting
+                ? 'Connecting'
+                : `Connect ${providerName}`}
           </Button>
+          {onDisconnectEverywhere ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className={
+                layout === 'row'
+                  ? 'h-auto min-h-9 w-full py-1 whitespace-normal'
+                  : 'mt-2 w-full'
+              }
+              disabled={
+                isLoading || isDisconnecting || isDisconnectingEverywhere
+              }
+              onClick={() => setIsDisconnectEverywhereDialogOpen(true)}
+            >
+              {isDisconnectingEverywhere
+                ? `Disconnecting ${providerName} everywhere`
+                : `Disconnect ${providerName} everywhere`}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      {onDisconnectEverywhere ? (
+        <>
           <AlertDialog
             open={isDisconnectEverywhereDialogOpen}
             onOpenChange={setIsDisconnectEverywhereDialogOpen}

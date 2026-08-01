@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Text } from '@/components/ui/typography'
+import { Heading4, Text } from '@/components/ui/typography'
 import { useBreakpointValue } from '@/hooks/use-breakpoint-value'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import type {
@@ -52,6 +52,7 @@ import type {
 interface ProviderOption {
   provider: StreamingProvider
   label: string
+  isConnected: boolean
 }
 
 const matchManagerSurface = {
@@ -201,9 +202,6 @@ function DesktopMatchManagerDialog({
               saveMessage={saveMessage}
               searchErrorMessage={searchErrorMessage}
               saveErrorMessage={saveErrorMessage}
-              unresolvedCount={unresolvedCount}
-              resolvedCount={resolvedCount}
-              trackCount={trackCount}
               nextLabel={nextLabel}
               onProviderChange={onProviderChange}
               onClearCandidates={onClearCandidates}
@@ -339,9 +337,6 @@ function MobileMatchManagerDrawer({
               saveMessage={saveMessage}
               searchErrorMessage={searchErrorMessage}
               saveErrorMessage={saveErrorMessage}
-              unresolvedCount={unresolvedCount}
-              resolvedCount={resolvedCount}
-              trackCount={trackCount}
               nextLabel={nextLabel}
               onProviderChange={onProviderChange}
               onClearCandidates={onClearCandidates}
@@ -581,9 +576,6 @@ function MatchEditor({
   saveMessage,
   searchErrorMessage,
   saveErrorMessage,
-  unresolvedCount,
-  resolvedCount,
-  trackCount,
   nextLabel,
   onProviderChange,
   onClearCandidates,
@@ -610,9 +602,6 @@ function MatchEditor({
   saveMessage: string | null
   searchErrorMessage: string | null
   saveErrorMessage: string | null
-  unresolvedCount: number
-  resolvedCount: number
-  trackCount: number
   nextLabel: string
   onProviderChange: (provider: StreamingProvider | null) => void
   onClearCandidates: () => void
@@ -627,18 +616,33 @@ function MatchEditor({
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 300)
   const searchRef = useRef(onSearch)
+  const selectedProviderOption = providers.find(
+    (provider) => provider.provider === selectedProvider,
+  )
+  const isSelectedProviderConnected = Boolean(
+    selectedProviderOption?.isConnected,
+  )
+  const isConnectionRequired = Boolean(
+    selectedProvider && !isSelectedProviderConnected,
+  )
+  const orderedProviders = [...providers].sort(compareProvidersByConnection)
 
   useEffect(() => {
     searchRef.current = onSearch
   }, [onSearch])
 
   useEffect(() => {
-    if (!track || !selectedProvider || debouncedQuery.trim().length < 2) {
+    if (
+      !track ||
+      !selectedProvider ||
+      !isSelectedProviderConnected ||
+      debouncedQuery.trim().length < 2
+    ) {
       return
     }
 
     void searchRef.current(debouncedQuery.trim()).catch(() => undefined)
-  }, [debouncedQuery, selectedProvider, track])
+  }, [debouncedQuery, isSelectedProviderConnected, selectedProvider, track])
 
   if (!track) {
     return (
@@ -653,15 +657,26 @@ function MatchEditor({
   const context =
     track.isCover && track.originalArtistName
       ? `Performed as a cover of ${track.originalArtistName}.`
-      : 'Select the intended recording from the provider catalog.'
+      : null
   const hasProposedMatch =
     currentMatch?.status === 'LOW_CONFIDENCE' &&
     Boolean(currentMatch.providerTrackId)
-
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="grid gap-4 p-4 sm:p-6">
+          <div className="border-b border-border pb-4">
+            <Text size="xs" weight="semibold" className="text-muted-foreground">
+              Playlist track
+            </Text>
+            <Heading4 className="mt-1 text-foreground">{track.title}</Heading4>
+            {context ? (
+              <Text size="sm" className="mt-1 text-muted-foreground">
+                {context}
+              </Text>
+            ) : null}
+          </div>
+
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[minmax(0,1fr)_12rem] sm:gap-4">
             <div className="grid gap-2">
               <Label htmlFor={selectId}>Streaming service</Label>
@@ -676,7 +691,7 @@ function MatchEditor({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {providers.map((provider) => (
+                  {orderedProviders.map((provider) => (
                     <SelectItem
                       key={provider.provider}
                       value={provider.provider}
@@ -690,115 +705,113 @@ function MatchEditor({
             {status ? <CurrentStatus status={status} /> : null}
           </div>
 
-          <div className="sticky top-0 z-10 grid gap-2 bg-background py-2">
-            <Label htmlFor={inputId}>
-              {currentMatch?.trackName
-                ? `Change the ${providerName ?? 'streaming'} match`
-                : providerName
-                  ? `Search ${providerName}`
-                  : 'Search tracks'}
-            </Label>
-            <Combobox<StreamingTrackCandidate>
-              items={candidates}
-              filteredItems={candidates}
-              filter={null}
-              inputValue={query}
-              onInputValueChange={(nextQuery) => {
-                setQuery(nextQuery)
-
-                if (nextQuery.trim().length < 2) {
-                  onClearCandidates()
-                }
-              }}
-              value={null}
-              onValueChange={(candidate) => {
-                if (candidate) {
-                  void onSelect(candidate).catch(() => undefined)
-                }
-              }}
-              itemToStringLabel={(candidate) => candidate.title}
-              itemToStringValue={(candidate) => candidate.providerTrackId}
-              isItemEqualToValue={(item, value) =>
-                item.providerTrackId === value.providerTrackId
-              }
-            >
-              <ComboboxInput
-                id={inputId}
-                className="w-full"
-                aria-label={
-                  providerName ? `Search ${providerName}` : 'Search tracks'
-                }
-                placeholder={
-                  providerName
-                    ? 'Track title, artist, or album'
-                    : 'Select a streaming service first'
-                }
-                disabled={!selectedProvider || isSaving}
-                showClear
+          {!isConnectionRequired ? (
+            <>
+              <CurrentMatchSummary
+                providerName={providerName}
+                currentMatch={currentMatch}
               />
-              <ComboboxContent>
-                <ComboboxEmpty>
-                  {isSearching
-                    ? `Searching ${providerName ?? 'tracks'}`
-                    : query.trim().length < 2
-                      ? 'Type at least 2 characters.'
-                      : `No ${providerName ?? 'streaming'} tracks found.`}
-                </ComboboxEmpty>
-                <ComboboxList>
-                  {(candidate) => (
-                    <ComboboxItem
-                      key={`${candidate.provider}:${candidate.providerTrackId}`}
-                      value={candidate}
-                      disabled={isSaving}
-                    >
-                      <StreamingTrackCandidateResult candidate={candidate} />
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
-          </div>
 
-          {searchErrorMessage ? (
-            <InlineOperationError
-              message={searchErrorMessage}
-              actionLabel="Retry search"
-              onRetry={() => {
-                const trimmedQuery = query.trim()
-                if (trimmedQuery.length >= 2) {
-                  void onSearch(trimmedQuery).catch(() => undefined)
-                }
-              }}
-            />
-          ) : null}
+              <div className="sticky top-0 z-10 grid gap-2 bg-background py-2">
+                <Label htmlFor={inputId}>
+                  {currentMatch?.trackName
+                    ? `Change the ${providerName ?? 'streaming'} match`
+                    : providerName
+                      ? `Search ${providerName}`
+                      : 'Search tracks'}
+                </Label>
+                <Combobox<StreamingTrackCandidate>
+                  items={candidates}
+                  filteredItems={candidates}
+                  filter={null}
+                  inputValue={query}
+                  onInputValueChange={(nextQuery) => {
+                    setQuery(nextQuery)
 
-          <div>
-            <Text size="xs" weight="semibold" className="text-muted-foreground">
-              {unresolvedCount} unresolved · {resolvedCount} of {trackCount}{' '}
-              resolved
-            </Text>
-            <Text size="lg" weight="semibold" className="mt-1">
-              {track.title}
-            </Text>
-            <Text size="xs" className="mt-1 text-muted-foreground">
-              {context}
-            </Text>
-          </div>
+                    if (nextQuery.trim().length < 2) {
+                      onClearCandidates()
+                    }
+                  }}
+                  value={null}
+                  onValueChange={(candidate) => {
+                    if (candidate) {
+                      void onSelect(candidate).catch(() => undefined)
+                    }
+                  }}
+                  itemToStringLabel={(candidate) => candidate.title}
+                  itemToStringValue={(candidate) => candidate.providerTrackId}
+                  isItemEqualToValue={(item, value) =>
+                    item.providerTrackId === value.providerTrackId
+                  }
+                >
+                  <ComboboxInput
+                    id={inputId}
+                    className="w-full"
+                    aria-label={
+                      providerName ? `Search ${providerName}` : 'Search tracks'
+                    }
+                    placeholder={
+                      providerName
+                        ? 'Track title, artist, or album'
+                        : 'Select a streaming service first'
+                    }
+                    disabled={!selectedProvider || isSaving}
+                    showClear
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>
+                      {isSearching
+                        ? `Searching ${providerName ?? 'tracks'}`
+                        : query.trim().length < 2
+                          ? 'Type at least 2 characters.'
+                          : `No ${providerName ?? 'streaming'} tracks found.`}
+                    </ComboboxEmpty>
+                    <ComboboxList>
+                      {(candidate) => (
+                        <ComboboxItem
+                          key={`${candidate.provider}:${candidate.providerTrackId}`}
+                          value={candidate}
+                          disabled={isSaving}
+                        >
+                          <StreamingTrackCandidateResult
+                            candidate={candidate}
+                          />
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
 
-          <CurrentMatchSummary
-            providerName={providerName}
-            currentMatch={currentMatch}
-          />
-          {saveStatus !== 'idle' && saveStatus !== 'error' && saveMessage ? (
-            <OperationFeedback status={saveStatus} message={saveMessage} />
-          ) : null}
+              {searchErrorMessage ? (
+                <InlineOperationError
+                  message={searchErrorMessage}
+                  actionLabel="Retry search"
+                  onRetry={() => {
+                    const trimmedQuery = query.trim()
+                    if (trimmedQuery.length >= 2) {
+                      void onSearch(trimmedQuery).catch(() => undefined)
+                    }
+                  }}
+                />
+              ) : null}
 
-          <TrackMatchEvidence track={track} currentMatch={currentMatch} />
+              {saveStatus !== 'idle' &&
+              saveStatus !== 'error' &&
+              saveMessage ? (
+                <OperationFeedback status={saveStatus} message={saveMessage} />
+              ) : null}
+            </>
+          ) : (
+            <ConnectionRequiredNotice providerName={providerName} />
+          )}
+
+          <TrackMatchEvidence track={track} />
         </div>
       </div>
 
       <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border p-5 sm:flex sm:justify-end sm:p-6">
-        {saveErrorMessage ? (
+        {!isConnectionRequired && saveErrorMessage ? (
           <div className="col-span-2 mb-2 sm:mb-0 sm:mr-auto">
             <InlineOperationError
               message={saveErrorMessage}
@@ -816,25 +829,29 @@ function MatchEditor({
         >
           Done
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-11 sm:min-h-0"
-          disabled={!selectedProvider || isSaving}
-          onClick={() => void onSkip().catch(() => undefined)}
-        >
-          {providerName ? `Skip on ${providerName}` : 'Skip export'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="col-span-2 min-h-11 sm:min-h-0"
-          disabled={!selectedProvider || isSaving}
-          onClick={onNext}
-        >
-          {nextLabel}
-        </Button>
-        {hasProposedMatch ? (
+        {!isConnectionRequired ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 sm:min-h-0"
+              disabled={!selectedProvider || isSaving}
+              onClick={() => void onSkip().catch(() => undefined)}
+            >
+              {providerName ? `Skip on ${providerName}` : 'Skip export'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="col-span-2 min-h-11 sm:min-h-0"
+              disabled={!selectedProvider || isSaving}
+              onClick={onNext}
+            >
+              {nextLabel}
+            </Button>
+          </>
+        ) : null}
+        {!isConnectionRequired && hasProposedMatch ? (
           <Button
             type="button"
             className="col-span-2 min-h-11 sm:min-h-0"
@@ -849,36 +866,64 @@ function MatchEditor({
   )
 }
 
-function TrackMatchEvidence({
-  track,
-  currentMatch,
+function ConnectionRequiredNotice({
+  providerName,
 }: {
-  track: PlaylistTrack
-  currentMatch: TrackMatch | null
+  providerName: string | null
 }) {
+  const serviceName = providerName ?? 'this streaming service'
+
+  return (
+    <div className="border-y border-border py-4">
+      <Text size="sm" weight="semibold" className="text-foreground">
+        Connect {serviceName} to match tracks
+      </Text>
+      <Text size="sm" className="mt-1 text-muted-foreground">
+        Manage your streaming connections from your profile before matching or
+        exporting.
+      </Text>
+      <Button asChild size="sm" variant="outline" className="mt-3">
+        <a href="/profile">Manage connections</a>
+      </Button>
+    </div>
+  )
+}
+
+function compareProvidersByConnection(
+  left: ProviderOption,
+  right: ProviderOption,
+) {
+  if (left.isConnected !== right.isConnected) {
+    return left.isConnected ? -1 : 1
+  }
+
+  if (left.provider === right.provider) {
+    return 0
+  }
+
+  if (left.provider === 'APPLE_MUSIC') {
+    return -1
+  }
+
+  if (right.provider === 'APPLE_MUSIC') {
+    return 1
+  }
+
+  return left.provider.localeCompare(right.provider)
+}
+
+function TrackMatchEvidence({ track }: { track: PlaylistTrack }) {
   const lastPlayedLabel = track.lastPlayedAt
     ? evidenceDateFormatter.format(track.lastPlayedAt)
     : 'Not available'
-  const automaticMatchConfidence =
-    currentMatch?.matchConfidenceScore == null
-      ? 'Not available'
-      : `${Math.round(currentMatch.matchConfidenceScore)}%`
 
   return (
-    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-border py-3 sm:grid-cols-4 sm:gap-y-3 sm:py-4">
+    <dl className="grid grid-cols-2 gap-x-4 border-y border-border py-3 sm:py-4">
       <EvidenceFact
-        label="Recent appearances"
-        value={`${track.appearanceCount} of ${track.totalSetlistsConsidered}`}
+        label="Setlist appearances"
+        value={`${track.appearanceCount} across ${track.totalSetlistsConsidered}`}
       />
-      <EvidenceFact
-        label="Setlist confidence"
-        value={`${Math.round(track.confidenceScore)}%`}
-      />
-      <EvidenceFact label="Most recent" value={lastPlayedLabel} />
-      <EvidenceFact
-        label="Automatic match confidence"
-        value={automaticMatchConfidence}
-      />
+      <EvidenceFact label="Most recent appearance" value={lastPlayedLabel} />
     </dl>
   )
 }
@@ -909,16 +954,20 @@ function CurrentMatchSummary({
 }) {
   const serviceName = providerName ?? 'streaming service'
   const hasProposedMatch = currentMatch?.status === 'LOW_CONFIDENCE'
+  const matchConfidence =
+    currentMatch?.matchConfidenceScore == null
+      ? null
+      : `${Math.round(currentMatch.matchConfidenceScore)}% automatic confidence`
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 border-b border-border pb-4">
       <Text size="xs" weight="semibold" className="text-muted-foreground">
-        {hasProposedMatch ? 'Proposed' : 'Current'} {serviceName} match
+        {hasProposedMatch ? 'Suggested' : 'Current'} {serviceName} recording
       </Text>
       {currentMatch?.trackName ? (
         <>
           <Text
-            size="sm"
+            size="md"
             weight="semibold"
             className="mt-1 truncate text-foreground"
           >
@@ -927,6 +976,11 @@ function CurrentMatchSummary({
           <Text size="sm" className="mt-1 text-muted-foreground">
             {formatMatchMetadata(currentMatch)}
           </Text>
+          {hasProposedMatch && matchConfidence ? (
+            <Text size="xs" className="mt-2 text-muted-foreground">
+              {matchConfidence} · Review before confirming.
+            </Text>
+          ) : null}
           {currentMatch.externalUrl ? (
             <a
               href={currentMatch.externalUrl}

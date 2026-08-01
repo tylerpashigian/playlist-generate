@@ -78,6 +78,7 @@ describe('PlaylistReviewExportSection', () => {
           groups: [
             {
               provider: 'SPOTIFY',
+              isConnected: true,
               selectedPlaylist: null,
               matches: [],
               exportResult: null,
@@ -122,6 +123,7 @@ describe('PlaylistReviewExportSection', () => {
           groups: [
             {
               provider: 'SPOTIFY',
+              isConnected: true,
               selectedPlaylist: null,
               matches: [],
               exportResult: null,
@@ -159,6 +161,7 @@ describe('PlaylistReviewExportSection', () => {
           groups: [
             {
               provider: 'SPOTIFY',
+              isConnected: true,
               selectedPlaylist: savedPlaylist,
               matches: [],
               exportResult: null,

@@ -317,14 +317,15 @@ states provide the character.
 The fixed shell uses a compact Graphite brand mark, quiet Fog Ink links, and a
 Graphite active state. On scroll it gains a rounded Porcelain surface, Fog
 Border, micro shadow, and backdrop blur. Desktop links hide below 768px; the
-account drawer carries navigation on smaller screens.
+mobile bottom sheet carries a compact Explore list first, followed by a short
+account summary and one direct account action.
 
 ### Dialogs and Drawers
 
 Dialogs use a centered Porcelain layer, a fine Graphite ring, 24px padding, and
 a 100ms fade-and-scale transition. The account drawer uses a 450ms spring-like
-slide, appearing as a bottom sheet on mobile and a right-side panel from the
-medium breakpoint.
+slide: on mobile it is a compact bottom sheet for navigation and one account
+action; from the medium breakpoint it becomes a fuller right-side panel.
 
 ### Playlist Evidence Rows
 

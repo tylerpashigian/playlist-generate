@@ -101,6 +101,7 @@ describe('ExportActionsPanel', () => {
         groups={[
           {
             provider: 'SPOTIFY',
+            isConnected: true,
             selectedPlaylist: null,
             matches: [],
             exportResult: null,
@@ -128,6 +129,7 @@ describe('ExportActionsPanel', () => {
         groups={[
           {
             provider: 'SPOTIFY',
+            isConnected: true,
             selectedPlaylist: null,
             matches: [
               { status: 'MATCHED' },
@@ -162,6 +164,7 @@ describe('ExportActionsPanel', () => {
         groups={[
           {
             provider: 'SPOTIFY',
+            isConnected: true,
             selectedPlaylist: savedPlaylist,
             matches: [matchedTrack],
             exportResult: null,
@@ -187,6 +190,7 @@ describe('ExportActionsPanel', () => {
         groups={[
           {
             provider: 'SPOTIFY',
+            isConnected: true,
             selectedPlaylist: savedPlaylist,
             matches: [matchedTrack],
             exportResult: null,
@@ -207,6 +211,40 @@ describe('ExportActionsPanel', () => {
     ).toBe(true)
   })
 
+  it('prompts for a connection instead of rendering export controls', () => {
+    render(
+      <ExportActionsPanel
+        selectedProvider="SPOTIFY"
+        onProviderChange={vi.fn()}
+        groups={[
+          {
+            provider: 'SPOTIFY',
+            isConnected: false,
+            selectedPlaylist: savedPlaylist,
+            matches: [matchedTrack],
+            exportResult: null,
+            isMatching: false,
+            isExporting: false,
+            errorMessage: null,
+            onMatchTracks: vi.fn(),
+            onExport: vi.fn(),
+            onManageMatches: vi.fn(),
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText('Connect Spotify to export')).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: 'Manage connections' }),
+    ).toHaveProperty('href', expect.stringContaining('/profile'))
+    expect(
+      screen.queryByRole('button', { name: 'Auto-match tracks' }),
+    ).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Manage matches' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Export' })).toBeNull()
+  })
+
   it('opens the consolidated provider match manager', () => {
     const onManageMatches = vi.fn()
 
@@ -217,6 +255,7 @@ describe('ExportActionsPanel', () => {
         groups={[
           {
             provider: 'SPOTIFY',
+            isConnected: true,
             selectedPlaylist: savedPlaylist,
             matches: [],
             exportResult: null,
@@ -247,6 +286,7 @@ describe('ExportActionsPanel', () => {
         groups={[
           {
             provider: 'SPOTIFY',
+            isConnected: true,
             selectedPlaylist: savedPlaylist,
             matches: [matchedTrack],
             exportResult: null,
@@ -258,6 +298,7 @@ describe('ExportActionsPanel', () => {
           },
           {
             provider: 'APPLE_MUSIC',
+            isConnected: true,
             selectedPlaylist: null,
             matches: [
               { ...matchedTrack, provider: 'APPLE_MUSIC' },

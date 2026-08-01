@@ -335,10 +335,13 @@ export function useStreamingTrackReview({
     trackQuery: review?.trackQuery ?? '',
     mobileView: review?.mobileView ?? 'match',
     nextLabel: review?.filter === 'review' ? 'Review later' : 'Next track',
-    providerOptions: providers.map(({ provider, label }) => ({
-      provider,
-      label,
-    })),
+    providerOptions: [...providers]
+      .sort(compareProvidersByConnection)
+      .map(({ provider, label, isConnected }) => ({
+        provider,
+        label,
+        isConnected,
+      })),
     candidates: selectedProvider?.candidates ?? [],
     currentMatch: selectedTrackRow?.match ?? null,
     isSearching: selectedProvider?.isSearching ?? false,
@@ -468,6 +471,29 @@ export function useStreamingTrackReview({
     setSearchErrorMessage(null)
     setSaveFeedback({ status: 'idle', message: null })
   }
+}
+
+function compareProvidersByConnection(
+  left: StreamingTrackReviewProvider,
+  right: StreamingTrackReviewProvider,
+) {
+  if (left.isConnected !== right.isConnected) {
+    return left.isConnected ? -1 : 1
+  }
+
+  if (left.provider === right.provider) {
+    return 0
+  }
+
+  if (left.provider === 'APPLE_MUSIC') {
+    return -1
+  }
+
+  if (right.provider === 'APPLE_MUSIC') {
+    return 1
+  }
+
+  return left.provider.localeCompare(right.provider)
 }
 
 function clearTimer(ref: { current: ReturnType<typeof setTimeout> | null }) {

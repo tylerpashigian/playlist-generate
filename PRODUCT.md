@@ -54,13 +54,12 @@ become available, adjust matches, export them, or delete them.
   product requirement where applicable.
 - Saved playlists, streaming-service connections, track matching, manual match
   review, skipped tracks, and exports are account-scoped.
-- Spotify is the only supported streaming export provider today because its API
-  is presently accessible to the project. It is an implementation milestone,
-  not a product-specific dependency or brand position.
-- The integration model must remain provider-agnostic. Additional services,
-  including Apple Music, are planned for the near future, and the product
-  should be able to present multiple connected services without treating one
-  as the default identity.
+- Apple Music is fully supported for connection, track matching, and playlist
+  export. Spotify is available in beta because Spotify limits how new apps can
+  be made available. Neither provider is Encore's brand identity.
+- The integration model remains provider-agnostic. Additional services may be
+  added over time, and the product should present connected services as peer
+  destinations rather than treating one as the default identity.
 - A user currently has one saved playlist per artist; regenerating that
   artist's playlist can replace the existing draft.
 

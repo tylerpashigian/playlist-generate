@@ -27,7 +27,6 @@ const track: PlaylistPreviewTrack = {
     appearanceCount: 8,
     totalSetlistsConsidered: 10,
     lastPlayedAt: new Date('2026-07-18T00:00:00.000Z'),
-    playedAt: ['18-07-2026'],
   },
 }
 

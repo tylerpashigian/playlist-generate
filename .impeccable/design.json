@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-28T02:41:41Z",
+  "generatedAt": "2026-08-01T04:45:00Z",
   "title": "Design System: Encore",
   "extensions": {
     "colorMeta": {
@@ -335,7 +335,7 @@
       "name": "Product Navigation",
       "kind": "nav",
       "refersTo": "navigation",
-      "description": "The 72px fixed shell with a compact brand mark and quiet navigation.",
+      "description": "The 72px fixed shell with a compact brand mark, quiet desktop links, and an Explore-first compact bottom sheet on mobile.",
       "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\"><span>E</span>Encore</a><div class=\"ds-nav-links\"><a class=\"ds-current\" href=\"#\">Home</a><a href=\"#\">App</a><a href=\"#\">Profile</a></div><button>Login</button></nav>",
       "css": ".ds-nav { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; background: var(--background); color: var(--foreground); font: 500 14px/20px \"Inter Variable\", system-ui, sans-serif; } .ds-nav a { color: var(--muted-foreground); text-decoration: none; transition: color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav a:hover, .ds-nav a:focus-visible, .ds-nav a.ds-current { color: var(--foreground); } .ds-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--foreground) !important; font-weight: 600; } .ds-brand span { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 8px; background: var(--foreground); color: var(--background); font-size: 12px; } .ds-nav-links { display: flex; gap: 32px; } .ds-nav button { height: 32px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); font: inherit; } .ds-nav button:hover { background: var(--muted); } .ds-nav a:focus-visible, .ds-nav button:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }"
     },
