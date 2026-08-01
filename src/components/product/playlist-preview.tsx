@@ -38,7 +38,6 @@ export interface PlaylistPreviewConfidenceEvidence {
   appearanceCount: number
   totalSetlistsConsidered: number
   lastPlayedAt: Date | null
-  playedAt: Array<string>
 }
 
 export function playlistToPreviewTracks({
@@ -77,7 +76,6 @@ export function trackToPreviewTrack(
       appearanceCount: track.appearanceCount,
       totalSetlistsConsidered: track.totalSetlistsConsidered,
       lastPlayedAt: track.lastPlayedAt,
-      playedAt: track.evidence.playedAt,
     },
     isCover: track.isCover,
     isIncluded: track.isIncluded,
@@ -270,10 +268,7 @@ function PlaylistPreviewRow({
               ease: [0.16, 1, 0.3, 1],
             }}
           >
-            <ConfidenceEvidence
-              trackTitle={track.title}
-              evidence={track.confidenceEvidence}
-            />
+            <ConfidenceEvidence evidence={track.confidenceEvidence} />
           </m.div>
         ) : null}
       </AnimatePresence>
@@ -282,35 +277,23 @@ function PlaylistPreviewRow({
 }
 
 function ConfidenceEvidence({
-  trackTitle,
   evidence,
 }: {
-  trackTitle: string
   evidence: PlaylistPreviewConfidenceEvidence
 }) {
   const totalPossibleWeight = getRecencyWeights(
     evidence.totalSetlistsConsidered,
   ).reduce((total, weight) => total + weight, 0)
-  const dateOccurrences = new Map<string, number>()
-  const appearanceDates = evidence.playedAt.map((playedAt) => {
-    const occurrence = (dateOccurrences.get(playedAt) ?? 0) + 1
-    dateOccurrences.set(playedAt, occurrence)
-
-    return {
-      key: `${playedAt}-${occurrence}`,
-      label: formatSetlistDate(playedAt),
-    }
-  })
 
   return (
     <div className="mx-3 border-t border-border pb-4 pt-4">
       <dl className="grid gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border">
         <EvidenceFact
-          label="Recent appearances"
-          value={`${evidence.appearanceCount} of ${evidence.totalSetlistsConsidered} setlists`}
+          label="Setlist appearances"
+          value={`${evidence.appearanceCount} appearances across ${evidence.totalSetlistsConsidered} setlists`}
         />
         <EvidenceFact
-          label="Recency-weighted score"
+          label="Confidence score"
           value={`${formatScore(evidence.weightedScore)} of ${formatScore(totalPossibleWeight)} possible`}
           className="sm:px-4"
         />
@@ -324,35 +307,6 @@ function ConfidenceEvidence({
           className="sm:pl-4"
         />
       </dl>
-
-      <div className="mt-4">
-        <Text size="xs" weight="semibold" className="text-foreground">
-          Known appearances for this song
-        </Text>
-        {appearanceDates.length > 0 ? (
-          <ul
-            aria-label={`Known setlist appearances for ${trackTitle}`}
-            className="mt-1 flex flex-wrap gap-x-3 gap-y-1"
-          >
-            {appearanceDates.map((date) => (
-              <li key={date.key}>
-                <Text as="span" size="sm" className="text-muted-foreground">
-                  {date.label}
-                </Text>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Text size="sm" className="mt-1 text-muted-foreground">
-            Appearance dates are not available for this track.
-          </Text>
-        )}
-      </div>
-
-      <Text size="sm" className="mt-3 max-w-170 text-muted-foreground">
-        These dates show where this song appeared in the setlists Encore
-        analyzed. They are not a complete tour history.
-      </Text>
     </div>
   )
 }
@@ -395,27 +349,6 @@ const scoreFormatter = new Intl.NumberFormat('en-US', {
 
 function formatDate(date: Date) {
   return evidenceDateFormatter.format(date)
-}
-
-function formatSetlistDate(dateLabel: string) {
-  const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(dateLabel)
-
-  if (!match) {
-    return dateLabel
-  }
-
-  const [, day, month, year] = match
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)))
-
-  if (
-    date.getUTCFullYear() !== Number(year) ||
-    date.getUTCMonth() !== Number(month) - 1 ||
-    date.getUTCDate() !== Number(day)
-  ) {
-    return dateLabel
-  }
-
-  return formatDate(date)
 }
 
 function formatScore(score: number) {

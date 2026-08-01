@@ -20,7 +20,6 @@ import { StreamingPlaylistReviewDialog } from './streaming-playlist-review-dialo
 import type { Artist } from '@/models/artists/models'
 import type {
   GeneratedPlaylist,
-  SavedPlaylist,
   SavedPlaylistSummary,
 } from '@/models/playlists/models'
 import {
@@ -33,7 +32,11 @@ import {
 } from '../ui/combobox'
 import { Heading4, Text } from '../ui/typography'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02Icon, Undo02Icon } from '@hugeicons/core-free-icons'
+import {
+  ArrowRight01Icon,
+  Delete02Icon,
+  Undo02Icon,
+} from '@hugeicons/core-free-icons'
 
 export function PlaylistWorkflow() {
   const auth = useAuthSession()
@@ -44,6 +47,8 @@ export function PlaylistWorkflow() {
     spotify,
     appleMusic,
     isSpotifyAvailable,
+    isSpotifyConnected,
+    isAppleMusicConnected,
     review: trackReview,
     resetStreaming,
   } = useStreamingPlaylistReview(savedPlaylists.selectedPlaylist)
@@ -193,10 +198,25 @@ export function PlaylistWorkflow() {
           selectedProvider: trackReview.selectedProvider,
           onProviderChange: trackReview.selectProvider,
           groups: [
+            {
+              provider: 'APPLE_MUSIC',
+              label: 'Apple Music',
+              isConnected: isAppleMusicConnected,
+              selectedPlaylist: savedPlaylists.selectedPlaylist,
+              matches: appleMusic.matches,
+              exportResult: appleMusic.exportResult,
+              isMatching: appleMusic.isMatching,
+              isExporting: appleMusic.isExporting,
+              errorMessage: appleMusic.errorMessage,
+              onMatchTracks: handleAppleMusicMatch,
+              onExport: handleAppleMusicExport,
+              onManageMatches: () => trackReview.openManager('APPLE_MUSIC'),
+            },
             ...(isSpotifyAvailable
               ? [
                   {
                     provider: 'SPOTIFY' as const,
+                    isConnected: isSpotifyConnected,
                     selectedPlaylist: savedPlaylists.selectedPlaylist,
                     matches: spotify.matches,
                     exportResult: spotify.exportResult,
@@ -209,19 +229,6 @@ export function PlaylistWorkflow() {
                   },
                 ]
               : []),
-            {
-              provider: 'APPLE_MUSIC',
-              label: 'Apple Music',
-              selectedPlaylist: savedPlaylists.selectedPlaylist,
-              matches: appleMusic.matches,
-              exportResult: appleMusic.exportResult,
-              isMatching: appleMusic.isMatching,
-              isExporting: appleMusic.isExporting,
-              errorMessage: appleMusic.errorMessage,
-              onMatchTracks: handleAppleMusicMatch,
-              onExport: handleAppleMusicExport,
-              onManageMatches: () => trackReview.openManager('APPLE_MUSIC'),
-            },
           ],
           fallback: auth.isAuthenticated ? undefined : (
             <AuthGatePanel
@@ -537,39 +544,43 @@ function getAuthGateDescription(
 
 export function SavedPlaylistsPanel({
   playlists,
-  selectedPlaylist,
-  selectedPlaylistId,
   isLoading,
   errorMessage,
-  onSelect,
   onDelete,
 }: {
   playlists: Array<SavedPlaylistSummary>
-  selectedPlaylist?: SavedPlaylist | null
-  selectedPlaylistId?: string | null
   isLoading: boolean
   errorMessage: string | null
-  onSelect?: (playlistId: string | null) => void
   onDelete?: (playlist: SavedPlaylistSummary) => void
 }) {
+  const orderedPlaylists = [...playlists].sort(
+    (left, right) => right.updatedAt.getTime() - left.updatedAt.getTime(),
+  )
+  const continuingPlaylist =
+    orderedPlaylists.length > 0
+      ? (orderedPlaylists.find((playlist) => playlist.status === 'DRAFT') ??
+        orderedPlaylists[0])
+      : null
+  const remainingPlaylists = orderedPlaylists.filter(
+    (playlist) => playlist.id !== continuingPlaylist?.id,
+  )
+
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
-      <div className="flex items-center justify-between gap-3">
+    <section className="text-card-foreground">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <Text
             size="xs"
             weight="semibold"
             className="uppercase text-muted-foreground"
           >
-            Drafts
+            Your concert prep
           </Text>
-          <Heading4 className="mt-1 text-foreground">Saved playlists</Heading4>
+          <Heading4 className="mt-1 text-foreground">Your playlists</Heading4>
         </div>
-        <Link to="/profile">
-          <Text as="span" size="sm" weight="medium">
-            Profile
-          </Text>
-        </Link>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/app">Build a playlist</Link>
+        </Button>
       </div>
       {errorMessage ? (
         <Text size="sm" className="mt-3 text-destructive">
@@ -577,66 +588,112 @@ export function SavedPlaylistsPanel({
         </Text>
       ) : null}
       {isLoading ? (
-        <Text size="sm" className="mt-3 text-muted-foreground">
+        <Text size="sm" className="mt-5 text-muted-foreground">
           Loading playlists
         </Text>
       ) : null}
-      <div className="mt-4 grid gap-2">
-        {playlists.map((playlist) => (
-          <div
-            key={playlist.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
-          >
-            <button
-              type="button"
-              className="grid flex-1 gap-1 text-left"
-              onClick={() => onSelect?.(playlist.id)}
-            >
-              <Text as="span" size="sm" weight="semibold" className="block">
-                {playlist.name}
-              </Text>
-              <Text as="span" size="xs" className="block text-muted-foreground">
-                {playlist.trackCount} tracks - {playlist.status}
-              </Text>
-              {playlist.id === selectedPlaylistId ? (
-                <Text
-                  as="span"
-                  size="xs"
-                  weight="medium"
-                  className="text-primary"
-                >
-                  Selected
-                </Text>
-              ) : null}
-            </button>
-            <Link
-              to="/playlists/$playlistId"
-              params={{ playlistId: playlist.id }}
-              className="rounded-md px-2 py-1 no-underline hover:bg-muted"
-            >
-              <Text as="span" size="xs" weight="semibold">
-                Open
-              </Text>
+      {!isLoading && !continuingPlaylist ? (
+        <div className="mt-5 rounded-2xl border border-border bg-card px-5 py-7 sm:px-6">
+          <Heading4 className="text-foreground">Start with an artist</Heading4>
+          <Text size="sm" className="mt-2 max-w-105 text-muted-foreground">
+            Build a playlist from recent setlist history, then return here to
+            review it and export when it is ready.
+          </Text>
+          <Button className="mt-5" asChild>
+            <Link to="/app">
+              Build your first playlist
+              <HugeiconsIcon icon={ArrowRight01Icon} />
             </Link>
-            {onDelete ? (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                aria-label={`Delete ${playlist.name}`}
-                onClick={() => onDelete(playlist)}
+          </Button>
+        </div>
+      ) : null}
+      {continuingPlaylist ? (
+        <div className="mt-5 rounded-2xl border border-border bg-card p-4 sm:p-5">
+          <div className="rounded-xl bg-muted/55 p-4 sm:p-5">
+            <Text size="xs" weight="semibold" className="text-muted-foreground">
+              Continue reviewing
+            </Text>
+            <Heading4 className="mt-2 text-foreground">
+              {continuingPlaylist.name}
+            </Heading4>
+            <Text size="sm" className="mt-1 text-muted-foreground">
+              {continuingPlaylist.artist.name} · {continuingPlaylist.trackCount}{' '}
+              tracks · {getPlaylistStatusLabel(continuingPlaylist.status)}
+            </Text>
+            <Text size="sm" className="mt-3 max-w-105 text-muted-foreground">
+              Review the evidence and track matches before exporting to a
+              connected service.
+            </Text>
+            <Button className="mt-5" asChild>
+              <Link
+                to="/playlists/$playlistId"
+                params={{ playlistId: continuingPlaylist.id }}
               >
-                <HugeiconsIcon icon={Delete02Icon} />
-              </Button>
-            ) : null}
+                Continue reviewing
+                <HugeiconsIcon icon={ArrowRight01Icon} />
+              </Link>
+            </Button>
           </div>
-        ))}
-      </div>
-      {selectedPlaylist ? (
-        <Text size="xs" className="mt-4 text-muted-foreground">
-          Selected for Spotify: {selectedPlaylist.name}
-        </Text>
+
+          {remainingPlaylists.length > 0 ? (
+            <div className="mt-5 border-t border-border pt-5">
+              <Text size="sm" weight="semibold" className="text-foreground">
+                More playlists
+              </Text>
+              <div className="mt-2 divide-y divide-border">
+                {remainingPlaylists.map((playlist) => (
+                  <div
+                    key={playlist.id}
+                    className="flex items-center justify-between gap-3 py-3"
+                  >
+                    <div className="min-w-0">
+                      <Text size="sm" weight="semibold" className="truncate">
+                        {playlist.name}
+                      </Text>
+                      <Text size="xs" className="mt-1 text-muted-foreground">
+                        {playlist.artist.name} · {playlist.trackCount} tracks ·{' '}
+                        {getPlaylistStatusLabel(playlist.status)}
+                      </Text>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link
+                          to="/playlists/$playlistId"
+                          params={{ playlistId: playlist.id }}
+                        >
+                          Open
+                        </Link>
+                      </Button>
+                      {onDelete ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Delete ${playlist.name}`}
+                          onClick={() => onDelete(playlist)}
+                        >
+                          <HugeiconsIcon icon={Delete02Icon} />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : null}
     </section>
   )
+}
+
+function getPlaylistStatusLabel(status: SavedPlaylistSummary['status']) {
+  switch (status) {
+    case 'DRAFT':
+      return 'In review'
+    case 'EXPORTED':
+      return 'Exported'
+    case 'ARCHIVED':
+      return 'Archived'
+  }
 }

@@ -20,7 +20,6 @@ const tracks: Array<PlaylistPreviewTrack> = [
       appearanceCount: 8,
       totalSetlistsConsidered: 10,
       lastPlayedAt: new Date('2026-07-18T00:00:00.000Z'),
-      playedAt: ['18-07-2026', '16-07-2026', 'unparsed-date'],
     },
   },
   {
@@ -35,7 +34,6 @@ const tracks: Array<PlaylistPreviewTrack> = [
       appearanceCount: 3,
       totalSetlistsConsidered: 10,
       lastPlayedAt: null,
-      playedAt: [],
     },
   },
 ]
@@ -70,11 +68,10 @@ describe('PlaylistPreview confidence evidence', () => {
       appearanceCount: 8,
       totalSetlistsConsidered: 10,
       lastPlayedAt: new Date('2026-07-18T00:00:00.000Z'),
-      playedAt: ['18-07-2026'],
     })
   })
 
-  it('reveals only track-level evidence and allows comparison across rows', async () => {
+  it('reveals concise track-level evidence and allows comparison across rows', async () => {
     render(<PlaylistPreview tracks={tracks} showConfidenceEvidence />)
 
     const innerbloomTrigger = screen.getByRole('button', {
@@ -85,7 +82,7 @@ describe('PlaylistPreview confidence evidence', () => {
     })
 
     expect(innerbloomTrigger.getAttribute('aria-expanded')).toBe('false')
-    expect(screen.queryByText('47 of 55 possible')).toBeNull()
+    expect(screen.queryByText('Setlist appearances')).toBeNull()
 
     fireEvent.click(innerbloomTrigger)
 
@@ -94,30 +91,27 @@ describe('PlaylistPreview confidence evidence', () => {
         name: '85% confidence. Hide evidence for Innerbloom',
       }),
     ).toBeTruthy()
-    expect(await screen.findByText('47 of 55 possible')).toBeTruthy()
-    expect(screen.getByText('8 of 10 setlists')).toBeTruthy()
-    expect(screen.getAllByText('Jul 18, 2026')).toHaveLength(2)
-    expect(screen.getByText('Jul 16, 2026')).toBeTruthy()
-    expect(screen.getByText('unparsed-date')).toBeTruthy()
-    expect(screen.getByText(/not a complete tour history/)).toBeTruthy()
+    expect(
+      await screen.findByText('8 appearances across 10 setlists'),
+    ).toBeTruthy()
+    expect(screen.getByText('47 of 55 possible')).toBeTruthy()
+    expect(screen.getByText('Jul 18, 2026')).toBeTruthy()
+    expect(screen.queryByText('Jul 16, 2026')).toBeNull()
+    expect(screen.queryByText('unparsed-date')).toBeNull()
 
-    expect(screen.getByText('Recent appearances').className).toContain(
+    expect(screen.getByText('Setlist appearances').className).toContain(
       'text-xs',
     )
-    expect(screen.getByText('Jul 16, 2026').className).toContain('text-sm')
-    expect(
-      screen.getByText(/not a complete tour history/).className,
-    ).toContain('text-sm')
+    expect(screen.getByText('Jul 18, 2026').className).toContain('text-sm')
 
     fireEvent.click(surrenderTrigger)
 
-    expect(await screen.findByText('16 of 55 possible')).toBeTruthy()
-    expect(screen.getByText('3 of 10 setlists')).toBeTruthy()
-    expect(screen.getByText('Not available')).toBeTruthy()
     expect(
-      screen.getByText('Appearance dates are not available for this track.'),
+      await screen.findByText('3 appearances across 10 setlists'),
     ).toBeTruthy()
-    expect(screen.getByText('47 of 55 possible')).toBeTruthy()
+    expect(screen.getByText('16 of 55 possible')).toBeTruthy()
+    expect(screen.getByText('Not available')).toBeTruthy()
+    expect(screen.getByText('8 appearances across 10 setlists')).toBeTruthy()
   })
 
   it('keeps the confidence score non-interactive when evidence is disabled', () => {

@@ -135,6 +135,7 @@ function MetricCard({
 export interface ExportActionGroup {
   provider: StreamingProvider
   label?: string
+  isConnected: boolean
   selectedPlaylist: SavedPlaylist | null
   matches: Array<TrackMatch>
   exportResult: PlaylistExportResult | null
@@ -157,10 +158,10 @@ export function ExportActionsPanel({
   onProviderChange: (provider: StreamingProvider) => void
   className?: string
 }) {
+  const orderedGroups = [...groups].sort(compareGroupsByConnection)
   const selectedGroup =
     groups.find((group) => group.provider === selectedProvider) ??
-    groups.find((group) => group.provider === 'SPOTIFY') ??
-    groups.at(0)
+    orderedGroups.at(0)
 
   return (
     <section className={cn('min-w-0 text-card-foreground', className)}>
@@ -195,7 +196,7 @@ export function ExportActionsPanel({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {groups.map((group) => (
+                {orderedGroups.map((group) => (
                   <SelectItem key={group.provider} value={group.provider}>
                     {group.label ?? formatProviderName(group.provider)}
                   </SelectItem>
@@ -231,6 +232,10 @@ function ExportActionProviderGroup({ group }: { group: ExportActionGroup }) {
   } = group
   const metrics = getExportReadinessMetrics(matches, selectedPlaylist?.tracks)
   const providerName = label ?? formatProviderName(provider)
+
+  if (group.isConnected === false) {
+    return <ConnectionRequiredNotice providerName={providerName} />
+  }
 
   return (
     <section className="pt-5">
@@ -317,6 +322,53 @@ function ExportActionProviderGroup({ group }: { group: ExportActionGroup }) {
       ) : null}
     </section>
   )
+}
+
+function ConnectionRequiredNotice({ providerName }: { providerName: string }) {
+  return (
+    <section className="border-y border-border py-5">
+      <Text size="sm" weight="semibold" className="text-foreground">
+        Connect {providerName} to export
+      </Text>
+      <Text size="sm" className="mt-1 text-muted-foreground">
+        Connect your account from Profile to match tracks and export this
+        playlist.
+      </Text>
+      <Button asChild size="sm" variant="outline" className="mt-3">
+        <a href="/profile">Manage connections</a>
+      </Button>
+    </section>
+  )
+}
+
+function compareGroupsByConnection(
+  left: ExportActionGroup,
+  right: ExportActionGroup,
+) {
+  if (left.isConnected !== right.isConnected) {
+    return left.isConnected ? -1 : 1
+  }
+
+  return compareProviderNames(left.provider, right.provider)
+}
+
+function compareProviderNames(
+  left: StreamingProvider,
+  right: StreamingProvider,
+) {
+  if (left === right) {
+    return 0
+  }
+
+  if (left === 'APPLE_MUSIC') {
+    return -1
+  }
+
+  if (right === 'APPLE_MUSIC') {
+    return 1
+  }
+
+  return left.localeCompare(right)
 }
 
 function formatProviderName(provider: StreamingProvider) {

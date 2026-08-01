@@ -8,20 +8,24 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { label: 'Home', to: '/' },
   { label: 'App', to: '/app' },
-  { label: 'Profile', to: '/profile' },
+  { label: 'About', to: '/about' },
 ] as const
 
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <Link
       to="/"
+      aria-label="Encore home"
       className="inline-flex items-center gap-2 text-foreground no-underline"
     >
-      <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background">
-        <Text as="span" size="xs" weight="semibold">
-          E
-        </Text>
-      </span>
+      <img
+        src="/brand/encore-logo.svg"
+        alt=""
+        aria-hidden="true"
+        width={32}
+        height={32}
+        className="size-8 shrink-0 object-contain dark:invert"
+      />
       {!compact ? (
         <Text as="span" size="sm" weight="semibold">
           Encore

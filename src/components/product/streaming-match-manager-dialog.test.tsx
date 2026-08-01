@@ -133,6 +133,24 @@ describe('StreamingMatchManagerDialog', () => {
     ).toBe(false)
   })
 
+  it('prompts for a connection instead of rendering match controls', () => {
+    renderDialog({
+      providers: [
+        { provider: 'SPOTIFY', label: 'Spotify', isConnected: false },
+        { provider: 'APPLE_MUSIC', label: 'Apple Music', isConnected: true },
+      ],
+    })
+
+    expect(screen.getByText('Connect Spotify to match tracks')).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: 'Manage connections' }),
+    ).toHaveProperty('href', expect.stringContaining('/profile'))
+    expect(
+      screen.queryByPlaceholderText('Track title, artist, or album'),
+    ).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Skip on Spotify' })).toBeNull()
+  })
+
   it('offers confirmation for a proposed low-confidence match', () => {
     const onConfirm = vi.fn().mockResolvedValue(undefined)
     renderDialog({
@@ -152,7 +170,14 @@ describe('StreamingMatchManagerDialog', () => {
       onConfirm,
     })
 
-    expect(screen.getByText('Proposed Spotify match')).toBeTruthy()
+    expect(screen.getByText('Playlist track')).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { level: 4, name: 'Generated title' }),
+    ).toBeTruthy()
+    expect(screen.getByText('Suggested Spotify recording')).toBeTruthy()
+    expect(
+      screen.getByText('62% automatic confidence · Review before confirming.'),
+    ).toBeTruthy()
     expect(
       screen.getByPlaceholderText('Track title, artist, or album'),
     ).toBeTruthy()
@@ -232,14 +257,12 @@ describe('StreamingMatchManagerDialog', () => {
 
     const manager = within(screen.getByTestId('desktop-match-manager'))
 
-    expect(manager.getByText('Recent appearances')).toBeTruthy()
-    expect(manager.getByText('5 of 10')).toBeTruthy()
-    expect(manager.getByText('Setlist confidence')).toBeTruthy()
-    expect(manager.getByText('75%')).toBeTruthy()
-    expect(manager.getByText('Most recent')).toBeTruthy()
+    expect(manager.getByText('Setlist appearances')).toBeTruthy()
+    expect(manager.getByText('5 across 10')).toBeTruthy()
+    expect(manager.getByText('Most recent appearance')).toBeTruthy()
     expect(manager.getByText('Jul 1, 2026')).toBeTruthy()
-    expect(manager.getByText('Automatic match confidence')).toBeTruthy()
-    expect(manager.getByText('95%')).toBeTruthy()
+    expect(manager.queryByText('Setlist confidence')).toBeNull()
+    expect(manager.queryByText('Automatic match confidence')).toBeNull()
     expect(
       manager.getByPlaceholderText('Track title, artist, or album'),
     ).toBeTruthy()
@@ -266,7 +289,7 @@ describe('StreamingMatchManagerDialog', () => {
     const searchInput = mobile.getByPlaceholderText(
       'Track title, artist, or album',
     )
-    const evidenceLabel = mobile.getByText('Recent appearances')
+    const evidenceLabel = mobile.getByText('Setlist appearances')
 
     expect(
       searchInput.compareDocumentPosition(evidenceLabel) &
@@ -316,6 +339,7 @@ function renderDialog({
   onOpenChange = vi.fn(),
   onRetrySave = vi.fn().mockResolvedValue(undefined),
   selectedProvider = 'SPOTIFY',
+  providers = [{ provider: 'SPOTIFY', label: 'Spotify', isConnected: true }],
   selectedTrackStatus = 'needs-review',
   mobileView = 'match',
   currentMatch = null,
@@ -336,6 +360,11 @@ function renderDialog({
   onOpenChange?: (open: boolean) => void
   onRetrySave?: () => Promise<void>
   selectedProvider?: 'SPOTIFY' | null
+  providers?: Array<{
+    provider: 'SPOTIFY' | 'APPLE_MUSIC'
+    label: string
+    isConnected: boolean
+  }>
   selectedTrackStatus?: 'needs-review' | 'matched' | 'skipped'
   mobileView?: 'tracks' | 'match'
   currentMatch?: TrackMatch | null
@@ -356,7 +385,7 @@ function renderDialog({
       trackRows={trackRows}
       trackCount={trackRows.length}
       selectedTrackStatus={selectedTrackStatus}
-      providers={[{ provider: 'SPOTIFY', label: 'Spotify' }]}
+      providers={providers}
       selectedProvider={selectedProvider}
       filter="all"
       trackQuery=""

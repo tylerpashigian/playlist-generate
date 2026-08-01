@@ -54,8 +54,8 @@ function ProfileRoute() {
       />
       <main className="min-h-dvh bg-primary-foreground">
         <NavbarOffset className="mx-auto max-w-280 px-5 pb-16 pt-14 sm:px-8">
-          <section className="flex flex-col gap-4 border-b border-border pb-8 md:flex-row md:items-end md:justify-between">
-            <div>
+          <section className="flex flex-col gap-5 border-b border-border pb-8 md:flex-row md:items-end md:justify-between">
+            <div className="min-w-0">
               <Text
                 size="xs"
                 weight="semibold"
@@ -63,13 +63,48 @@ function ProfileRoute() {
               >
                 Profile
               </Text>
-              <Heading3 className="mt-3 text-foreground">
-                Account and connections
-              </Heading3>
-              <Text size="sm" className="mt-2 max-w-150 text-muted-foreground">
-                Manage your app account, saved playlists, and linked streaming
-                services.
+              <Heading3 className="mt-3 text-foreground">{user.name}</Heading3>
+              <Text size="sm" className="mt-2 text-muted-foreground">
+                {user.email}
               </Text>
+              {!user.emailVerified ? (
+                <div className="mt-4 max-w-150 border-l border-border pl-3">
+                  <Text size="sm" weight="semibold" className="text-foreground">
+                    Verify your email to add another sign-in method.
+                  </Text>
+                  {verificationSent ? (
+                    <Text size="sm" className="mt-1 text-green-700">
+                      Verification email sent. Check your inbox.
+                    </Text>
+                  ) : null}
+                  {auth.authError ? (
+                    <Text size="sm" className="mt-1 text-destructive">
+                      {auth.authError}
+                    </Text>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    disabled={auth.isSendingVerificationEmail}
+                    onClick={async () => {
+                      const sent = await auth.resendVerificationEmail(
+                        user.email,
+                        '/profile',
+                      )
+
+                      if (sent) {
+                        setVerificationSent(true)
+                      }
+                    }}
+                  >
+                    {auth.isSendingVerificationEmail
+                      ? 'Sending'
+                      : 'Send verification email'}
+                  </Button>
+                </div>
+              ) : null}
             </div>
             <Button
               type="button"
@@ -85,111 +120,116 @@ function ProfileRoute() {
             </Button>
           </section>
 
-          <section className="grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_368px]">
-            <SavedPlaylistsPanel
-              playlists={savedPlaylists.playlists}
-              selectedPlaylist={savedPlaylists.selectedPlaylist}
-              selectedPlaylistId={savedPlaylists.selectedPlaylistId}
-              isLoading={savedPlaylists.isLoadingPlaylists}
-              errorMessage={savedPlaylists.errorMessage}
-              onSelect={savedPlaylists.selectPlaylist}
-              onDelete={savedPlaylists.requestDeletion}
-            />
+          <section className="grid gap-8 pt-8 lg:grid-cols-3 lg:gap-10">
+            <div className="lg:col-span-2">
+              <SavedPlaylistsPanel
+                playlists={savedPlaylists.playlists}
+                isLoading={savedPlaylists.isLoadingPlaylists}
+                errorMessage={savedPlaylists.errorMessage}
+                onDelete={savedPlaylists.requestDeletion}
+              />
+            </div>
 
-            <div className="grid h-fit gap-4">
-              <section className="rounded-2xl border border-border bg-card p-4 text-card-foreground sm:p-5">
+            <aside className="h-fit rounded-2xl border border-border bg-card px-4 text-card-foreground sm:px-5">
+              <div className="border-b border-border py-5">
                 <Text
-                  size="sm"
+                  size="xs"
                   weight="semibold"
-                  className="text-muted-foreground"
+                  className="uppercase text-muted-foreground"
                 >
-                  Profile
+                  Ready to export
                 </Text>
                 <Heading4 className="mt-1 text-foreground">
-                  {user.name}
+                  Connections
                 </Heading4>
-                <Text size="sm" className="mt-1 text-muted-foreground">
-                  {user.email}
+                <Text size="sm" className="mt-2 text-muted-foreground">
+                  Connect a streaming service to export playlists after review.
                 </Text>
-                {!user.emailVerified ? (
-                  <div className="mt-4 border-t border-border pt-4">
+              </div>
+              <div className="divide-y divide-border">
+                <ConnectionPanel
+                  layout="row"
+                  providerName="Apple Music"
+                  description="Apple Music is fully supported for playlist export."
+                  connection={streamingConnections.appleMusicConnection}
+                  isLoading={streamingConnections.isLoading}
+                  isConnecting={streamingConnections.isConnectingAppleMusic}
+                  isDisconnecting={
+                    streamingConnections.isDisconnectingAppleMusic
+                  }
+                  errorMessage={streamingConnections.appleMusicErrorMessage}
+                  onConnect={streamingConnections.connectAppleMusic}
+                  onDisconnect={() =>
+                    streamingConnections.disconnect('APPLE_MUSIC')
+                  }
+                  onDisconnectEverywhere={
+                    streamingConnections.disconnectAllAppleMusic
+                  }
+                  isDisconnectingEverywhere={
+                    streamingConnections.isDisconnectingAllAppleMusic
+                  }
+                />
+                {streamingConnections.isSpotifyAvailable ? (
+                  <ConnectionPanel
+                    layout="row"
+                    providerName="Spotify"
+                    description="Spotify is in beta because Spotify currently limits Encore to invited testers."
+                    connection={streamingConnections.spotifyConnection}
+                    isLoading={streamingConnections.isLoading}
+                    isConnecting={streamingConnections.isConnectingSpotify}
+                    isDisconnecting={
+                      streamingConnections.isDisconnectingSpotify
+                    }
+                    errorMessage={streamingConnections.spotifyErrorMessage}
+                    onConnect={streamingConnections.connectSpotify}
+                    onDisconnect={() =>
+                      streamingConnections.disconnect('SPOTIFY')
+                    }
+                  />
+                ) : (
+                  <section className="py-5">
                     <Text
                       size="sm"
                       weight="semibold"
-                      className="text-foreground"
+                      className="text-muted-foreground"
                     >
-                      Verify your email
+                      Streaming service
                     </Text>
-                    <Text size="sm" className="mt-1 text-muted-foreground">
-                      Verify your email before adding another sign-in method.
-                    </Text>
-                    {verificationSent ? (
-                      <Text size="sm" className="mt-3 text-green-700">
-                        Verification email sent. Check your inbox.
+                    <Heading4 className="mt-1 text-foreground">
+                      Spotify
+                    </Heading4>
+                    {streamingConnections.connectionsError ? (
+                      <>
+                        <Text size="sm" className="mt-2 text-destructive">
+                          {streamingConnections.spotifyErrorMessage ??
+                            'Spotify availability could not be checked.'}
+                        </Text>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-3"
+                          disabled={streamingConnections.isRefreshing}
+                          onClick={() => {
+                            void streamingConnections.refreshConnections()
+                          }}
+                        >
+                          {streamingConnections.isRefreshing
+                            ? 'Checking'
+                            : 'Try again'}
+                        </Button>
+                      </>
+                    ) : (
+                      <Text size="sm" className="mt-2 text-muted-foreground">
+                        {streamingConnections.isLoading
+                          ? 'Checking Spotify availability.'
+                          : 'We want to support Spotify for everyone, but Spotify currently limits Encore to invited beta testers. There is no setting in Encore or your Spotify account that can enable it.'}
                       </Text>
-                    ) : null}
-                    {auth.authError ? (
-                      <Text size="sm" className="mt-3 text-destructive">
-                        {auth.authError}
-                      </Text>
-                    ) : null}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 w-full"
-                      disabled={auth.isSendingVerificationEmail}
-                      onClick={async () => {
-                        const sent = await auth.resendVerificationEmail(
-                          user.email,
-                          '/profile',
-                        )
-
-                        if (sent) {
-                          setVerificationSent(true)
-                        }
-                      }}
-                    >
-                      {auth.isSendingVerificationEmail
-                        ? 'Sending'
-                        : 'Send verification email'}
-                    </Button>
-                  </div>
-                ) : null}
-              </section>
-
-              {streamingConnections.isSpotifyAvailable ? (
-                <ConnectionPanel
-                  providerName="Spotify"
-                  connection={streamingConnections.spotifyConnection}
-                  isLoading={streamingConnections.isLoading}
-                  isConnecting={streamingConnections.isConnectingSpotify}
-                  isDisconnecting={streamingConnections.isDisconnectingSpotify}
-                  errorMessage={streamingConnections.spotifyErrorMessage}
-                  onConnect={streamingConnections.connectSpotify}
-                  onDisconnect={() =>
-                    streamingConnections.disconnect('SPOTIFY')
-                  }
-                />
-              ) : null}
-              <ConnectionPanel
-                providerName="Apple Music"
-                connection={streamingConnections.appleMusicConnection}
-                isLoading={streamingConnections.isLoading}
-                isConnecting={streamingConnections.isConnectingAppleMusic}
-                isDisconnecting={streamingConnections.isDisconnectingAppleMusic}
-                errorMessage={streamingConnections.appleMusicErrorMessage}
-                onConnect={streamingConnections.connectAppleMusic}
-                onDisconnect={() =>
-                  streamingConnections.disconnect('APPLE_MUSIC')
-                }
-                onDisconnectEverywhere={
-                  streamingConnections.disconnectAllAppleMusic
-                }
-                isDisconnectingEverywhere={
-                  streamingConnections.isDisconnectingAllAppleMusic
-                }
-              />
-            </div>
+                    )}
+                  </section>
+                )}
+              </div>
+            </aside>
           </section>
         </NavbarOffset>
       </main>

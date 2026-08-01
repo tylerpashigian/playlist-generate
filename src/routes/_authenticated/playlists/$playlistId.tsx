@@ -28,6 +28,8 @@ function PlaylistDetailRoute() {
     spotify,
     appleMusic,
     isSpotifyAvailable,
+    isSpotifyConnected,
+    isAppleMusicConnected,
     review: trackReview,
     reloadMatches,
   } = useStreamingPlaylistReview(playlist)
@@ -195,6 +197,7 @@ function PlaylistDetailRoute() {
                         ? [
                             {
                               provider: 'SPOTIFY' as const,
+                              isConnected: isSpotifyConnected,
                               selectedPlaylist: playlist,
                               matches: spotify.matches,
                               exportResult: spotify.exportResult,
@@ -211,6 +214,7 @@ function PlaylistDetailRoute() {
                       {
                         provider: 'APPLE_MUSIC',
                         label: 'Apple Music',
+                        isConnected: isAppleMusicConnected,
                         selectedPlaylist: playlist,
                         matches: appleMusic.matches,
                         exportResult: appleMusic.exportResult,
