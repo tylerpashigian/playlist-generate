@@ -3,6 +3,7 @@ import {
   AppleMusicAuthorizationError,
   AppleMusicNotConnectedError,
   ExternalProviderError,
+  ExternalProviderRateLimitError,
   NoMatchedTracksError,
   OnlyLoginMethodError,
   PlaylistItemNotFoundError,
@@ -91,6 +92,14 @@ export function toTRPCError(error: unknown): TRPCError {
   }
 
   if (error instanceof ExternalProviderError) {
+    if (error instanceof ExternalProviderRateLimitError) {
+      return new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: error.message,
+        cause: error,
+      })
+    }
+
     return new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: error.message,

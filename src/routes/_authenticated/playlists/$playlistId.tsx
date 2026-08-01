@@ -27,6 +27,7 @@ function PlaylistDetailRoute() {
   const {
     spotify,
     appleMusic,
+    isSpotifyAvailable,
     review: trackReview,
     reloadMatches,
   } = useStreamingPlaylistReview(playlist)
@@ -190,19 +191,23 @@ function PlaylistDetailRoute() {
                     selectedProvider: trackReview.selectedProvider,
                     onProviderChange: trackReview.selectProvider,
                     groups: [
-                      {
-                        provider: 'SPOTIFY',
-                        selectedPlaylist: playlist,
-                        matches: spotify.matches,
-                        exportResult: spotify.exportResult,
-                        isMatching: spotify.isMatching,
-                        isExporting: spotify.isExporting,
-                        errorMessage: spotify.errorMessage,
-                        onMatchTracks: handleMatch,
-                        onExport: handleExport,
-                        onManageMatches: () =>
-                          trackReview.openManager('SPOTIFY'),
-                      },
+                      ...(isSpotifyAvailable
+                        ? [
+                            {
+                              provider: 'SPOTIFY' as const,
+                              selectedPlaylist: playlist,
+                              matches: spotify.matches,
+                              exportResult: spotify.exportResult,
+                              isMatching: spotify.isMatching,
+                              isExporting: spotify.isExporting,
+                              errorMessage: spotify.errorMessage,
+                              onMatchTracks: handleMatch,
+                              onExport: handleExport,
+                              onManageMatches: () =>
+                                trackReview.openManager('SPOTIFY'),
+                            },
+                          ]
+                        : []),
                       {
                         provider: 'APPLE_MUSIC',
                         label: 'Apple Music',

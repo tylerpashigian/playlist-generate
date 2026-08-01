@@ -128,8 +128,9 @@ describe('frontend model conversions', () => {
 
   it('maps streaming connection states', () => {
     const connectionDto: StreamingConnectionDto = {
-      provider: 'SPOTIFY',
-      connected: true,
+        provider: 'SPOTIFY',
+        available: true,
+        connected: true,
       displayName: 'Spotify User',
       providerAccountId: 'spotify-user-id',
       canDisconnect: true,
@@ -139,6 +140,7 @@ describe('frontend model conversions', () => {
 
     expect(toStreamingConnection(connectionDto)).toEqual({
       provider: 'SPOTIFY',
+      available: true,
       connected: true,
       displayName: 'Spotify User',
       providerAccountId: 'spotify-user-id',

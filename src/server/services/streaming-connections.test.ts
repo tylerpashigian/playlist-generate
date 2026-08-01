@@ -23,6 +23,10 @@ const providerMocks = vi.hoisted(() => ({
   getAppleMusicConnection: vi.fn(),
 }))
 
+const spotifyBetaMocks = vi.hoisted(() => ({
+  isSpotifyBetaUser: vi.fn(),
+}))
+
 vi.mock('@/db', () => ({
   prisma: {
     account: {
@@ -55,6 +59,8 @@ vi.mock('./apple-music-connection', () => ({
   getAppleMusicConnection: providerMocks.getAppleMusicConnection,
 }))
 
+vi.mock('./spotify-beta', () => spotifyBetaMocks)
+
 const updatedAt = new Date('2026-06-01T12:00:00.000Z')
 const spotifyAccount = {
   accountId: 'spotify-user-id',
@@ -79,6 +85,7 @@ describe('streaming connections service', () => {
     })
     prismaMocks.streamingConnectionDeleteMany.mockResolvedValue({ count: 1 })
     providerMocks.getAppleMusicConnection.mockResolvedValue(null)
+    spotifyBetaMocks.isSpotifyBetaUser.mockReturnValue(true)
   })
 
   it('marks Spotify connected but not disconnectable when it is the only login method', async () => {
@@ -88,6 +95,7 @@ describe('streaming connections service', () => {
     await expect(listStreamingConnections('user-id')).resolves.toEqual([
       {
         provider: 'SPOTIFY',
+        available: true,
         connected: true,
         displayName: 'Spotify User',
         providerAccountId: 'spotify-user-id',
@@ -97,6 +105,7 @@ describe('streaming connections service', () => {
       },
       {
         provider: 'APPLE_MUSIC',
+        available: true,
         connected: false,
         displayName: null,
         providerAccountId: null,
@@ -178,6 +187,7 @@ describe('streaming connections service', () => {
       disconnectStreamingProvider('user-id', 'SPOTIFY', headers),
     ).resolves.toEqual({
       provider: 'SPOTIFY',
+      available: true,
       connected: false,
       displayName: null,
       providerAccountId: null,
@@ -193,5 +203,24 @@ describe('streaming connections service', () => {
       },
       headers,
     })
+  })
+
+  it('does not resolve or expose Spotify for non-beta users', async () => {
+    spotifyBetaMocks.isSpotifyBetaUser.mockReturnValue(false)
+
+    await expect(listStreamingConnections('user-id')).resolves.toMatchObject([
+      {
+        provider: 'SPOTIFY',
+        available: false,
+        connected: false,
+      },
+      {
+        provider: 'APPLE_MUSIC',
+        available: true,
+      },
+    ])
+
+    expect(prismaMocks.accountFindFirst).not.toHaveBeenCalled()
+    expect(authMocks.getAccessToken).not.toHaveBeenCalled()
   })
 })

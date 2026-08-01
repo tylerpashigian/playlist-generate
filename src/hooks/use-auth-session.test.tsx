@@ -5,7 +5,6 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthSession } from './use-auth-session'
 import type { ReactNode } from 'react'
-import { spotifyLoginScopes } from '@/lib/spotify-scopes'
 import {
   savedPlaylistDetailQueryKey,
   savedPlaylistsQueryKey,
@@ -179,26 +178,6 @@ describe('useAuthSession', () => {
     expect(result.current.isSignedIn).toBe(true)
     expect(result.current.isVerified).toBe(true)
     expect(result.current.isAuthenticated).toBe(true)
-  })
-
-  it('starts Spotify social sign in with playlist scope and redirect', async () => {
-    authMocks.signInSocial.mockResolvedValue({
-      data: { redirect: true },
-      error: null,
-    })
-    const { result } = renderHook(() => useAuthSession(), {
-      wrapper: createWrapper(),
-    })
-
-    await act(async () => {
-      await result.current.signInWithSpotify('/app')
-    })
-
-    expect(authMocks.signInSocial).toHaveBeenCalledWith({
-      provider: 'spotify',
-      scopes: [...spotifyLoginScopes],
-      callbackURL: '/app',
-    })
   })
 
   it('starts Google social sign in with the redirect', async () => {

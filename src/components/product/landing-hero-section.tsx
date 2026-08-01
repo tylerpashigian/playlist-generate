@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Heading1, Text } from '@/components/ui/typography'
 
 const recentShows = [
-  { city: 'Sydney', date: 'Jul 24', weight: 100 },
-  { city: 'Melbourne', date: 'Jul 21', weight: 88 },
-  { city: 'Auckland', date: 'Jul 18', weight: 76 },
-  { city: 'Brisbane', date: 'Jul 15', weight: 64 },
+  { city: 'Chicago', date: 'Jul 24', weight: 100 },
+  { city: 'Miami', date: 'Jul 21', weight: 88 },
+  { city: 'New York', date: 'Jul 18', weight: 76 },
+  { city: 'Los Angeles', date: 'Jul 15', weight: 64 },
 ] as const
 
 const evidenceFacts = [

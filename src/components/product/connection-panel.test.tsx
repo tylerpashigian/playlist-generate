@@ -7,6 +7,7 @@ import type { StreamingConnection } from '@/models/streaming/models'
 
 const connectedSpotify: StreamingConnection = {
   provider: 'SPOTIFY',
+  available: true,
   connected: true,
   displayName: 'Spotify User',
   providerAccountId: 'spotify-user-id',

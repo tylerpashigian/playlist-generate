@@ -78,6 +78,7 @@ export function useStreamingTrackReview({
   })
   const failedSaveActionRef = useRef<FailedSaveAction | null>(null)
   const hasInitializedProviderRef = useRef(false)
+  const providersRef = useRef(providers)
   const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -88,6 +89,11 @@ export function useStreamingTrackReview({
   const selectedProvider = selectedProviderId
     ? providersById.get(selectedProviderId)
     : undefined
+
+  useEffect(() => {
+    providersRef.current = providers
+  })
+
   const allTrackRows = getTrackRows(playlist, selectedProvider)
   const visibleTrackRows = review
     ? filterTrackRows(allTrackRows, review.filter, review.trackQuery)
@@ -113,10 +119,11 @@ export function useStreamingTrackReview({
     }
 
     setSelectedProviderId(
-      providers.find((provider) => provider.isConnected)?.provider ?? null,
+      providersRef.current.find((provider) => provider.isConnected)?.provider ??
+        null,
     )
     hasInitializedProviderRef.current = true
-  }, [isLoadingProviders, providers])
+  }, [isLoadingProviders])
 
   function openManager(provider: StreamingProvider) {
     const providerReview = getProvider(provider)

@@ -28,6 +28,7 @@ export function toStreamingConnection(
 ): StreamingConnection {
   return {
     provider: toStreamingProvider(dto.provider),
+    available: dto.available,
     connected: dto.connected,
     displayName: dto.displayName,
     providerAccountId: dto.providerAccountId,

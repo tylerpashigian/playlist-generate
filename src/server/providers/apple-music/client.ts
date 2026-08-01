@@ -1,7 +1,6 @@
-import {
-  AppleMusicAuthorizationError,
-  ExternalProviderError,
-} from '@/server/errors'
+import { env } from '@/env'
+import { AppleMusicAuthorizationError } from '@/server/errors'
+import { getProviderResponseError } from '@/server/providers/provider-errors'
 import {
   appleMusicCatalogSearchResponseSchema,
   appleMusicPlaylistResponseSchema,
@@ -25,6 +24,7 @@ async function appleMusicFetch(
       Authorization: `Bearer ${auth.developerToken}`,
       'Music-User-Token': auth.musicUserToken,
       'Content-Type': 'application/json',
+      Origin: new URL(env.BETTER_AUTH_URL).origin,
       ...init.headers,
     },
   })
@@ -33,7 +33,7 @@ async function appleMusicFetch(
     if ([401, 403].includes(response.status)) {
       throw new AppleMusicAuthorizationError()
     }
-    throw new ExternalProviderError('Apple Music', response.status)
+    throw getProviderResponseError('Apple Music', response)
   }
 
   if (response.status === 204) return null

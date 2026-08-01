@@ -1,15 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   exportSpotifyPlaylist,
+  getSpotifyTrackMatches,
   matchSpotifyTracks,
   searchSpotifyTrackCandidates,
   selectSpotifyTrackMatch,
   skipSpotifyTrackMatch,
 } from './spotify'
-import { UnresolvedTrackMatchesError } from '@/server/errors'
+import {
+  PlaylistNotFoundError,
+  UnresolvedTrackMatchesError,
+} from '@/server/errors'
 import type { SavedPlaylistDto } from '@/server/contracts/playlists'
 
 const prismaMocks = vi.hoisted(() => ({
+  playlistFindFirst: vi.fn(),
   playlistFindFirstOrThrow: vi.fn(),
   playlistItemFindFirst: vi.fn(),
   trackMatchFindMany: vi.fn(),
@@ -25,7 +30,10 @@ const providerMocks = vi.hoisted(() => ({
 
 vi.mock('@/db', () => ({
   prisma: {
-    playlist: { findFirstOrThrow: prismaMocks.playlistFindFirstOrThrow },
+    playlist: {
+      findFirst: prismaMocks.playlistFindFirst,
+      findFirstOrThrow: prismaMocks.playlistFindFirstOrThrow,
+    },
     playlistItem: { findFirst: prismaMocks.playlistItemFindFirst },
     trackMatch: {
       findMany: prismaMocks.trackMatchFindMany,
@@ -113,10 +121,33 @@ function savedMatch(status: 'MANUALLY_MATCHED' | 'SKIPPED') {
 describe('Spotify playlist review service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    prismaMocks.playlistFindFirst.mockResolvedValue({ id: 'playlist-id' })
     prismaMocks.playlistItemFindFirst.mockResolvedValue({
       id: 'playlist-item-id',
       isIncluded: true,
     })
+  })
+
+  it('loads Spotify matches with a minimal ownership check', async () => {
+    prismaMocks.trackMatchFindMany.mockResolvedValue([])
+
+    await expect(
+      getSpotifyTrackMatches('user-id', 'playlist-id'),
+    ).resolves.toEqual([])
+
+    expect(prismaMocks.playlistFindFirst).toHaveBeenCalledWith({
+      where: { id: 'playlist-id', userId: 'user-id' },
+      select: { id: true },
+    })
+  })
+
+  it('rejects Spotify match reads for a playlist the user does not own', async () => {
+    prismaMocks.playlistFindFirst.mockResolvedValue(null)
+
+    await expect(
+      getSpotifyTrackMatches('user-id', 'playlist-id'),
+    ).rejects.toBeInstanceOf(PlaylistNotFoundError)
+    expect(prismaMocks.trackMatchFindMany).not.toHaveBeenCalled()
   })
 
   it('normalizes searched Spotify candidates after verifying playlist item ownership', async () => {

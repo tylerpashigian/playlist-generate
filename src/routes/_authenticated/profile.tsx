@@ -157,16 +157,20 @@ function ProfileRoute() {
                 ) : null}
               </section>
 
-              <ConnectionPanel
-                providerName="Spotify"
-                connection={streamingConnections.spotifyConnection}
-                isLoading={streamingConnections.isLoading}
-                isConnecting={streamingConnections.isConnectingSpotify}
-                isDisconnecting={streamingConnections.isDisconnectingSpotify}
-                errorMessage={streamingConnections.spotifyErrorMessage}
-                onConnect={streamingConnections.connectSpotify}
-                onDisconnect={() => streamingConnections.disconnect('SPOTIFY')}
-              />
+              {streamingConnections.isSpotifyAvailable ? (
+                <ConnectionPanel
+                  providerName="Spotify"
+                  connection={streamingConnections.spotifyConnection}
+                  isLoading={streamingConnections.isLoading}
+                  isConnecting={streamingConnections.isConnectingSpotify}
+                  isDisconnecting={streamingConnections.isDisconnectingSpotify}
+                  errorMessage={streamingConnections.spotifyErrorMessage}
+                  onConnect={streamingConnections.connectSpotify}
+                  onDisconnect={() =>
+                    streamingConnections.disconnect('SPOTIFY')
+                  }
+                />
+              ) : null}
               <ConnectionPanel
                 providerName="Apple Music"
                 connection={streamingConnections.appleMusicConnection}

@@ -40,7 +40,8 @@ export function DeletePlaylistDialog({
               : 'This playlist and its confidence evidence, saved track matches, and local export metadata will be permanently removed from Encore.'}
           </AlertDialogDescription>
           <AlertDialogDescription>
-            Any exported Spotify playlist will remain available in Spotify.
+            Any exported playlists will remain available in their streaming
+            services.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

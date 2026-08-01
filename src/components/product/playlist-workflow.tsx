@@ -43,6 +43,7 @@ export function PlaylistWorkflow() {
   const {
     spotify,
     appleMusic,
+    isSpotifyAvailable,
     review: trackReview,
     resetStreaming,
   } = useStreamingPlaylistReview(savedPlaylists.selectedPlaylist)
@@ -192,18 +193,22 @@ export function PlaylistWorkflow() {
           selectedProvider: trackReview.selectedProvider,
           onProviderChange: trackReview.selectProvider,
           groups: [
-            {
-              provider: 'SPOTIFY',
-              selectedPlaylist: savedPlaylists.selectedPlaylist,
-              matches: spotify.matches,
-              exportResult: spotify.exportResult,
-              isMatching: spotify.isMatching,
-              isExporting: spotify.isExporting,
-              errorMessage: spotify.errorMessage,
-              onMatchTracks: handleMatch,
-              onExport: handleExport,
-              onManageMatches: () => trackReview.openManager('SPOTIFY'),
-            },
+            ...(isSpotifyAvailable
+              ? [
+                  {
+                    provider: 'SPOTIFY' as const,
+                    selectedPlaylist: savedPlaylists.selectedPlaylist,
+                    matches: spotify.matches,
+                    exportResult: spotify.exportResult,
+                    isMatching: spotify.isMatching,
+                    isExporting: spotify.isExporting,
+                    errorMessage: spotify.errorMessage,
+                    onMatchTracks: handleMatch,
+                    onExport: handleExport,
+                    onManageMatches: () => trackReview.openManager('SPOTIFY'),
+                  },
+                ]
+              : []),
             {
               provider: 'APPLE_MUSIC',
               label: 'Apple Music',

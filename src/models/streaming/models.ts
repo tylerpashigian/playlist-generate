@@ -5,6 +5,7 @@ export type TrackMatchStatus =
 
 export interface StreamingConnection {
   provider: StreamingProvider
+  available: boolean
   connected: boolean
   displayName: string | null
   providerAccountId: string | null

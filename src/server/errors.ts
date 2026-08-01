@@ -9,6 +9,22 @@ export class ExternalProviderError extends Error {
   }
 }
 
+export class ExternalProviderRateLimitError extends ExternalProviderError {
+  constructor(
+    provider: string,
+    public readonly retryAfterSeconds: number | null,
+  ) {
+    super(
+      provider,
+      429,
+      retryAfterSeconds
+        ? `${provider} is temporarily rate limited. Try again in ${retryAfterSeconds} seconds.`
+        : `${provider} is temporarily rate limited. Try again shortly.`,
+    )
+    this.name = 'ExternalProviderRateLimitError'
+  }
+}
+
 export class SpotifyNotConnectedError extends Error {
   constructor() {
     super('Spotify is not connected.')

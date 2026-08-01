@@ -157,6 +157,13 @@ export function useStreamingConnections({
   }
 
   async function connectSpotify() {
+    if (!isSpotifyAvailable) {
+      const message = 'Spotify is currently available only to beta users.'
+      setConnectionError('SPOTIFY', message)
+      toast.error(new Error(message), message)
+      return false
+    }
+
     setConnectionError('SPOTIFY', null)
     setIsConnectingSpotify(true)
 
@@ -200,12 +207,15 @@ export function useStreamingConnections({
   const appleMusicConnection =
     connections.find((connection) => connection.provider === 'APPLE_MUSIC') ??
     null
+  const isSpotifyAvailable = Boolean(spotifyConnection?.available)
 
   return {
     connections,
     spotifyConnection,
     appleMusicConnection,
-    isSpotifyConnected: Boolean(spotifyConnection?.connected),
+    isSpotifyAvailable,
+    isSpotifyConnected:
+      isSpotifyAvailable && Boolean(spotifyConnection?.connected),
     isAppleMusicConnected: Boolean(appleMusicConnection?.connected),
     connectSpotify,
     connectAppleMusic,

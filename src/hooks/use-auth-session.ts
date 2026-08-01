@@ -6,7 +6,6 @@ import {
   authSessionQueryOptions,
 } from '@/lib/auth-session'
 import { getErrorMessage } from '@/lib/errors'
-import { spotifyLoginScopes } from '@/lib/spotify-scopes'
 import { clearUserDataCache } from '@/lib/user-data-cache'
 
 interface EmailAuthInput {
@@ -134,36 +133,6 @@ export function useAuthSession() {
     }
   }
 
-  async function signInWithSpotify(callbackURL: string) {
-    setAuthError(null)
-    setIsAuthenticating(true)
-
-    try {
-      const result = await authClient.signIn.social({
-        provider: 'spotify',
-        scopes: [...spotifyLoginScopes],
-        callbackURL,
-      })
-
-      if (result.error) {
-        setAuthError(result.error.message ?? 'Spotify sign in failed')
-        return false
-      }
-
-      if (!result.data.redirect) {
-        await queryClient.invalidateQueries({ queryKey: authSessionQueryKey })
-        await queryClient.fetchQuery(authSessionQueryOptions())
-      }
-
-      return true
-    } catch (error) {
-      setAuthError(getErrorMessage(error) ?? 'Spotify sign in failed')
-      return false
-    } finally {
-      setIsAuthenticating(false)
-    }
-  }
-
   async function signInWithGoogle(callbackURL: string) {
     setAuthError(null)
     setIsAuthenticating(true)
@@ -218,7 +187,6 @@ export function useAuthSession() {
     signUp,
     resendVerificationEmail,
     signInWithGoogle,
-    signInWithSpotify,
     signOut,
   }
 }

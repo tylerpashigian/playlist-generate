@@ -816,12 +816,28 @@ describe('playlist workflow hooks', () => {
   })
 
   it('connects Spotify through Better Auth inside the connection hook', async () => {
+    serviceMocks.listStreamingConnections.mockResolvedValue([
+      {
+        provider: 'SPOTIFY',
+        available: true,
+        connected: false,
+        displayName: null,
+        providerAccountId: null,
+        canDisconnect: false,
+        disconnectDisabledReason: null,
+        updatedAt: null,
+      },
+    ])
     authMocks.linkSocial.mockResolvedValue({
       data: { redirect: false },
       error: null,
     })
     const { result } = renderHook(() => useStreamingConnections(), {
       wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSpotifyAvailable).toBe(true)
     })
 
     await act(async () => {

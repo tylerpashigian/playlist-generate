@@ -45,7 +45,7 @@ export function AccountDrawer() {
   const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
 
   const connectedServiceCount = streamingConnections.connections.filter(
-    (connection) => connection.connected,
+    (connection) => connection.available && connection.connected,
   ).length
 
   return (
@@ -100,6 +100,9 @@ export function AccountDrawer() {
                       serviceCount={connectedServiceCount}
                     />
                     <ConnectedServices
+                      isSpotifyAvailable={
+                        streamingConnections.isSpotifyAvailable
+                      }
                       isSpotifyConnected={
                         streamingConnections.isSpotifyConnected
                       }
@@ -283,9 +286,11 @@ function MetricTile({ value, label }: { value: number; label: string }) {
 }
 
 function ConnectedServices({
+  isSpotifyAvailable,
   isSpotifyConnected,
   isAppleMusicConnected,
 }: {
+  isSpotifyAvailable: boolean
   isSpotifyConnected: boolean
   isAppleMusicConnected: boolean
 }) {
@@ -298,15 +303,17 @@ function ConnectedServices({
       >
         Connected services
       </Text>
-      <ServiceRow
-        name="Spotify"
-        description={
-          isSpotifyConnected
-            ? 'Default export service'
-            : 'Manage this connection from your profile'
-        }
-        status={isSpotifyConnected ? 'Connected' : 'Not connected'}
-      />
+      {isSpotifyAvailable ? (
+        <ServiceRow
+          name="Spotify"
+          description={
+            isSpotifyConnected
+              ? 'Default export service'
+              : 'Manage this connection from your profile'
+          }
+          status={isSpotifyConnected ? 'Connected' : 'Not connected'}
+        />
+      ) : null}
       <ServiceRow
         name="Apple Music"
         description={

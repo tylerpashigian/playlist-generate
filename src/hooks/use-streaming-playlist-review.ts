@@ -19,11 +19,15 @@ export function useStreamingPlaylistReview(playlist: SavedPlaylist | null) {
   const review = useStreamingTrackReview({
     playlist,
     providers: [
-      createSpotifyReviewProvider({
-        spotify,
-        playlistId,
-        isConnected: streamingConnections.isSpotifyConnected,
-      }),
+      ...(streamingConnections.isSpotifyAvailable
+        ? [
+            createSpotifyReviewProvider({
+              spotify,
+              playlistId,
+              isConnected: streamingConnections.isSpotifyConnected,
+            }),
+          ]
+        : []),
       createAppleMusicReviewProvider({
         appleMusic,
         playlistId,
@@ -70,7 +74,14 @@ export function useStreamingPlaylistReview(playlist: SavedPlaylist | null) {
     resetAppleMusic()
   }, [resetAppleMusic, resetSpotify])
 
-  return { spotify, appleMusic, review, reloadMatches, resetStreaming }
+  return {
+    spotify,
+    appleMusic,
+    isSpotifyAvailable: streamingConnections.isSpotifyAvailable,
+    review,
+    reloadMatches,
+    resetStreaming,
+  }
 }
 
 function createAppleMusicReviewProvider({

@@ -7,6 +7,7 @@ import {
 import {
   NoMatchedTracksError,
   PlaylistItemNotFoundError,
+  PlaylistNotFoundError,
   UnresolvedTrackMatchesError,
 } from '@/server/errors'
 import {
@@ -253,10 +254,14 @@ export async function getSpotifyTrackMatches(
   userId: string,
   playlistId: string,
 ) {
-  await prisma.playlist.findFirstOrThrow({
+  const playlist = await prisma.playlist.findFirst({
     where: { id: playlistId, userId },
     select: { id: true },
   })
+
+  if (!playlist) {
+    throw new PlaylistNotFoundError()
+  }
 
   const matches = await prisma.trackMatch.findMany({
     where: {

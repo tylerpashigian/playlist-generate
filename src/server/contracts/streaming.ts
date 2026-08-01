@@ -47,6 +47,7 @@ export const playlistItemInputSchema = playlistIdInputSchema.extend({
 
 export const streamingConnectionDtoSchema = z.object({
   provider: streamingProviderSchema,
+  available: z.boolean(),
   connected: z.boolean(),
   displayName: z.string().nullable(),
   providerAccountId: z.string().nullable(),

@@ -7,6 +7,7 @@ import {
 } from '@/server/contracts/streaming'
 import { OnlyLoginMethodError, SpotifyNotConnectedError } from '@/server/errors'
 import { resolveSpotifyConnectionMetadata } from '@/server/providers/spotify/connection'
+import { isSpotifyBetaUser } from '@/server/services/spotify-beta'
 import {
   disconnectAppleMusic,
   getAppleMusicConnection,
@@ -46,6 +47,19 @@ const STREAMING_PROVIDER_CONFIG = {
     resolveMetadata: resolveSpotifyConnectionMetadata,
   },
 } satisfies StreamingProviderConfig
+
+function getUnavailableSpotifyConnection() {
+  return streamingConnectionDtoSchema.parse({
+    provider: 'SPOTIFY',
+    available: false,
+    connected: false,
+    displayName: null,
+    providerAccountId: null,
+    canDisconnect: false,
+    disconnectDisabledReason: null,
+    updatedAt: null,
+  })
+}
 
 function getProviderConfig(provider: StreamingProviderDto) {
   if (provider === 'APPLE_MUSIC') {
@@ -108,6 +122,10 @@ async function syncStreamingConnectionMetadata(
   provider: StreamingProviderDto,
   appleMusicConnectionKey: string | null = null,
 ): Promise<StreamingConnectionDto> {
+  if (provider === 'SPOTIFY' && !isSpotifyBetaUser(userId)) {
+    return getUnavailableSpotifyConnection()
+  }
+
   if (provider === 'APPLE_MUSIC') {
     const credential = await getAppleMusicConnection(
       userId,
@@ -115,6 +133,7 @@ async function syncStreamingConnectionMetadata(
     )
     return streamingConnectionDtoSchema.parse({
       provider,
+      available: true,
       connected: Boolean(credential),
       displayName: credential ? 'Apple Music' : null,
       providerAccountId: null,
@@ -136,6 +155,7 @@ async function syncStreamingConnectionMetadata(
 
     return streamingConnectionDtoSchema.parse({
       provider,
+      available: true,
       connected: false,
       displayName: null,
       providerAccountId: null,
@@ -174,6 +194,7 @@ async function syncStreamingConnectionMetadata(
 
   return streamingConnectionDtoSchema.parse({
     provider,
+    available: true,
     connected: true,
     displayName: metadata.displayName,
     providerAccountId: metadata.providerAccountId,
@@ -248,6 +269,7 @@ export async function disconnectStreamingProvider(
     await disconnectAppleMusic(userId, appleMusicConnectionKey)
     return streamingConnectionDtoSchema.parse({
       provider,
+      available: true,
       connected: false,
       displayName: null,
       providerAccountId: null,
@@ -285,6 +307,7 @@ export async function disconnectStreamingProvider(
 
   return streamingConnectionDtoSchema.parse({
     provider,
+    available: isSpotifyBetaUser(userId),
     connected: false,
     displayName: null,
     providerAccountId: null,

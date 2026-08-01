@@ -7,7 +7,6 @@ import { AuthForm } from './auth-form'
 const authMocks = vi.hoisted(() => ({
   isAuthenticating: false,
   signInWithGoogle: vi.fn(),
-  signInWithSpotify: vi.fn(),
 }))
 
 vi.mock('@tanstack/react-router', () => ({
@@ -25,7 +24,6 @@ vi.mock('@/hooks/use-auth-session', () => ({
     resendVerificationEmail: vi.fn(),
     signIn: vi.fn(),
     signInWithGoogle: authMocks.signInWithGoogle,
-    signInWithSpotify: authMocks.signInWithSpotify,
     signOut: vi.fn(),
     signUp: vi.fn(),
   }),
@@ -38,35 +36,27 @@ afterEach(() => {
 })
 
 describe('AuthForm', () => {
-  it('offers Google before Spotify and starts the selected social sign-in', () => {
+  it('offers Google but not Spotify as a public sign-in method', () => {
     render(<AuthForm redirect="/app" />)
 
     expect(
       screen.getByText(
-        'Use email, Google, or Spotify to access your app account.',
+        'Use email or Google to access your app account.',
       ),
     ).toBeTruthy()
 
     const googleButton = screen.getByRole('button', {
       name: 'Continue with Google',
     })
-    const spotifyButton = screen.getByRole('button', {
-      name: 'Continue with Spotify',
-    })
-
-    expect(
-      googleButton.compareDocumentPosition(spotifyButton) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
-
     fireEvent.click(googleButton)
-    fireEvent.click(spotifyButton)
 
     expect(authMocks.signInWithGoogle).toHaveBeenCalledWith('/app')
-    expect(authMocks.signInWithSpotify).toHaveBeenCalledWith('/app')
+    expect(
+      screen.queryByRole('button', { name: 'Continue with Spotify' }),
+    ).toBeNull()
   })
 
-  it('disables both social providers while authentication is in progress', () => {
+  it('disables Google while authentication is in progress', () => {
     authMocks.isAuthenticating = true
 
     render(<AuthForm />)
@@ -75,7 +65,7 @@ describe('AuthForm', () => {
       name: 'Please wait',
     })
 
-    expect(waitingButtons).toHaveLength(3)
+    expect(waitingButtons).toHaveLength(2)
     expect(
       waitingButtons.every((button) => button.hasAttribute('disabled')),
     ).toBe(true)
