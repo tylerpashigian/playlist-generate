@@ -8,16 +8,25 @@ import { useDebouncedValue } from './use-debounced-value'
 import { useGeneratedPlaylist } from './use-generated-playlist'
 import { useLatestRequestGuard } from './use-latest-request-guard'
 import { useSavedPlaylists } from './use-saved-playlists'
+import { useAppleMusic } from './use-apple-music'
 import { useSpotify } from './use-spotify'
+import { useStreamingPlaylistReview } from './use-streaming-playlist-review'
 import { useStreamingConnections } from './use-streaming-connections'
 import type { ReactNode } from 'react'
 import type { Artist } from '@/models/artists/models'
-import type { GeneratedPlaylist } from '@/models/playlists/models'
+import type {
+  GeneratedPlaylist,
+  SavedPlaylist,
+} from '@/models/playlists/models'
 import type {
   StreamingTrackCandidate,
   TrackMatch,
 } from '@/models/streaming/models'
 import { spotifyPlaylistExportScopes } from '@/lib/spotify-scopes'
+import {
+  savedPlaylistDetailQueryKey,
+  savedPlaylistsQueryKey,
+} from '@/lib/user-data-cache'
 
 const serviceMocks = vi.hoisted(() => ({
   searchArtists: vi.fn(),
@@ -35,6 +44,7 @@ const serviceMocks = vi.hoisted(() => ({
   selectSpotifyTrack: vi.fn(),
   skipSpotifyTrack: vi.fn(),
   exportPlaylistToSpotify: vi.fn(),
+  exportPlaylistToAppleMusic: vi.fn(),
 }))
 
 const authMocks = vi.hoisted(() => ({
@@ -76,6 +86,15 @@ vi.mock('@/services/spotify', () => ({
   exportPlaylistToSpotify: serviceMocks.exportPlaylistToSpotify,
 }))
 
+vi.mock('@/services/apple-music', () => ({
+  exportPlaylistToAppleMusic: serviceMocks.exportPlaylistToAppleMusic,
+  getAppleMusicTrackMatches: vi.fn(),
+  matchAppleMusicPlaylistTracks: vi.fn(),
+  searchAppleMusicTrackCandidates: vi.fn(),
+  selectAppleMusicTrack: vi.fn(),
+  skipAppleMusicTrack: vi.fn(),
+}))
+
 vi.mock('@/lib/auth-client', () => ({
   authClient: {
     linkSocial: authMocks.linkSocial,
@@ -107,6 +126,15 @@ const generatedPlaylist: GeneratedPlaylist = {
   tracks: [],
 }
 
+const savedPlaylistForReview: SavedPlaylist = {
+  ...generatedPlaylist,
+  id: 'saved-playlist-id',
+  status: 'DRAFT',
+  createdAt: generatedPlaylist.generatedAt,
+  updatedAt: generatedPlaylist.generatedAt,
+  trackCount: 0,
+}
+
 function createDeferred<T>() {
   let resolve!: (value: T) => void
   const promise = new Promise<T>((resolvePromise) => {
@@ -118,16 +146,16 @@ function createDeferred<T>() {
 
 function createWrapper({
   queryRetry = false,
-}: {
-  queryRetry?: boolean
-} = {}) {
-  const queryClient = new QueryClient({
+  queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: queryRetry },
       mutations: { retry: false },
     },
-  })
-
+  }),
+}: {
+  queryRetry?: boolean
+  queryClient?: QueryClient
+} = {}) {
   return function TestWrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -730,13 +758,86 @@ describe('playlist workflow hooks', () => {
     )
   })
 
+  it('keeps disconnect state scoped to the provider being disconnected', async () => {
+    const deferredDisconnect = createDeferred<{
+      provider: 'SPOTIFY'
+      connected: false
+      displayName: null
+      providerAccountId: null
+      canDisconnect: false
+      disconnectDisabledReason: null
+      updatedAt: null
+    }>()
+    serviceMocks.disconnectStreamingProvider.mockReturnValue(
+      deferredDisconnect.promise,
+    )
+    const { result } = renderHook(() => useStreamingConnections(), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      void result.current.disconnect('SPOTIFY')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isDisconnectingSpotify).toBe(true)
+    })
+    expect(result.current.isDisconnectingAppleMusic).toBe(false)
+
+    await act(async () => {
+      deferredDisconnect.resolve({
+        provider: 'SPOTIFY',
+        connected: false,
+        displayName: null,
+        providerAccountId: null,
+        canDisconnect: false,
+        disconnectDisabledReason: null,
+        updatedAt: null,
+      })
+      await deferredDisconnect.promise
+    })
+  })
+
+  it('does not load review matches for disconnected providers', async () => {
+    const { result } = renderHook(
+      () => useStreamingPlaylistReview(savedPlaylistForReview),
+      { wrapper: createWrapper() },
+    )
+
+    await waitFor(() => {
+      expect(serviceMocks.listStreamingConnections).toHaveBeenCalled()
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(result.current.spotify.matches).toEqual([])
+    expect(serviceMocks.getSpotifyTrackMatches).not.toHaveBeenCalled()
+  })
+
   it('connects Spotify through Better Auth inside the connection hook', async () => {
+    serviceMocks.listStreamingConnections.mockResolvedValue([
+      {
+        provider: 'SPOTIFY',
+        available: true,
+        connected: false,
+        displayName: null,
+        providerAccountId: null,
+        canDisconnect: false,
+        disconnectDisabledReason: null,
+        updatedAt: null,
+      },
+    ])
     authMocks.linkSocial.mockResolvedValue({
       data: { redirect: false },
       error: null,
     })
     const { result } = renderHook(() => useStreamingConnections(), {
       wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSpotifyAvailable).toBe(true)
     })
 
     await act(async () => {
@@ -818,6 +919,76 @@ describe('playlist workflow hooks', () => {
     )
   })
 
+  it('invalidates saved-playlist caches after exporting to Spotify', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    })
+    const playlistId = 'playlist-id'
+    serviceMocks.exportPlaylistToSpotify.mockResolvedValue({
+      provider: 'SPOTIFY',
+      providerPlaylistId: 'spotify-playlist-id',
+      externalUrl: 'https://open.spotify.com/playlist/123',
+      snapshotId: 'snapshot-id',
+      exportedAt: generatedPlaylist.generatedAt,
+      exportedTrackCount: 1,
+    })
+    queryClient.setQueryData(savedPlaylistsQueryKey, [])
+    queryClient.setQueryData(savedPlaylistDetailQueryKey(playlistId), {
+      ...savedPlaylistForReview,
+      status: 'DRAFT',
+    })
+    const { result } = renderHook(() => useSpotify(), {
+      wrapper: createWrapper({ queryClient }),
+    })
+
+    await act(async () => {
+      await result.current.exportPlaylist({ playlistId })
+    })
+
+    expect(
+      queryClient.getQueryState(savedPlaylistDetailQueryKey(playlistId))
+        ?.isInvalidated,
+    ).toBe(true)
+    expect(queryClient.getQueryState(savedPlaylistsQueryKey)?.isInvalidated).toBe(
+      true,
+    )
+  })
+
+  it('invalidates saved-playlist caches after exporting to Apple Music', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    })
+    const playlistId = 'playlist-id'
+    serviceMocks.exportPlaylistToAppleMusic.mockResolvedValue({
+      provider: 'APPLE_MUSIC',
+      providerPlaylistId: 'apple-music-playlist-id',
+      externalUrl: 'https://music.apple.com/us/playlist/123',
+      snapshotId: null,
+      exportedAt: generatedPlaylist.generatedAt,
+      exportedTrackCount: 1,
+    })
+    queryClient.setQueryData(savedPlaylistsQueryKey, [])
+    queryClient.setQueryData(savedPlaylistDetailQueryKey(playlistId), {
+      ...savedPlaylistForReview,
+      status: 'DRAFT',
+    })
+    const { result } = renderHook(() => useAppleMusic(), {
+      wrapper: createWrapper({ queryClient }),
+    })
+
+    await act(async () => {
+      await result.current.exportPlaylist({ playlistId })
+    })
+
+    expect(
+      queryClient.getQueryState(savedPlaylistDetailQueryKey(playlistId))
+        ?.isInvalidated,
+    ).toBe(true)
+    expect(queryClient.getQueryState(savedPlaylistsQueryKey)?.isInvalidated).toBe(
+      true,
+    )
+  })
+
   it('loads, searches, and updates individual Spotify track decisions', async () => {
     const match = {
       playlistTrackId: 'playlist-item-id',
@@ -880,13 +1051,11 @@ describe('playlist workflow hooks', () => {
 
     expect(result.current.candidates).toHaveLength(1)
     expect(result.current.matches[0]?.status).toBe('SKIPPED')
-    expect(serviceMocks.searchSpotifyTrackCandidates).toHaveBeenCalledWith(
-      {
-        playlistId: 'playlist-id',
-        playlistItemId: 'playlist-item-id',
-        query: 'track',
-      },
-    )
+    expect(serviceMocks.searchSpotifyTrackCandidates).toHaveBeenCalledWith({
+      playlistId: 'playlist-id',
+      playlistItemId: 'playlist-item-id',
+      query: 'track',
+    })
   })
 
   it('does not let an older Spotify search overwrite newer candidates', async () => {

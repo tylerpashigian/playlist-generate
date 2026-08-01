@@ -390,6 +390,7 @@ export const ModelName = {
   Account: 'Account',
   Verification: 'Verification',
   StreamingConnection: 'StreamingConnection',
+  AppleMusicCredential: 'AppleMusicCredential',
   Artist: 'Artist',
   Playlist: 'Playlist',
   PlaylistItem: 'PlaylistItem',
@@ -410,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "todo" | "user" | "session" | "account" | "verification" | "streamingConnection" | "artist" | "playlist" | "playlistItem" | "trackMatch" | "externalPlaylist"
+    modelProps: "todo" | "user" | "session" | "account" | "verification" | "streamingConnection" | "appleMusicCredential" | "artist" | "playlist" | "playlistItem" | "trackMatch" | "externalPlaylist"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -855,6 +856,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.StreamingConnectionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.StreamingConnectionCountAggregateOutputType> | number
+        }
+      }
+    }
+    AppleMusicCredential: {
+      payload: Prisma.$AppleMusicCredentialPayload<ExtArgs>
+      fields: Prisma.AppleMusicCredentialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AppleMusicCredentialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AppleMusicCredentialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>
+        }
+        findFirst: {
+          args: Prisma.AppleMusicCredentialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AppleMusicCredentialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>
+        }
+        findMany: {
+          args: Prisma.AppleMusicCredentialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>[]
+        }
+        create: {
+          args: Prisma.AppleMusicCredentialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>
+        }
+        createMany: {
+          args: Prisma.AppleMusicCredentialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AppleMusicCredentialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>[]
+        }
+        delete: {
+          args: Prisma.AppleMusicCredentialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>
+        }
+        update: {
+          args: Prisma.AppleMusicCredentialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>
+        }
+        deleteMany: {
+          args: Prisma.AppleMusicCredentialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AppleMusicCredentialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AppleMusicCredentialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>[]
+        }
+        upsert: {
+          args: Prisma.AppleMusicCredentialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppleMusicCredentialPayload>
+        }
+        aggregate: {
+          args: Prisma.AppleMusicCredentialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAppleMusicCredential>
+        }
+        groupBy: {
+          args: Prisma.AppleMusicCredentialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppleMusicCredentialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AppleMusicCredentialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppleMusicCredentialCountAggregateOutputType> | number
         }
       }
     }
@@ -1347,6 +1422,22 @@ export const StreamingConnectionScalarFieldEnum = {
 export type StreamingConnectionScalarFieldEnum = (typeof StreamingConnectionScalarFieldEnum)[keyof typeof StreamingConnectionScalarFieldEnum]
 
 
+export const AppleMusicCredentialScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  connectionKeyHash: 'connectionKeyHash',
+  musicUserToken: 'musicUserToken',
+  encryptionIv: 'encryptionIv',
+  encryptionAuthTag: 'encryptionAuthTag',
+  encryptionKeyVersion: 'encryptionKeyVersion',
+  storefrontId: 'storefrontId',
+  connectedAt: 'connectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AppleMusicCredentialScalarFieldEnum = (typeof AppleMusicCredentialScalarFieldEnum)[keyof typeof AppleMusicCredentialScalarFieldEnum]
+
+
 export const ArtistScalarFieldEnum = {
   id: 'id',
   mbid: 'mbid',
@@ -1722,6 +1813,7 @@ export type GlobalOmitConfig = {
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit
   streamingConnection?: Prisma.StreamingConnectionOmit
+  appleMusicCredential?: Prisma.AppleMusicCredentialOmit
   artist?: Prisma.ArtistOmit
   playlist?: Prisma.PlaylistOmit
   playlistItem?: Prisma.PlaylistItemOmit

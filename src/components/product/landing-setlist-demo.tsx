@@ -3,7 +3,6 @@ import {
   ArrowRight01Icon,
   RefreshIcon,
   Search01Icon,
-  Tick02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -46,7 +45,7 @@ const previewTracks: Array<PlaylistPreviewTrack> = [
     title: 'Levitating',
     detail: 'Mid-set rotation',
     evidence: '6/10 setlists',
-    confidenceScore: 67,
+    confidenceScore: 78,
   },
   {
     key: '4-until-the-sun-needs-to-rise',
@@ -54,7 +53,7 @@ const previewTracks: Array<PlaylistPreviewTrack> = [
     title: 'Until the Sun Needs to Rise',
     detail: 'Needs review',
     evidence: '4/10 setlists',
-    confidenceScore: 49,
+    confidenceScore: 67,
   },
 ]
 
@@ -75,9 +74,9 @@ export function LandingSetlistDemo() {
     <LazyMotion features={domAnimation}>
       <section
         aria-label="Interactive setlist confidence preview"
-        className="w-full overflow-hidden rounded-2xl border border-border bg-card text-left shadow-[0_24px_80px_rgba(0,0,0,0.06)]"
+        className="w-full overflow-hidden rounded-2xl border border-border bg-card text-left"
       >
-        <div className="flex flex-col gap-4 border-b border-border bg-muted/35 px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+        <div className="flex flex-col gap-4 border-b border-border/70 bg-muted/35 px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
           <div>
             <Text
               as="span"
@@ -94,7 +93,9 @@ export function LandingSetlistDemo() {
           <Badge variant="outline" size="lg" className="w-fit bg-background">
             <span
               aria-hidden="true"
-              className="size-1.5 rounded-full bg-review"
+              className={`size-1.5 rounded-full ${
+                isRevealed ? 'bg-success' : 'bg-muted-foreground'
+              }`}
             />
             <span aria-live="polite">
               {isRevealed
@@ -104,40 +105,32 @@ export function LandingSetlistDemo() {
           </Badge>
         </div>
 
-        <form
-          className="grid gap-3 border-b border-border p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-6"
-          onSubmit={(event) => {
-            event.preventDefault()
-            setIsRevealed((current) => !current)
-          }}
-        >
-          <label className="grid gap-2">
+        <div className="grid gap-3 border-b border-border/70 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-6">
+          <div className="grid gap-2">
             <Text as="span" size="xs" weight="semibold">
               Sample artist
             </Text>
-            <span className="flex min-h-11 items-center gap-3 rounded-md border border-input bg-background px-3 text-foreground shadow-xs focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+            <div
+              aria-label="Sample artist: RÜFÜS DU SOL"
+              className="flex min-h-11 items-center gap-3 rounded-md border border-input bg-background px-3 text-foreground shadow-xs"
+            >
               <HugeiconsIcon
                 aria-hidden="true"
                 icon={Search01Icon}
                 strokeWidth={2}
                 className="size-4 shrink-0 text-muted-foreground"
               />
-              <Text
-                as="span"
-                size="sm"
-                weight="medium"
-                className="min-w-0 flex-1"
-              >
-                <input
-                  aria-label="Sample artist"
-                  className="w-full bg-transparent outline-none"
-                  readOnly
-                  value="RÜFÜS DU SOL"
-                />
+              <Text as="span" size="sm" weight="medium">
+                RÜFÜS DU SOL
               </Text>
-            </span>
-          </label>
-          <Button type="submit" size="lg" className="min-h-11 self-end px-4">
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="lg"
+            className="min-h-11 self-end px-4"
+            onClick={() => setIsRevealed((current) => !current)}
+          >
             {isRevealed ? (
               <>
                 <HugeiconsIcon
@@ -158,7 +151,7 @@ export function LandingSetlistDemo() {
               </>
             )}
           </Button>
-        </form>
+        </div>
 
         <div className="p-4 sm:p-6">
           <div className="border-b border-border pb-5">
@@ -182,11 +175,11 @@ export function LandingSetlistDemo() {
                     <m.span
                       key={weight}
                       aria-hidden="true"
-                      className="min-w-2 flex-1 origin-bottom rounded-t-sm"
+                      className="h-full min-w-2 flex-1 origin-bottom rounded-t-sm"
                       initial={false}
                       animate={{
                         backgroundColor: isRevealed
-                          ? 'var(--success)'
+                          ? 'var(--foreground)'
                           : 'var(--border)',
                         scaleY: isRevealed
                           ? weight / strongestRecencyWeight
@@ -194,9 +187,8 @@ export function LandingSetlistDemo() {
                       }}
                       transition={{
                         ...transition,
-                        delay: shouldReduceMotion ? 0 : index * 0.025,
+                        delay: shouldReduceMotion ? 0 : 0.04 + index * 0.035,
                       }}
-                      style={{ height: '100%' }}
                     />
                   ))}
                 </div>
@@ -210,18 +202,20 @@ export function LandingSetlistDemo() {
                 </div>
               </div>
             </div>
-            <Text size="xs" className="mt-3 text-muted-foreground">
-              <Text
-                as="span"
-                size="xs"
-                weight="semibold"
-                className="text-foreground"
-              >
-                Scoring guide:
-              </Text>{' '}
-              each bar is a recency weight, not the number of songs played at
-              that concert.
-            </Text>
+            <div className="mt-4 flex items-center gap-2 border-t border-border pt-3 text-muted-foreground">
+              <Text as="span" size="xs" weight="semibold">
+                Recent-show weights
+              </Text>
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={ArrowRight01Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
+              <Text as="span" size="xs" weight="semibold">
+                Ranked confidence
+              </Text>
+            </div>
           </div>
 
           <AnimatePresence initial={false} mode="wait">
@@ -247,14 +241,17 @@ export function LandingSetlistDemo() {
                     ? undefined
                     : { opacity: 0, transition: { duration: 0.16 } }
                 }
-                transition={transition}
-                className="grid pt-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:divide-x"
+                transition={{
+                  ...transition,
+                  delay: shouldReduceMotion ? 0 : 0.12,
+                }}
+                className="grid pt-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:divide-x"
               >
                 <PlaylistPreview
                   title="RÜFÜS DU SOL recent setlist"
                   subtitle={`Sample preview · 4 tracks ranked from ${sampleSetlistCount} recent setlists`}
                   tracks={previewTracks}
-                  className="px-0 lg:px-5"
+                  className="px-0 lg:pr-6"
                   compact
                 />
 
@@ -302,15 +299,9 @@ export function LandingSetlistDemo() {
                     become confidence—and where a match still needs review.
                   </Text>
                 </div>
-                <div className="flex shrink-0 items-center gap-2 text-review">
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Tick02Icon}
-                    strokeWidth={2}
-                    className="size-4"
-                  />
+                <div className="flex shrink-0 items-center gap-2 text-muted-foreground">
                   <Text as="span" size="xs" weight="semibold">
-                    Sample setlist history loaded
+                    Sample data ready
                   </Text>
                 </div>
               </m.div>

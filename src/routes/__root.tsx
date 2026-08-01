@@ -37,10 +37,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Playlist Builder',
+        title: 'Encore',
       },
     ],
     links: [
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
+      },
       {
         rel: 'stylesheet',
         href: appCss,
@@ -56,6 +60,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script
+          id="apple-music-kit"
+          src="https://js-cdn.music.apple.com/musickit/v1/musickit.js"
+          defer
+        />
         <HeadContent />
       </head>
       <body className="font-sans antialiased wrap-anywhere selection:bg-muted">

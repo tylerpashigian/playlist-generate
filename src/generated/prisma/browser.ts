@@ -48,6 +48,11 @@ export type Verification = Prisma.VerificationModel
  */
 export type StreamingConnection = Prisma.StreamingConnectionModel
 /**
+ * Model AppleMusicCredential
+ * 
+ */
+export type AppleMusicCredential = Prisma.AppleMusicCredentialModel
+/**
  * Model Artist
  * 
  */

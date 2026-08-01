@@ -45,7 +45,7 @@ export function AccountDrawer() {
   const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
 
   const connectedServiceCount = streamingConnections.connections.filter(
-    (connection) => connection.connected,
+    (connection) => connection.available && connection.connected,
   ).length
 
   return (
@@ -100,8 +100,14 @@ export function AccountDrawer() {
                       serviceCount={connectedServiceCount}
                     />
                     <ConnectedServices
+                      isSpotifyAvailable={
+                        streamingConnections.isSpotifyAvailable
+                      }
                       isSpotifyConnected={
                         streamingConnections.isSpotifyConnected
+                      }
+                      isAppleMusicConnected={
+                        streamingConnections.isAppleMusicConnected
                       }
                     />
                   </>
@@ -280,9 +286,13 @@ function MetricTile({ value, label }: { value: number; label: string }) {
 }
 
 function ConnectedServices({
+  isSpotifyAvailable,
   isSpotifyConnected,
+  isAppleMusicConnected,
 }: {
+  isSpotifyAvailable: boolean
   isSpotifyConnected: boolean
+  isAppleMusicConnected: boolean
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -293,14 +303,25 @@ function ConnectedServices({
       >
         Connected services
       </Text>
+      {isSpotifyAvailable ? (
+        <ServiceRow
+          name="Spotify"
+          description={
+            isSpotifyConnected
+              ? 'Default export service'
+              : 'Manage this connection from your profile'
+          }
+          status={isSpotifyConnected ? 'Connected' : 'Not connected'}
+        />
+      ) : null}
       <ServiceRow
-        name="Spotify"
+        name="Apple Music"
         description={
-          isSpotifyConnected
-            ? 'Default export service'
+          isAppleMusicConnected
+            ? 'Ready for export'
             : 'Manage this connection from your profile'
         }
-        status={isSpotifyConnected ? 'Connected' : 'Not connected'}
+        status={isAppleMusicConnected ? 'Connected' : 'Not connected'}
       />
     </section>
   )

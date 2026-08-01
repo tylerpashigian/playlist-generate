@@ -157,14 +157,37 @@ function ProfileRoute() {
                 ) : null}
               </section>
 
+              {streamingConnections.isSpotifyAvailable ? (
+                <ConnectionPanel
+                  providerName="Spotify"
+                  connection={streamingConnections.spotifyConnection}
+                  isLoading={streamingConnections.isLoading}
+                  isConnecting={streamingConnections.isConnectingSpotify}
+                  isDisconnecting={streamingConnections.isDisconnectingSpotify}
+                  errorMessage={streamingConnections.spotifyErrorMessage}
+                  onConnect={streamingConnections.connectSpotify}
+                  onDisconnect={() =>
+                    streamingConnections.disconnect('SPOTIFY')
+                  }
+                />
+              ) : null}
               <ConnectionPanel
-                connection={streamingConnections.spotifyConnection}
+                providerName="Apple Music"
+                connection={streamingConnections.appleMusicConnection}
                 isLoading={streamingConnections.isLoading}
-                isConnecting={streamingConnections.isConnectingSpotify}
-                isDisconnecting={streamingConnections.isDisconnecting}
-                errorMessage={streamingConnections.errorMessage}
-                onConnect={streamingConnections.connectSpotify}
-                onDisconnect={() => streamingConnections.disconnect('SPOTIFY')}
+                isConnecting={streamingConnections.isConnectingAppleMusic}
+                isDisconnecting={streamingConnections.isDisconnectingAppleMusic}
+                errorMessage={streamingConnections.appleMusicErrorMessage}
+                onConnect={streamingConnections.connectAppleMusic}
+                onDisconnect={() =>
+                  streamingConnections.disconnect('APPLE_MUSIC')
+                }
+                onDisconnectEverywhere={
+                  streamingConnections.disconnectAllAppleMusic
+                }
+                isDisconnectingEverywhere={
+                  streamingConnections.isDisconnectingAllAppleMusic
+                }
               />
             </div>
           </section>

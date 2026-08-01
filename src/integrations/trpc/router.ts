@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { createTRPCRouter, publicProcedure } from './init'
 import { artistsRouter } from './routers/artists'
+import { appleMusicRouter } from './routers/apple-music'
 import { playlistsRouter } from './routers/playlists'
 import { spotifyRouter } from './routers/spotify'
 import { streamingRouter } from './routers/streaming'
@@ -27,6 +28,7 @@ const todosRouter = {
 
 export const trpcRouter = createTRPCRouter({
   artists: artistsRouter,
+  appleMusic: appleMusicRouter,
   playlists: playlistsRouter,
   spotify: spotifyRouter,
   streaming: streamingRouter,

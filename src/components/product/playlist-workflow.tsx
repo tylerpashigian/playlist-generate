@@ -14,7 +14,7 @@ import { useAuthSession } from '@/hooks/use-auth-session'
 import { useArtist } from '@/hooks/use-artist'
 import { useGeneratedPlaylist } from '@/hooks/use-generated-playlist'
 import { useSavedPlaylists } from '@/hooks/use-saved-playlists'
-import { useSpotifyPlaylistReview } from '@/hooks/use-spotify-playlist-review'
+import { useStreamingPlaylistReview } from '@/hooks/use-streaming-playlist-review'
 import { PlaylistReviewExportSection } from './playlist-review-export-section'
 import { StreamingPlaylistReviewDialog } from './streaming-playlist-review-dialog'
 import type { Artist } from '@/models/artists/models'
@@ -42,15 +42,17 @@ export function PlaylistWorkflow() {
   const savedPlaylists = useSavedPlaylists({ enabled: auth.isAuthenticated })
   const {
     spotify,
+    appleMusic,
+    isSpotifyAvailable,
     review: trackReview,
-    resetSpotify,
-  } = useSpotifyPlaylistReview(savedPlaylists.selectedPlaylist)
+    resetStreaming,
+  } = useStreamingPlaylistReview(savedPlaylists.selectedPlaylist)
   const authGate = getAuthGate(auth)
 
   async function handleGenerate(artist: Artist) {
     savedPlaylists.cancelPendingReplacement()
     savedPlaylists.selectPlaylist(null)
-    resetSpotify()
+    resetStreaming()
     artistSearch.selectArtist(artist)
     await generatedPlaylist.generate(artist)
   }
@@ -62,14 +64,14 @@ export function PlaylistWorkflow() {
     if (!query.trim()) {
       generatedPlaylist.reset()
       savedPlaylists.selectPlaylist(null)
-      resetSpotify()
+      resetStreaming()
     }
   }
 
   function handleTrackInclusionChange(position: number, isIncluded: boolean) {
     generatedPlaylist.setTrackIncluded(position, isIncluded)
     savedPlaylists.selectPlaylist(null)
-    resetSpotify()
+    resetStreaming()
   }
 
   async function handleSave() {
@@ -102,6 +104,19 @@ export function PlaylistWorkflow() {
     }
 
     await spotify.exportPlaylist({
+      playlistId: savedPlaylists.selectedPlaylist.id,
+      name: savedPlaylists.selectedPlaylist.name,
+    })
+  }
+
+  async function handleAppleMusicMatch() {
+    if (!auth.isAuthenticated || !savedPlaylists.selectedPlaylist) return
+    await appleMusic.matchTracks(savedPlaylists.selectedPlaylist.id)
+  }
+
+  async function handleAppleMusicExport() {
+    if (!auth.isAuthenticated || !savedPlaylists.selectedPlaylist) return
+    await appleMusic.exportPlaylist({
       playlistId: savedPlaylists.selectedPlaylist.id,
       name: savedPlaylists.selectedPlaylist.name,
     })
@@ -175,18 +190,37 @@ export function PlaylistWorkflow() {
               },
         }}
         exports={{
+          selectedProvider: trackReview.selectedProvider,
+          onProviderChange: trackReview.selectProvider,
           groups: [
+            ...(isSpotifyAvailable
+              ? [
+                  {
+                    provider: 'SPOTIFY' as const,
+                    selectedPlaylist: savedPlaylists.selectedPlaylist,
+                    matches: spotify.matches,
+                    exportResult: spotify.exportResult,
+                    isMatching: spotify.isMatching,
+                    isExporting: spotify.isExporting,
+                    errorMessage: spotify.errorMessage,
+                    onMatchTracks: handleMatch,
+                    onExport: handleExport,
+                    onManageMatches: () => trackReview.openManager('SPOTIFY'),
+                  },
+                ]
+              : []),
             {
-              provider: 'SPOTIFY',
+              provider: 'APPLE_MUSIC',
+              label: 'Apple Music',
               selectedPlaylist: savedPlaylists.selectedPlaylist,
-              matches: spotify.matches,
-              exportResult: spotify.exportResult,
-              isMatching: spotify.isMatching,
-              isExporting: spotify.isExporting,
-              errorMessage: spotify.errorMessage,
-              onMatchTracks: handleMatch,
-              onExport: handleExport,
-              onManageMatches: () => trackReview.openManager('SPOTIFY'),
+              matches: appleMusic.matches,
+              exportResult: appleMusic.exportResult,
+              isMatching: appleMusic.isMatching,
+              isExporting: appleMusic.isExporting,
+              errorMessage: appleMusic.errorMessage,
+              onMatchTracks: handleAppleMusicMatch,
+              onExport: handleAppleMusicExport,
+              onManageMatches: () => trackReview.openManager('APPLE_MUSIC'),
             },
           ],
           fallback: auth.isAuthenticated ? undefined : (
@@ -538,7 +572,7 @@ export function SavedPlaylistsPanel({
         </Link>
       </div>
       {errorMessage ? (
-        <Text size="sm" className="mt-3 text-red-600">
+        <Text size="sm" className="mt-3 text-destructive">
           {errorMessage}
         </Text>
       ) : null}

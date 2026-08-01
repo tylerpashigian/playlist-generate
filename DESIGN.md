@@ -17,27 +17,27 @@ colors:
 typography:
   display:
     fontFamily: 'Inter Variable, system-ui, sans-serif'
-    fontSize: '72px'
+    fontSize: '44px / 60px / 76px (mobile / tablet / desktop)'
     fontWeight: 760
-    lineHeight: '76px'
+    lineHeight: '0.98'
     letterSpacing: '-0.035em'
   headline:
     fontFamily: 'Inter Variable, system-ui, sans-serif'
-    fontSize: '40px'
+    fontSize: '32px / 40px / 48px (mobile / tablet / desktop)'
     fontWeight: 720
-    lineHeight: '46px'
+    lineHeight: '1.08'
     letterSpacing: '-0.035em'
   title:
     fontFamily: 'Inter Variable, system-ui, sans-serif'
-    fontSize: '30px'
+    fontSize: '24px / 28px / 34px (mobile / tablet / desktop)'
     fontWeight: 680
-    lineHeight: '36px'
+    lineHeight: '1.15'
     letterSpacing: '-0.025em'
   subtitle:
     fontFamily: 'Inter Variable, system-ui, sans-serif'
-    fontSize: '22px'
+    fontSize: '20px / 22px / 24px (mobile / tablet / desktop)'
     fontWeight: 650
-    lineHeight: '28px'
+    lineHeight: '1.25'
     letterSpacing: '-0.015em'
   body-large:
     fontFamily: 'Inter Variable, system-ui, sans-serif'
@@ -192,11 +192,12 @@ pairing.
 ### Hierarchy
 
 - **Display:** Landing-page statements and rare top-level moments on large
-  screens.
+  screens. It scales from 44px on mobile to 60px on tablet and 76px on desktop.
 - **Headline:** Page introductions, mobile hero statements, and major section
-  headings.
-- **Title:** Account and saved-work headings.
-- **Subtitle:** Card, dialog, and workflow section titles.
+  headings. It scales from 32px to 40px to 48px across those breakpoints.
+- **Title:** Account and saved-work headings, scaled 24px / 28px / 34px.
+- **Subtitle:** Card, dialog, and workflow section titles, scaled
+  20px / 22px / 24px.
 - **Body Large:** High-priority supporting copy.
 - **Body:** Default reading and explanatory copy.
 - **Label:** Buttons, controls, navigation, field labels, and compact metadata.
@@ -204,6 +205,11 @@ pairing.
 
 **The Confident Compression Rule.** Large headings are heavy and tightly
 tracked; supporting copy stays regular-weight with comfortable line height.
+
+**The Responsive Role Rule.** Heading components retain their semantic HTML
+level at every viewport. Their visual scale changes through the mobile-first
+type-role tokens, with tablet at 768px and desktop at 1024px, rather than by
+substituting a smaller heading element on narrow screens.
 
 **The One Voice Rule.** Use Inter Variable throughout. Create hierarchy through
 the established roles instead of introducing a decorative display face.

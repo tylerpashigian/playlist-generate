@@ -13,6 +13,7 @@ import type {
   StreamingTrackCandidate,
   TrackMatch,
 } from '@/models/streaming/models'
+import type { StreamingTrackReviewRow } from '@/hooks/use-streaming-track-review'
 
 const breakpoint = vi.hoisted<{ surface: 'dialog' | 'drawer' }>(() => ({
   surface: 'dialog',
@@ -55,7 +56,7 @@ const candidate = {
   durationMs: 243000,
 }
 
-const trackRows = [
+const trackRows: Array<StreamingTrackReviewRow> = [
   {
     track,
     match: null,
@@ -251,7 +252,9 @@ describe('StreamingMatchManagerDialog', () => {
     expect(
       screen.queryByRole('button', { name: 'Close match manager' }),
     ).toBeNull()
-    expect(document.querySelector('[data-slot="drawer-swipe-handle"]')).toBeTruthy()
+    expect(
+      document.querySelector('[data-slot="drawer-swipe-handle"]'),
+    ).toBeTruthy()
     expect(screen.getByText('1 remaining')).toBeTruthy()
   })
 
@@ -282,9 +285,7 @@ describe('StreamingMatchManagerDialog', () => {
       selectedTrackStatus: 'matched',
     })
 
-    expect(
-      screen.getByLabelText('Change the Spotify match'),
-    ).toBeTruthy()
+    expect(screen.getByLabelText('Change the Spotify match')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy()
     expect(screen.queryByText('Review complete')).toBeNull()
   })

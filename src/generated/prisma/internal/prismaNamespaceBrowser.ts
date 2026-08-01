@@ -57,6 +57,7 @@ export const ModelName = {
   Account: 'Account',
   Verification: 'Verification',
   StreamingConnection: 'StreamingConnection',
+  AppleMusicCredential: 'AppleMusicCredential',
   Artist: 'Artist',
   Playlist: 'Playlist',
   PlaylistItem: 'PlaylistItem',
@@ -158,6 +159,22 @@ export const StreamingConnectionScalarFieldEnum = {
 } as const
 
 export type StreamingConnectionScalarFieldEnum = (typeof StreamingConnectionScalarFieldEnum)[keyof typeof StreamingConnectionScalarFieldEnum]
+
+
+export const AppleMusicCredentialScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  connectionKeyHash: 'connectionKeyHash',
+  musicUserToken: 'musicUserToken',
+  encryptionIv: 'encryptionIv',
+  encryptionAuthTag: 'encryptionAuthTag',
+  encryptionKeyVersion: 'encryptionKeyVersion',
+  storefrontId: 'storefrontId',
+  connectedAt: 'connectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AppleMusicCredentialScalarFieldEnum = (typeof AppleMusicCredentialScalarFieldEnum)[keyof typeof AppleMusicCredentialScalarFieldEnum]
 
 
 export const ArtistScalarFieldEnum = {

@@ -1,5 +1,5 @@
 import superjson from 'superjson'
-import { createTRPCClient, httpBatchStreamLink } from '@trpc/client'
+import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import type { TRPCRouter } from '@/integrations/trpc/router'
 
 function getUrl() {
@@ -12,9 +12,14 @@ function getUrl() {
 
 export const trpcClient = createTRPCClient<TRPCRouter>({
   links: [
-    httpBatchStreamLink({
+    httpBatchLink({
       transformer: superjson,
       url: getUrl(),
+      fetch: (url, options) =>
+        fetch(url, {
+          ...options,
+          credentials: 'same-origin',
+        }),
     }),
   ],
 })

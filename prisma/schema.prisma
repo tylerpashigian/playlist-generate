@@ -9,6 +9,7 @@ datasource db {
 
 enum StreamingProvider {
   SPOTIFY
+  APPLE_MUSIC
 }
 
 enum TrackMatchStatus {
@@ -43,6 +44,7 @@ model User {
   accounts             Account[]
   playlists            Playlist[]
   streamingConnections StreamingConnection[]
+  appleMusicCredentials AppleMusicCredential[]
 
   @@unique([email])
   @@map("user")
@@ -100,7 +102,7 @@ model StreamingConnection {
   id                String            @id @default(cuid())
   userId            String
   provider          StreamingProvider
-  providerAccountId String
+  providerAccountId String?
   displayName       String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
@@ -109,6 +111,23 @@ model StreamingConnection {
   @@unique([userId, provider])
   @@index([provider, providerAccountId])
   @@map("streaming_connection")
+}
+
+model AppleMusicCredential {
+  id                   String   @id @default(cuid())
+  userId               String
+  connectionKeyHash    String   @unique
+  musicUserToken       String
+  encryptionIv         String
+  encryptionAuthTag    String
+  encryptionKeyVersion Int      @default(1)
+  storefrontId         String
+  connectedAt          DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("apple_music_credential")
 }
 
 model Artist {

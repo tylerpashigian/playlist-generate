@@ -1,13 +1,15 @@
 import {
-  exportPlaylistDtoSchema,
-  exportPlaylistInputSchema,
-  matchTracksInputSchema,
   searchSpotifyTracksInputSchema,
   selectSpotifyTrackInputSchema,
   spotifyPlaylistItemInputSchema,
   spotifyTrackCandidateDtoSchema,
-  trackMatchDtoSchema,
 } from '@/server/contracts/spotify'
+import {
+  exportPlaylistDtoSchema,
+  exportPlaylistInputSchema,
+  matchTracksInputSchema,
+  trackMatchDtoSchema,
+} from '@/server/contracts/streaming'
 import {
   exportSpotifyPlaylist,
   getSpotifyTrackMatches,
@@ -18,7 +20,7 @@ import {
 } from '@/server/services/spotify'
 import { getUserPlaylist } from '@/server/services/playlists'
 import { toTRPCError } from '../errors'
-import { protectedProcedure } from '../init'
+import { spotifyBetaProcedure } from '../init'
 
 import { TRPCError } from '@trpc/server'
 import type { TRPCRouterRecord } from '@trpc/server'
@@ -37,12 +39,10 @@ async function requirePlaylist(userId: string, playlistId: string) {
 }
 
 export const spotifyRouter = {
-  matches: protectedProcedure
+  matches: spotifyBetaProcedure
     .input(matchTracksInputSchema)
     .output(trackMatchDtoSchema.array())
     .query(async ({ ctx, input }) => {
-      await requirePlaylist(ctx.userId, input.playlistId)
-
       try {
         return await getSpotifyTrackMatches(ctx.userId, input.playlistId)
       } catch (error) {
@@ -50,7 +50,7 @@ export const spotifyRouter = {
       }
     }),
 
-  matchTracks: protectedProcedure
+  matchTracks: spotifyBetaProcedure
     .input(matchTracksInputSchema)
     .output(trackMatchDtoSchema.array())
     .mutation(async ({ ctx, input }) => {
@@ -59,12 +59,11 @@ export const spotifyRouter = {
       try {
         return await matchSpotifyTracks(ctx.userId, playlist)
       } catch (error) {
-        console.log(error)
         throw toTRPCError(error)
       }
     }),
 
-  searchTracks: protectedProcedure
+  searchTracks: spotifyBetaProcedure
     .input(searchSpotifyTracksInputSchema)
     .output(spotifyTrackCandidateDtoSchema.array())
     .mutation(async ({ ctx, input }) => {
@@ -77,7 +76,7 @@ export const spotifyRouter = {
       }
     }),
 
-  selectTrack: protectedProcedure
+  selectTrack: spotifyBetaProcedure
     .input(selectSpotifyTrackInputSchema)
     .output(trackMatchDtoSchema)
     .mutation(async ({ ctx, input }) => {
@@ -90,7 +89,7 @@ export const spotifyRouter = {
       }
     }),
 
-  skipTrack: protectedProcedure
+  skipTrack: spotifyBetaProcedure
     .input(spotifyPlaylistItemInputSchema)
     .output(trackMatchDtoSchema)
     .mutation(async ({ ctx, input }) => {
@@ -103,7 +102,7 @@ export const spotifyRouter = {
       }
     }),
 
-  exportPlaylist: protectedProcedure
+  exportPlaylist: spotifyBetaProcedure
     .input(exportPlaylistInputSchema)
     .output(exportPlaylistDtoSchema)
     .mutation(async ({ ctx, input }) => {

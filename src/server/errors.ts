@@ -9,10 +9,42 @@ export class ExternalProviderError extends Error {
   }
 }
 
+export class ExternalProviderRateLimitError extends ExternalProviderError {
+  constructor(
+    provider: string,
+    public readonly retryAfterSeconds: number | null,
+  ) {
+    super(
+      provider,
+      429,
+      retryAfterSeconds
+        ? `${provider} is temporarily rate limited. Try again in ${retryAfterSeconds} seconds.`
+        : `${provider} is temporarily rate limited. Try again shortly.`,
+    )
+    this.name = 'ExternalProviderRateLimitError'
+  }
+}
+
 export class SpotifyNotConnectedError extends Error {
   constructor() {
     super('Spotify is not connected.')
     this.name = 'SpotifyNotConnectedError'
+  }
+}
+
+export class AppleMusicNotConnectedError extends Error {
+  constructor(message = 'Apple Music is not connected.') {
+    super(message)
+    this.name = 'AppleMusicNotConnectedError'
+  }
+}
+
+export class AppleMusicAuthorizationError extends Error {
+  constructor() {
+    super(
+      'Apple Music authorization has expired or is unavailable. Reconnect Apple Music and try again.',
+    )
+    this.name = 'AppleMusicAuthorizationError'
   }
 }
 
@@ -25,7 +57,7 @@ export class OnlyLoginMethodError extends Error {
 
 export class NoMatchedTracksError extends Error {
   constructor() {
-    super('No matched Spotify tracks are available to export.')
+    super('No matched tracks are available to export.')
     this.name = 'NoMatchedTracksError'
   }
 }

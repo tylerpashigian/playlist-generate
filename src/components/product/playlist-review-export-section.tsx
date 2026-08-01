@@ -17,6 +17,7 @@ import type {
   GeneratedPlaylist,
   SavedPlaylist,
 } from '@/models/playlists/models'
+import type { StreamingProvider } from '@/models/streaming/models'
 
 export interface PlaylistReviewConfig {
   playlist: GeneratedPlaylist | SavedPlaylist | null
@@ -33,6 +34,8 @@ export interface PlaylistReviewConfig {
 
 export interface PlaylistExportConfig {
   groups: Array<ExportActionGroup>
+  selectedProvider: StreamingProvider | null
+  onProviderChange: (provider: StreamingProvider) => void
   fallback?: ReactNode
 }
 
@@ -60,10 +63,12 @@ export function PlaylistReviewExportSection({
 
   return (
     <section className="grid grid-cols-1 gap-6 pt-6 sm:gap-8 sm:pt-8 lg:grid-cols-5">
-      <div className="col-span-1 grid gap-6 sm:gap-8 lg:col-span-3 lg:gap-0 lg:divide-y">
+      <div className="col-span-1 flex flex-col gap-6 sm:gap-8 lg:col-span-3 lg:gap-0 lg:divide-y">
         {topContent}
 
-        <section className={topContent ? 'lg:pt-8' : ''}>
+        <section
+          className={`flex min-h-0 flex-1 flex-col${topContent ? ' lg:pt-8' : ''}`}
+        >
           {!playlist && emptyTitle ? (
             <Empty className="min-h-70 border border-border bg-card">
               <EmptyHeader>
@@ -97,7 +102,13 @@ export function PlaylistReviewExportSection({
       </div>
 
       <div className="col-span-1 min-w-0 border-t border-border pt-6 sm:pt-8 lg:col-span-2 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-        {exports.fallback ?? <ExportActionsPanel groups={exports.groups} />}
+        {exports.fallback ?? (
+          <ExportActionsPanel
+            groups={exports.groups}
+            selectedProvider={exports.selectedProvider}
+            onProviderChange={exports.onProviderChange}
+          />
+        )}
       </div>
     </section>
   )

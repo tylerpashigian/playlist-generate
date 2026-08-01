@@ -15,9 +15,8 @@ describe('LandingSetlistDemo', () => {
 
     expect(screen.getByText('The sample scoring window is ready.')).toBeTruthy()
     expect(screen.getByText('Sample · 10 setlists')).toBeTruthy()
-    expect(
-      screen.getByText(/each bar is a recency weight, not the number of songs/),
-    ).toBeTruthy()
+    expect(screen.getByText('Recent-show weights')).toBeTruthy()
+    expect(screen.getByText('Ranked confidence')).toBeTruthy()
     expect(
       screen.getByRole('img', {
         name: /10, 9, 8, 7, 6, 5, 4, 3, 2, 1 points from newest to oldest/,

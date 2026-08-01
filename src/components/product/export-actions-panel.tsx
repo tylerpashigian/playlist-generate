@@ -1,4 +1,12 @@
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Heading4, Text } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
 import type { PlaylistTrack, SavedPlaylist } from '@/models/playlists/models'
@@ -35,7 +43,10 @@ export function getExportReadinessMetrics(
 
         const match = track.id ? matchesByTrackId.get(track.id) : undefined
 
-        if (match?.status === 'MATCHED' || match?.status === 'MANUALLY_MATCHED') {
+        if (
+          match?.status === 'MATCHED' ||
+          match?.status === 'MANUALLY_MATCHED'
+        ) {
           metrics.matchedCount += 1
         } else if (match?.status === 'SKIPPED') {
           metrics.skippedCount += 1
@@ -73,10 +84,12 @@ export function ExportReadinessMetrics({
   showResolutionCounts = false,
   className,
 }: Pick<ExportReadinessMetricCounts, 'matchedCount' | 'reviewCount'> &
-  Partial<Pick<ExportReadinessMetricCounts, 'skippedCount' | 'excludedCount'>> & {
-  className?: string
-  showResolutionCounts?: boolean
-}) {
+  Partial<
+    Pick<ExportReadinessMetricCounts, 'skippedCount' | 'excludedCount'>
+  > & {
+    className?: string
+    showResolutionCounts?: boolean
+  }) {
   return (
     <div className={className}>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -135,11 +148,20 @@ export interface ExportActionGroup {
 
 export function ExportActionsPanel({
   groups,
+  selectedProvider,
+  onProviderChange,
   className,
 }: {
   groups: Array<ExportActionGroup>
+  selectedProvider: StreamingProvider | null
+  onProviderChange: (provider: StreamingProvider) => void
   className?: string
 }) {
+  const selectedGroup =
+    groups.find((group) => group.provider === selectedProvider) ??
+    groups.find((group) => group.provider === 'SPOTIFY') ??
+    groups.at(0)
+
   return (
     <section className={cn('min-w-0 text-card-foreground', className)}>
       <Text
@@ -154,20 +176,46 @@ export function ExportActionsPanel({
         Review service-specific matches before exporting to connected services.
       </Text>
 
-      <div className="mt-5 divide-y divide-border">
-        {groups.map((group) => (
-          <ExportActionProviderGroup key={group.provider} group={group} />
-        ))}
-      </div>
+      {selectedGroup ? (
+        <>
+          <div className="mt-5 grid gap-2">
+            <Label htmlFor="export-streaming-service">Streaming service</Label>
+            <Select<StreamingProvider>
+              value={selectedGroup.provider}
+              onValueChange={(provider) => {
+                if (provider) {
+                  onProviderChange(provider)
+                }
+              }}
+            >
+              <SelectTrigger id="export-streaming-service" className="w-full">
+                <SelectValue>
+                  {selectedGroup.label ??
+                    formatProviderName(selectedGroup.provider)}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((group) => (
+                  <SelectItem key={group.provider} value={group.provider}>
+                    {group.label ?? formatProviderName(group.provider)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <ExportActionProviderGroup group={selectedGroup} />
+        </>
+      ) : (
+        <Text size="sm" className="mt-5 text-muted-foreground">
+          No streaming services are available.
+        </Text>
+      )}
     </section>
   )
 }
 
-function ExportActionProviderGroup({
-  group,
-}: {
-  group: ExportActionGroup
-}) {
+function ExportActionProviderGroup({ group }: { group: ExportActionGroup }) {
   const {
     provider,
     label,
@@ -185,17 +233,14 @@ function ExportActionProviderGroup({
   const providerName = label ?? formatProviderName(provider)
 
   return (
-    <section className="py-5 first:pt-0 last:pb-0">
-      <Text size="sm" weight="semibold" className="text-foreground">
-        {providerName}
-      </Text>
-      <Text size="sm" className="mt-1 text-muted-foreground">
+    <section className="pt-5">
+      <Text size="sm" className="text-muted-foreground">
         Automatically match tracks, review decisions, and export to{' '}
         {providerName}.
       </Text>
 
       {errorMessage ? (
-        <Text size="sm" className="mt-3 text-red-600">
+        <Text size="sm" className="mt-3 text-destructive">
           {errorMessage}
         </Text>
       ) : null}

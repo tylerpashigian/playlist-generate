@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Heading4, Text } from '@/components/ui/typography'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { GoogleIcon, SpotifyIcon } from '@hugeicons/core-free-icons'
+import { GoogleIcon } from '@hugeicons/core-free-icons'
 
 import type {
   ValidationLogicFn,
@@ -227,7 +227,7 @@ export function AuthForm({
           {isSignUp ? 'Create account' : 'Sign in'}
         </Heading4>
         <Text size="sm" className="text-muted-foreground">
-          Use email, Google, or Spotify to access your app account.
+          Use email or Google to access your app account.
         </Text>
       </div>
 
@@ -267,19 +267,6 @@ export function AuthForm({
       >
         <>{auth.isAuthenticating ? 'Please wait' : 'Continue with Google'}</>
         <HugeiconsIcon icon={GoogleIcon} />
-      </Button>
-
-      <Button
-        type="button"
-        variant="outline"
-        className="mt-3 w-full"
-        disabled={auth.isAuthenticating}
-        onClick={() => {
-          void auth.signInWithSpotify(redirect)
-        }}
-      >
-        <>{auth.isAuthenticating ? 'Please wait' : 'Continue with Spotify'}</>
-        <HugeiconsIcon icon={SpotifyIcon} />
       </Button>
 
       <div className="my-6 flex items-center gap-3">

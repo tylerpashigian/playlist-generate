@@ -1,6 +1,9 @@
 import {
   DuplicateSavedPlaylistError,
+  AppleMusicAuthorizationError,
+  AppleMusicNotConnectedError,
   ExternalProviderError,
+  ExternalProviderRateLimitError,
   NoMatchedTracksError,
   OnlyLoginMethodError,
   PlaylistItemNotFoundError,
@@ -24,6 +27,22 @@ export function toTRPCError(error: unknown): TRPCError {
     })
   }
 
+  if (error instanceof AppleMusicNotConnectedError) {
+    return new TRPCError({
+      code: 'BAD_REQUEST',
+      message: error.message,
+      cause: error,
+    })
+  }
+
+  if (error instanceof AppleMusicAuthorizationError) {
+    return new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: error.message,
+      cause: error,
+    })
+  }
+
   if (error instanceof OnlyLoginMethodError) {
     return new TRPCError({
       code: 'BAD_REQUEST',
@@ -35,7 +54,7 @@ export function toTRPCError(error: unknown): TRPCError {
   if (error instanceof NoMatchedTracksError) {
     return new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'No matched Spotify tracks are available to export.',
+      message: error.message,
       cause: error,
     })
   }
@@ -73,6 +92,14 @@ export function toTRPCError(error: unknown): TRPCError {
   }
 
   if (error instanceof ExternalProviderError) {
+    if (error instanceof ExternalProviderRateLimitError) {
+      return new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: error.message,
+        cause: error,
+      })
+    }
+
     return new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: error.message,

@@ -1,4 +1,4 @@
-import { ExternalProviderError } from '@/server/errors'
+import { getProviderResponseError } from '@/server/providers/provider-errors'
 import {
   spotifyAddItemsResponseSchema,
   spotifyCreatePlaylistResponseSchema,
@@ -31,7 +31,7 @@ async function spotifyFetch(
   })
 
   if (!response.ok) {
-    throw new ExternalProviderError('Spotify', response.status)
+    throw getProviderResponseError('Spotify', response)
   }
 
   return response.json() as Promise<unknown>

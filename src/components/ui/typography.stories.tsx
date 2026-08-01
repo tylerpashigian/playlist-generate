@@ -1,10 +1,4 @@
-import {
-  Heading1,
-  Heading2,
-  Heading3,
-  Heading4,
-  Text,
-} from './typography'
+import { Heading1, Heading2, Heading3, Heading4, Text } from './typography'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
@@ -22,25 +16,25 @@ export const Headings: Story = {
       <div>
         <Heading1>Heading1</Heading1>
         <Text size="sm" className="mt-2 text-muted-foreground">
-          72 / 76 / 760 / -0.035em
+          44 → 60 → 76 / 760 / -0.035em
         </Text>
       </div>
       <div>
         <Heading2>Heading2</Heading2>
         <Text size="sm" className="mt-2 text-muted-foreground">
-          40 / 46 / 720 / -0.035em
+          32 → 40 → 48 / 720 / -0.035em
         </Text>
       </div>
       <div>
         <Heading3>Heading3</Heading3>
         <Text size="sm" className="mt-2 text-muted-foreground">
-          30 / 36 / 680 / -0.025em
+          24 → 28 → 34 / 680 / -0.025em
         </Text>
       </div>
       <div>
         <Heading4>Heading4</Heading4>
         <Text size="sm" className="mt-2 text-muted-foreground">
-          22 / 28 / 650 / -0.015em
+          20 → 22 → 24 / 650 / -0.015em
         </Text>
       </div>
     </div>

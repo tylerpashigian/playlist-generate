@@ -6,24 +6,24 @@ import {
   toSavedPlaylist,
   toSavedPlaylistSummary,
 } from './playlists/conversions'
-import { toStreamingConnection } from './streaming/conversions'
 import {
   toPlaylistExportResult,
-  toStreamingTrackCandidate,
+  toStreamingConnection,
   toTrackMatch,
-} from './spotify/conversions'
+} from './streaming/conversions'
+import { toStreamingTrackCandidate } from './spotify/conversions'
 import type { ArtistDto } from '@/server/contracts/artists'
 import type {
   GeneratedPlaylistDto,
   SavedPlaylistDto,
   SavedPlaylistSummaryDto,
 } from '@/server/contracts/playlists'
-import type { StreamingConnectionDto } from '@/server/contracts/streaming'
 import type {
   ExportPlaylistDto,
-  SpotifyTrackCandidateDto,
+  StreamingConnectionDto,
   TrackMatchDto,
-} from '@/server/contracts/spotify'
+} from '@/server/contracts/streaming'
+import type { SpotifyTrackCandidateDto } from '@/server/contracts/spotify'
 
 const artistDto: ArtistDto = {
   mbid: 'artist-mbid',
@@ -128,8 +128,9 @@ describe('frontend model conversions', () => {
 
   it('maps streaming connection states', () => {
     const connectionDto: StreamingConnectionDto = {
-      provider: 'SPOTIFY',
-      connected: true,
+        provider: 'SPOTIFY',
+        available: true,
+        connected: true,
       displayName: 'Spotify User',
       providerAccountId: 'spotify-user-id',
       canDisconnect: true,
@@ -139,6 +140,7 @@ describe('frontend model conversions', () => {
 
     expect(toStreamingConnection(connectionDto)).toEqual({
       provider: 'SPOTIFY',
+      available: true,
       connected: true,
       displayName: 'Spotify User',
       providerAccountId: 'spotify-user-id',

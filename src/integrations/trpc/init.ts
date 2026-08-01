@@ -1,9 +1,17 @@
 import { TRPCError, initTRPC } from '@trpc/server'
 import { auth } from '@/lib/auth'
 import { getAuthAccessState } from '@/server/services/auth-access'
+import { getAppleMusicConnectionKey } from '@/server/services/apple-music-connection-cookie'
+import { isSpotifyBetaUser } from '@/server/services/spotify-beta'
 import superjson from 'superjson'
 
-export async function createTRPCContext({ request }: { request: Request }) {
+export async function createTRPCContext({
+  request,
+  responseHeaders = new Headers(),
+}: {
+  request: Request
+  responseHeaders?: Headers
+}) {
   const session = await auth.api.getSession({
     headers: request.headers,
   })
@@ -11,6 +19,8 @@ export async function createTRPCContext({ request }: { request: Request }) {
   return {
     request,
     session,
+    appleMusicConnectionKey: getAppleMusicConnectionKey(request.headers),
+    responseHeaders,
   }
 }
 
@@ -63,3 +73,14 @@ export const protectedProcedure = signedInProcedure.use(
     return next({ ctx })
   },
 )
+
+export const spotifyBetaProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!isSpotifyBetaUser(ctx.userId)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Spotify is currently available only to beta users.',
+    })
+  }
+
+  return next({ ctx })
+})
