@@ -400,8 +400,7 @@ export async function exportSpotifyPlaylist(
   playlist: SavedPlaylistDto,
   name?: string,
 ): Promise<ExportPlaylistDto> {
-  const { accessToken, providerAccountId } =
-    await getValidSpotifyAccessToken(userId)
+  const { accessToken } = await getValidSpotifyAccessToken(userId)
   const itemIds = playlist.items
     .filter((item) => item.isIncluded)
     .map((item) => item.id)
@@ -447,14 +446,10 @@ export async function exportSpotifyPlaylist(
     throw new NoMatchedTracksError()
   }
 
-  const createdPlaylist = await createSpotifyPlaylist(
-    accessToken,
-    providerAccountId,
-    {
-      name: name ?? playlist.name,
-      description: playlist.description,
-    },
-  )
+  const createdPlaylist = await createSpotifyPlaylist(accessToken, {
+    name: name ?? playlist.name,
+    description: playlist.description,
+  })
   let snapshotId: string | null = null
 
   for (const batch of chunk(uris, 100)) {
