@@ -74,14 +74,13 @@ export async function getSpotifyTrack(
 
 export async function createSpotifyPlaylist(
   accessToken: string,
-  providerAccountId: string,
   playlist: {
     name: string
     description?: string | null
   },
 ): Promise<SpotifyCreatePlaylistResponse> {
   return spotifyCreatePlaylistResponseSchema.parse(
-    await spotifyFetch(`/users/${providerAccountId}/playlists`, accessToken, {
+    await spotifyFetch('/me/playlists', accessToken, {
       method: 'POST',
       body: JSON.stringify({
         name: playlist.name,
@@ -98,7 +97,7 @@ export async function addSpotifyPlaylistItems(
   uris: Array<string>,
 ): Promise<SpotifyAddItemsResponse> {
   return spotifyAddItemsResponseSchema.parse(
-    await spotifyFetch(`/playlists/${spotifyPlaylistId}/tracks`, accessToken, {
+    await spotifyFetch(`/playlists/${spotifyPlaylistId}/items`, accessToken, {
       method: 'POST',
       body: JSON.stringify({ uris }),
     }),
