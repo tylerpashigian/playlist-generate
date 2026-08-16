@@ -17,6 +17,7 @@ import { Analytics } from '@vercel/analytics/react'
 import type { TRPCRouter } from '@/integrations/trpc/router'
 import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import { Toaster } from '@/components/ui/sonner'
+import { pageMetadata } from '@/lib/site-metadata'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -36,9 +37,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: 'viewport',
         content: 'width=device-width, initial-scale=1',
       },
-      {
-        title: 'Encore',
-      },
+      ...pageMetadata({
+        title: 'Encore | Get ready for the set they’re most likely to play',
+        description:
+          'Build an evidence-based concert playlist from an artist’s recent setlists, then export it to your favorite streaming service.',
+        path: '/',
+      }),
     ],
     links: [
       {

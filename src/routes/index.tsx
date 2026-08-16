@@ -10,8 +10,20 @@ import { LandingWorkflowSection } from '@/components/product/landing-workflow-se
 import { WithNavbar } from '@/components/product/product-navbar'
 import { Button } from '@/components/ui/button'
 import { useAuthSession } from '@/hooks/use-auth-session'
+import { pageMetadata, siteUrl } from '@/lib/site-metadata'
 
-export const Route = createFileRoute('/')({ component: LandingRoute })
+export const Route = createFileRoute('/')({
+  head: () => ({
+    meta: pageMetadata({
+      title: 'Encore | Get ready for the set they’re most likely to play',
+      description:
+        'Build an evidence-based concert playlist from an artist’s recent setlists, then export it to your favorite streaming service.',
+      path: '/',
+    }),
+    links: [{ rel: 'canonical', href: `${siteUrl}/` }],
+  }),
+  component: LandingRoute,
+})
 
 function LandingRoute() {
   const { isAuthenticated, isSessionLoading, isSignedIn } = useAuthSession()

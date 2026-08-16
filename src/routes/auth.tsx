@@ -19,6 +19,7 @@ export const Route = createFileRoute('/auth')({
       search.verificationRequired === true,
     verified: search.verified === 'true' || search.verified === true,
   }),
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] }),
   component: AuthRoute,
 })
 
