@@ -12,6 +12,7 @@ export const Route = createFileRoute('/_authenticated')({
       throw redirect(authRedirect)
     }
   },
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] }),
   component: AuthenticatedLayout,
 })
 

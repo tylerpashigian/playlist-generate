@@ -4,6 +4,7 @@ import { PlaylistWorkflow } from '@/components/product/playlist-workflow'
 import { Heading2, Text } from '@/components/ui/typography'
 
 export const Route = createFileRoute('/app')({
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] }),
   component: AppRoute,
 })
 

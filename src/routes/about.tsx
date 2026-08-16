@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Heading2, Heading3, Heading4, Text } from '@/components/ui/typography'
+import { pageMetadata, siteUrl } from '@/lib/site-metadata'
 
 /*
 THESIS: An evidence-led field guide, not a marketing feature grid.
@@ -18,7 +19,18 @@ STORY: Explain how recent setlists become inspectable playlist confidence, then 
 FIRST VIEWPORT: Large explanation left; compact evidence ledger right; Build a playlist action beneath the introduction.
 FORM: Field-guide narrative (Option A), paired with a separate Explore-first mobile drawer (Option C).
 */
-export const Route = createFileRoute('/about')({ component: AboutRoute })
+export const Route = createFileRoute('/about')({
+  head: () => ({
+    meta: pageMetadata({
+      title: 'About Encore | Evidence-based concert playlists',
+      description:
+        'Learn how Encore uses recent public setlists to create transparent, confidence-ranked playlists for the concert you’re heading to.',
+      path: '/about',
+    }),
+    links: [{ rel: 'canonical', href: `${siteUrl}/about` }],
+  }),
+  component: AboutRoute,
+})
 
 const evidenceRows = [
   ['Recent shows', 'Newer performances carry more weight.'],
