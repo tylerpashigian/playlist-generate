@@ -63,6 +63,7 @@ vi.mock('./spotify-beta', () => spotifyBetaMocks)
 
 const updatedAt = new Date('2026-06-01T12:00:00.000Z')
 const spotifyAccount = {
+  id: 'local-spotify-account-id',
   accountId: 'spotify-user-id',
   providerId: 'spotify',
   password: null,
@@ -198,8 +199,7 @@ describe('streaming connections service', () => {
 
     expect(authMocks.unlinkAccount).toHaveBeenCalledWith({
       body: {
-        providerId: 'spotify',
-        accountId: 'spotify-user-id',
+        accountId: 'local-spotify-account-id',
       },
       headers,
     })
