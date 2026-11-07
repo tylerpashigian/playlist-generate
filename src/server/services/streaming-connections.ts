@@ -169,8 +169,11 @@ async function syncStreamingConnectionMetadata(
   const canDisconnect = await hasAlternateLoginAccount(userId, provider)
 
   const resolvedMetadata = await resolveStreamingConnectionMetadata(
-    userId,
-    account.accountId,
+    {
+      userId,
+      localAccountId: account.id,
+      providerAccountId: account.accountId,
+    },
     providerConfig,
   )
   const metadata = await prisma.streamingConnection.upsert({
@@ -207,14 +210,20 @@ async function syncStreamingConnectionMetadata(
 }
 
 async function resolveStreamingConnectionMetadata(
-  userId: string,
-  providerAccountId: string,
+  {
+    userId,
+    localAccountId,
+    providerAccountId,
+  }: {
+    userId: string
+    localAccountId: string
+    providerAccountId: string
+  },
   providerConfig: ProviderConfig,
 ) {
   const token = await auth.api.getAccessToken({
     body: {
-      providerId: providerConfig.betterAuthProviderId,
-      accountId: providerAccountId,
+      accountId: localAccountId,
       userId,
     },
   })
@@ -291,8 +300,7 @@ export async function disconnectStreamingProvider(
 
     await auth.api.unlinkAccount({
       body: {
-        providerId: providerConfig.betterAuthProviderId,
-        accountId: account.accountId,
+        accountId: account.id,
       },
       headers,
     })
@@ -327,11 +335,9 @@ export async function getStreamingProviderAccessToken(
     throw new SpotifyNotConnectedError()
   }
 
-  const providerConfig = getProviderConfig(provider)
   const token = await auth.api.getAccessToken({
     body: {
-      providerId: providerConfig.betterAuthProviderId,
-      accountId: account.accountId,
+      accountId: account.id,
       userId,
     },
   })

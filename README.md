@@ -16,6 +16,11 @@ API routes remain under `/api/trpc/$` and `/api/auth/$`.
 
 ## Development
 
+Use pnpm 12.4.2, pinned in `package.json` and shared with CI.
+
+Dependencies must be at least 72 hours old before installation. Any reviewed
+exceptions are limited to exact versions in `pnpm-workspace.yaml`.
+
 ```bash
 pnpm install
 pnpm dev
