@@ -1,0 +1,29 @@
+allowBuilds:
+  '@prisma/engines': false
+  esbuild: true
+  lightningcss: true
+  prisma: false
+  unrs-resolver: false
+
+# Require package releases to be at least 72 hours old before installation.
+minimumReleaseAge: 4320
+
+# Keep the already-validated security upgrade installable during the transition.
+# Every exception is limited to an exact version; future releases must wait.
+minimumReleaseAgeExclude:
+  # Remove after 2026-11-07 15:53 UTC (Better Auth security upgrade).
+  - '@better-auth/core@1.7.17'
+  - '@better-auth/drizzle-adapter@1.7.17'
+  - '@better-auth/kysely-adapter@1.7.17'
+  - '@better-auth/memory-adapter@1.7.17'
+  - '@better-auth/mongo-adapter@1.7.17'
+  - '@better-auth/prisma-adapter@1.7.17'
+  - '@better-auth/telemetry@1.7.17'
+  - better-auth@1.7.17
+  # Remove after 2026-11-07 16:34 UTC (already-locked build dependencies).
+  - '@babel/generator@7.29.13'
+  - '@babel/helper-string-parser@7.29.13'
+  - '@babel/parser@7.29.13'
+  # Remove after 2026-11-09 16:42 UTC (TanStack Start serializers).
+  - seroval@1.7.9
+  - seroval-plugins@1.7.8
