@@ -1,0 +1,2 @@
+# Exclude bundled third-party agent skills from GitHub language statistics.
+.agents/skills/** linguist-vendored
